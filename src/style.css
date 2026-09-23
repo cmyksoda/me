@@ -80,8 +80,9 @@ svg { display: block; }
 .avatar-scene { width: 15rem; height: 9rem; margin: 0 auto; position: relative; }
 .avatar-frame { width: 8rem; height: 8rem; padding: 0.3125rem; margin-inline: auto; background: var(--page); border: 0.0625rem solid var(--line); border-radius: 50%; box-shadow: -0.3125rem 0.125rem 0 -0.125rem var(--cyan), 0.3125rem -0.125rem 0 -0.125rem var(--pink); transform: rotate(-6deg); }
 .avatar { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 50%; transform: rotate(6deg); }
-.hello-sticker { position: absolute; bottom: 0.8125rem; right: -0.625rem; font-size: 0.75rem; font-weight: 500; padding: 0.4375rem 0.6875rem; background: var(--card); border: 0.0625rem solid var(--line); box-shadow: 0 0.1875rem 0.5rem #17182d06; border-radius: 0.4375rem; transform: rotate(8deg); }
-.hello-sticker span { color: var(--pink); font-size: 0.9375rem; margin-left: 0.25rem; }
+.hello-sticker { position: absolute; bottom: 0.8125rem; right: -0.625rem; display: inline-flex; align-items: center; gap: 0.3em; font-size: 0.75rem; font-weight: 500; padding: 0.4375rem 0.6875rem; background: var(--card); border: 0.0625rem solid var(--line); box-shadow: 0 0.1875rem 0.5rem #17182d06; border-radius: 0.4375rem; transform: rotate(8deg); }
+.drawn-heart { display: block; flex-shrink: 0; color: var(--pink); fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+.hello-heart { width: 1.25em; height: 1.25em; stroke-width: 1.85; }
 .sparkle { position: absolute; line-height: 1; }
 .sparkle-pink { left: 0.75rem; top: 0.75rem; color: var(--pink); font-size: 1.875rem; transform: rotate(12deg); }
 .sparkle-cyan { right: 1.125rem; top: 0.625rem; color: var(--cyan); font-size: 1.6875rem; }
@@ -202,8 +203,8 @@ h2 { display: flex; align-items: center; gap: 0.6875rem; margin: 0; font-size: 1
 .footer-source { text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
 .footer-source:hover { color: var(--pink-ink); text-decoration-color: var(--pink); }
 .mini-flower { color: var(--pink); font-size: 1.4375rem; line-height: 1; }
-.footer-goodbye { text-align: right; }
-.footer-goodbye span { color: var(--pink); margin-left: 0.1875rem; }
+.footer-goodbye { display: inline-flex; align-items: center; justify-content: flex-end; gap: 0.35em; text-align: right; }
+.footer-heart { width: 1.2em; height: 1.2em; stroke-width: 1.6; }
 .skip-link { position: fixed; left: 1.25rem; top: 0.625rem; padding: 0.75rem 1.125rem; background: var(--card); color: var(--text); border-radius: 0.5rem; transform: translateY(-150%); z-index: 10; }
 .skip-link:focus { transform: translateY(0); }
 .sr-only { position: absolute; height: 0.0625rem; width: 0.0625rem; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

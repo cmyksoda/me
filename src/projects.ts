@@ -52,16 +52,23 @@ export const projects: Project[] = [
   },
   {
     title: 'Coaster Ranker',
-    description: 'Derived from a Claude Artifact a friend of a friend made and turned into a live service with an expansive image database, Coaster Ranker accounts for the implicit bias of trying to have the right opinion when ranking your favorite roller coasters. After importing your credit list, rank every option pairwise until you have your true ranking. Supports top 10, top 50, and full rankings.',
+    description: 'Rank your favorite roller coasters two at a time, without chasing the “right” opinion. Import your credit list and build a top 10, top 50, or full ranking. Expanded from a Claude Artifact made by a friend of a friend, now including an expansive image database.',
     color: 'pink', art: 'sparkles',
     image: 'projects/coaster-ranker.png', imageAlt: 'Coaster Ranker C/R logo',
     url: 'https://coasters.cmyksoda.cc/',
   },
   {
     title: 'Animal Crossing Desktop Clock Plasmoid',
-    description: 'After the [original application](https://archive.org/details/AnimalCrossingDesktopClock) was surfaced on Twitter by user [@MrTalida](https://x.com/MrTalida), I ported this desktop clock to Linux as a KDE Plasma widget. It is fully functional and includes a replica of the original network test page that this application was distributed with, as well as including new features like 24-hour time support and the ability to toggle the colon blinking animation on and off.',
+    description: 'I brought the [original Animal Crossing desktop clock](https://archive.org/details/AnimalCrossingDesktopClock), rediscovered by [@MrTalida](https://x.com/MrTalida), to Linux as a KDE Plasma widget. Includes a replica of its network test page, plus 24-hour time, the option to turn off the blinking colon, and other new features and settings.',
     color: 'lilac', art: 'disc',
     image: 'projects/animal-crossing-clock.png', imageAlt: 'Animal Crossing desktop clock with circular date and time digits',
     url: 'https://github.com/cmyksoda/AC-Desktop-Clock-Plasmoid',
+  },
+  {
+    title: 'WiiRadio Stream Bridge',
+    description: 'Brings modern internet radio to WiiRadio, a long-abandoned Nintendo Wii homebrew app. A simple web interface converts streams into Wii-compatible audio and generates .pls playlists for easy playback.',
+    color: 'cyan', art: 'disc',
+    image: 'projects/wiiradio-stream-bridge.webp', imageAlt: 'WiiRadio Stream Bridge logo',
+    url: 'https://github.com/cmyksoda/wiiradio-stream-bridge',
   },
 ];
