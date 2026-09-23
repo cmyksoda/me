@@ -24,14 +24,14 @@ export const projects: Project[] = [
   },
   {
     title: 'WiiEAS',
-    description: 'A cute little homebrew application for playing recent and live emergency alert broadcasts from the United States. Displays them in DASDEC style, and supports live mode, where new alerts will play automatically.',
+    description: 'A cute little homebrew application for playing recent and live emergency alert broadcasts from the United States using the [GlobalEAS Central Alert Repository](https://alerts.globaleas.org/) API. It displays them in DASDEC style and supports live mode, where new alerts will play automatically.',
     color: 'cyan', art: 'sparkles',
     image: 'projects/wiieas.png', imageAlt: 'WiiEAS logo', roundedImage: true,
     url: 'https://github.com/cmyksoda/WiiEAS',
   },
   {
     title: 'Tanka',
-    description: 'Work-in-progress. An operating system based on Haiku that seeks to run natively on the Nintendo Wii.',
+    description: 'Work-in-progress. An operating system based on Haiku that seeks to run natively on the Nintendo Wii, using [ActionRetro\'s Tabby for PowerPC](https://github.com/ActionRetro/Tabby-PPC) as a baseline.',
     color: 'lilac', art: 'window',
     image: 'projects/tanka.png', imageAlt: 'Tanka logo', roundedImage: true,
     url: 'https://github.com/cmyksoda/Tanka',
@@ -52,7 +52,7 @@ export const projects: Project[] = [
   },
   {
     title: 'Coaster Ranker',
-    description: 'Derived from a Claude Artifact a friend of a friend made and turned into a live service with a large image database, Coaster Ranker accounts for the implicit bias of trying to have the right opinion when ranking your favorite roller coasters. After importing your credit list, rank every option pairwise until you have your true ranking. Supports top 10, top 50, and full rankings.',
+    description: 'Derived from a Claude Artifact a friend of a friend made and turned into a live service with an expansive image database, Coaster Ranker accounts for the implicit bias of trying to have the right opinion when ranking your favorite roller coasters. After importing your credit list, rank every option pairwise until you have your true ranking. Supports top 10, top 50, and full rankings.',
     color: 'pink', art: 'sparkles',
     image: 'projects/coaster-ranker.png', imageAlt: 'Coaster Ranker C/R logo',
     url: 'https://coasters.cmyksoda.cc/',
