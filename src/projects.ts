@@ -33,7 +33,7 @@ export const projects: Project[] = [
   },
   {
     title: 'Tanka',
-    description: 'Work-in-progress. An operating system based on Haiku that seeks to run natively on the Nintendo Wii, using [ActionRetro\'s Tabby for PowerPC](https://github.com/ActionRetro/Tabby-PPC) as a baseline.',
+    description: 'Work-in-progress. An operating system based on Haiku, the free and open-source spiritual successor to BeOS. Runs natively on the Nintendo Wii, using [ActionRetro\'s Tabby for PowerPC](https://github.com/ActionRetro/Tabby-PPC) as a baseline.',
     color: 'lilac', art: 'window',
     image: 'projects/tanka.png', imageAlt: 'Tanka logo', roundedImage: true,
     url: 'https://github.com/cmyksoda/Tanka',
