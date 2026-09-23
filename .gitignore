@@ -2,5 +2,6 @@ node_modules/
 dist/
 .DS_Store
 .vite/
+.wrangler/
 .qa/
 project-notes/

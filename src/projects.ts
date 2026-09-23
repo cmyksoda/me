@@ -40,7 +40,7 @@ export const projects: Project[] = [
   },
   {
     title: 'Sump.Stream',
-    description: '24/7 synchronous broadcast of (almost) every sump on YouTube. Why? Sump.\n\nVideos collected through extensive sump-related YouTube searches are shuffled daily using a shared seed. The current time determines where everyone tunes into the broadcast. The site is fully static, with no broadcast server to run.',
+    description: '24/7 synchronous broadcast of (almost) every sump on YouTube. Why? Sump.\nVideos collected through extensive sump-related YouTube searches are shuffled daily using a shared seed. The current time determines where everyone tunes into the broadcast. The site is fully static, with no broadcast server to run.',
     color: 'cyan', art: 'orbit',
     image: '', imageAlt: '', emoji: '💧',
     url: 'https://sump.stream/',
