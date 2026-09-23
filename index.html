@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="cmyksoda's little corner of the internet. projects, music, and things made for fun." />
+    <meta name="theme-color" content="#ffffff" />
+    <meta property="og:title" content="cmyksoda — my little corner of the internet" />
+    <meta property="og:description" content="projects, music, and things made for fun." />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <title>cmyksoda — my little corner of the internet</title>
+    <script>
+      let savedTheme;
+      try { savedTheme = localStorage.getItem('cmyksoda-theme'); } catch {}
+      const theme = savedTheme === 'dark' || savedTheme === 'light'
+        ? savedTheme
+        : window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.dataset.theme = theme;
+      document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#14151b' : '#ffffff';
+    </script>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#projects">skip to projects</a>
+    <div class="site-shell">
+      <header class="site-header">
+        <a class="blog-link" href="https://blog.cmyksoda.cc/">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4.5h6a3 3 0 0 1 3 3V21a4 4 0 0 0-4-2H4z"/><path d="M13 7.5a3 3 0 0 1 3-3h5V19h-4a4 4 0 0 0-4 2"/><path d="M7 8h3M7 11h3M16 8h2M16 11h2"/></svg>
+          <span>the blog</span><span class="small-arrow" aria-hidden="true">↗</span>
+        </a>
+        <span class="header-colors" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <button class="theme-toggle" type="button" aria-label="switch to dark mode" aria-pressed="false">
+          <svg class="moon-icon" viewBox="0.2 -0.45 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7Z"/><path d="M17 3v4m-2-2h4"/></svg>
+          <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>
+        </button>
+      </header>
+
+      <main>
+        <section class="profile" aria-labelledby="profile-name">
+          <div class="avatar-scene">
+            <span class="sparkle sparkle-pink" aria-hidden="true">✦</span>
+            <span class="sparkle sparkle-cyan" aria-hidden="true">✧</span>
+            <span class="little-dot" aria-hidden="true"></span>
+            <div class="avatar-frame"><img class="avatar" src="./avatar.png" width="120" height="120" alt="cmyksoda's colorful anime avatar with pink hair and a cyan bow" fetchpriority="high" /></div>
+            <span class="hello-sticker">hi, i'm jaxi! <span aria-hidden="true">♡</span></span>
+          </div>
+          <h1 id="profile-name">cmyk<span>soda</span><span class="name-dot" aria-hidden="true">.</span></h1>
+          <p class="profile-bio">just a girl using the computer for fun <span class="smiley">:)</span></p>
+          <nav class="social-links" aria-label="find me elsewhere">
+            <a href="https://github.com/cmyksoda" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .8a11.4 11.4 0 0 0-3.6 22.2c.6.1.8-.2.8-.5v-2c-3.3.7-4-1.4-4-1.4-.5-1.4-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.7.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-5.7 0-1.2.4-2.3 1.2-3.1-.1-.3-.5-1.6.1-3.2 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0C17 5 18 5.3 18 5.3c.6 1.6.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.1 0 4.4-2.8 5.4-5.5 5.7.4.4.8 1.1.8 2.2v3c0 .3.2.6.8.5A11.4 11.4 0 0 0 12 .8Z"/></svg>
+              github<span class="social-arrow" aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span>
+            </a>
+            <a href="https://serifmusic.bandcamp.com/" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m8.3 5-8 14h15.4l8-14Z"/></svg>
+              bandcamp<span class="social-arrow" aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span>
+            </a>
+            <a href="https://x.com/cmyksoda" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23 4.7c-.8.4-1.7.6-2.6.7a4.5 4.5 0 0 0 2-2.5c-.9.5-1.9.9-2.9 1.1a4.5 4.5 0 0 0-7.7 4.1A12.8 12.8 0 0 1 2.5 3.4a4.5 4.5 0 0 0 1.4 6c-.7 0-1.4-.2-2-.6v.1c0 2.2 1.5 4 3.6 4.4-.7.2-1.4.2-2 .1a4.5 4.5 0 0 0 4.2 3.1A9 9 0 0 1 1 18.4a12.7 12.7 0 0 0 19.6-10.7v-.6c.9-.7 1.7-1.5 2.4-2.4Z"/></svg>
+              twitter<span class="social-arrow" aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span>
+            </a>
+          </nav>
+        </section>
+
+        <section class="projects-section" id="projects" aria-labelledby="projects-heading">
+          <div class="section-heading">
+            <h2 id="projects-heading">my little projects <span class="project-count" aria-label="7 projects">7</span></h2>
+          </div>
+          <div class="project-grid" id="project-grid"></div>
+          <noscript><p class="noscript-note">a few things are still finding their home here. in the meantime, <a href="https://github.com/cmyksoda">visit my projects on github ↗</a></p></noscript>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <div class="footer-signature"><span class="mini-flower" aria-hidden="true">✳</span><a class="footer-source" href="https://github.com/cmyksoda/me" target="_blank" rel="noopener noreferrer">source<span class="sr-only"> (opens in a new tab)</span></a></div>
+        <span class="footer-goodbye">thanks for stopping by <span aria-hidden="true">♡</span></span>
+      </footer>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
