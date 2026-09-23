@@ -51,11 +51,16 @@ function createProjectCard(project: Project) {
     cover.setAttribute('aria-hidden', 'true');
   };
   if (project.image) {
+    if (project.imageWidth) cover.style.setProperty('--image-width', `${project.imageWidth}px`);
     const img = document.createElement('img');
     img.src = `${import.meta.env.BASE_URL}${project.image.replace(/^\//, '')}`;
     img.alt = project.imageAlt;
     if (project.roundedImage) img.classList.add('rounded-image');
     if (project.imageScale) img.style.setProperty('--image-scale', String(project.imageScale));
+    if (project.imageOffset) {
+      img.style.setProperty('--image-offset-x', `${project.imageOffset[0]}px`);
+      img.style.setProperty('--image-offset-y', `${project.imageOffset[1]}px`);
+    }
     img.loading = 'lazy';
     img.decoding = 'async';
     img.addEventListener('load', () => {

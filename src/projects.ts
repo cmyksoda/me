@@ -10,6 +10,8 @@ export type Project = {
   roundedImage?: boolean;
   /** Display zoom for icons with transparent padding. */
   imageScale?: number;
+  imageOffset?: [number, number];
+  imageWidth?: number;
   emoji?: string;
   url: string;
 };
@@ -61,14 +63,14 @@ export const projects: Project[] = [
     title: 'Animal Crossing Desktop Clock Plasmoid',
     description: 'I brought the [original Animal Crossing desktop clock](https://archive.org/details/AnimalCrossingDesktopClock), rediscovered by [@MrTalida](https://x.com/MrTalida), to Linux as a KDE Plasma widget. Includes a replica of its network test page, plus 24-hour time, the option to turn off the blinking colon, and other new features and settings.',
     color: 'lilac', art: 'disc',
-    image: 'projects/animal-crossing-clock.png', imageAlt: 'Animal Crossing desktop clock with circular date and time digits',
+    image: 'projects/animal-crossing-clock.png', imageAlt: 'Animal Crossing desktop clock with circular date and time digits', imageScale: 1.17, imageOffset: [-6, -2],
     url: 'https://github.com/cmyksoda/AC-Desktop-Clock-Plasmoid',
   },
   {
     title: 'WiiRadio Stream Bridge',
     description: 'Brings modern internet radio to WiiRadio, a long-abandoned Nintendo Wii homebrew app. A simple web interface converts streams into Wii-compatible audio and generates .pls playlists for easy playback.',
     color: 'cyan', art: 'disc',
-    image: 'projects/wiiradio-stream-bridge.webp', imageAlt: 'WiiRadio Stream Bridge logo',
+    image: 'projects/wiiradio-stream-bridge.webp', imageAlt: 'WiiRadio Stream Bridge logo', imageScale: 1.02, imageOffset: [2, 0.6], imageWidth: 200,
     url: 'https://github.com/cmyksoda/wiiradio-stream-bridge',
   },
 ];
