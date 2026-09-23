@@ -19,7 +19,7 @@ export type Project = {
 export const projects: Project[] = [
   {
     title: 'VectrexWii',
-    description: 'Wii port of Vecx, a Vectrex emulator. I picked up this project after it had been abandoned by its original developer, Aruskano for over a decade; it now comes with all of the originally released Vectrex games, some mods and demos, every official overlay, and *sound support*, which had been a missing feature since the project had stopped development in 2014.',
+    description: 'Wii port of Vecx, a Vectrex emulator. I picked up this project after it had been abandoned by its original developer, Aruskano, for over a decade; it now comes with all of the originally released Vectrex games, some mods and demos, every official overlay, and *sound support*, which had been a missing feature since the project had stopped development in 2014.',
     color: 'pink', art: 'window',
     image: 'projects/vectrexwii.png', imageAlt: 'VectrexWii logo', roundedImage: true,
     url: 'https://github.com/cmyksoda/vectrexwii',
