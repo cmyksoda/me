@@ -4,7 +4,8 @@
   font-size: 120%;
   font-family: 'Outfit Variable', 'Trebuchet MS', sans-serif;
   color: #303139;
-  background: #fff;
+  /* Mobile browsers show this under a sliding toolbar or on fast scrolls, so it follows the theme. */
+  background: var(--page);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
