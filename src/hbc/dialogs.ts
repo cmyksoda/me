@@ -208,7 +208,7 @@ function splitLink(w: Widget, url: string): Link | null {
 }
 
 /** Whether the pointer is on the About text's source link, which lights up while it is. */
-export function pointingAtSourceLink(v: View): boolean {
+function pointingAtSourceLink(v: View): boolean {
   const link = sourceLink;
   const credits = v.widgets[2];
   if (!link || !credits) return false;
