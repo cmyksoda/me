@@ -8,7 +8,9 @@ import { parseU8 } from './lyt/u8';
 /** The page's folder, so assets resolve the same at /wii-forwarders and /wii-forwarders/. */
 export const root = new URL(location.pathname.endsWith('/') || location.pathname.endsWith('.html') ? '.' : `${location.pathname}/`, location.href);
 
-const MENU_ARCHIVES = ['chanSel', 'chanTtl', 'cmnBtn', 'cursor', 'balloon', 'board', 'letter'] as const;
+const MENU_ARCHIVES = [
+  'chanSel', 'chanTtl', 'cmnBtn', 'cursor', 'balloon', 'board', 'letter', 'dlgWdw', 'sdButton', 'sdChanSel', 'sdChanTtl',
+] as const;
 const FONTS = ['RevoIpl_RodinNTLGPro_DB_32_I4', 'RevoIpl_UtrilloProGrecoStd_M_32_I4', 'RevoIpl_RodinNTLGPro_DB_48_IA4'];
 
 export type MenuArchive = (typeof MENU_ARCHIVES)[number];
@@ -50,18 +52,43 @@ async function fetchBytes(path: string): Promise<Uint8Array> {
   return new Uint8Array(await response.arrayBuffer());
 }
 
-export interface Channel {
+/** What every channel carries: its title id, its name and the icon and banner from its WAD. */
+export interface ChannelBase {
   id: string;
   name: string;
-  repo: string;
   icon: Archive;
   banner: Archive;
+}
+
+export interface Channel extends ChannelBase {
+  repo: string;
+}
+
+/** A channel on the SD Card Menu; its WAD's link is null until the WAD is posted. */
+export interface SdChannel extends ChannelBase {
+  download: string | null;
 }
 
 export interface Assets {
   menu: Record<MenuArchive, Archive>;
   messages: Record<string, string>;
   channels: Channel[];
+  sdChannels: SdChannel[];
+}
+
+/** Every channel listed in `<folder>.json`, with the icon and banner unpacked into `<folder>/<id>/`. */
+async function loadChannels<T extends ChannelBase>(folder: string): Promise<T[]> {
+  const list: Omit<T, 'icon' | 'banner'>[] = await (await fetch(new URL(`${folder}.json`, root))).json();
+  return Promise.all(list.map(async (entry) => {
+    const [icon, banner] = await Promise.all(
+      ['icon.bin', 'banner.bin'].map((file) => fetchBytes(`${folder}/${entry.id}/${file}`)),
+    );
+    return {
+      ...entry,
+      icon: new Archive(parseU8(unwrapChannelFile(icon))),
+      banner: new Archive(parseU8(unwrapChannelFile(banner))),
+    } as T;
+  }));
 }
 
 export async function loadAssets(renderer: Renderer): Promise<Assets> {
@@ -71,16 +98,6 @@ export async function loadAssets(renderer: Renderer): Promise<Assets> {
   }));
   await Promise.all(FONTS.map((font) => renderer.loadFont(font, new URL(`menu/fonts/${font}`, root).href)));
   const messages = await (await fetch(new URL('menu/messages.json', root))).json();
-  const list: { id: string; name: string; repo: string }[] = await (await fetch(new URL('channels.json', root))).json();
-  const channels = await Promise.all(list.map(async (entry) => {
-    const [icon, banner] = await Promise.all(
-      ['icon.bin', 'banner.bin'].map((file) => fetchBytes(`channels/${entry.id}/${file}`)),
-    );
-    return {
-      ...entry,
-      icon: new Archive(parseU8(unwrapChannelFile(icon))),
-      banner: new Archive(parseU8(unwrapChannelFile(banner))),
-    };
-  }));
-  return { menu: Object.fromEntries(menuEntries) as Record<MenuArchive, Archive>, messages, channels };
+  const [channels, sdChannels] = await Promise.all([loadChannels<Channel>('channels'), loadChannels<SdChannel>('sd-channels')]);
+  return { menu: Object.fromEntries(menuEntries) as Record<MenuArchive, Archive>, messages, channels, sdChannels };
 }

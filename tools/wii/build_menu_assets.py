@@ -20,7 +20,8 @@ import wii_formats as wii
 
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT = ROOT / "public/wii-forwarders/menu"
-ARCHIVES = ["chanSel", "chanTtl", "cmnBtn", "cursor", "balloon", "board", "letter", "calendar", "dlgWdw"]
+ARCHIVES = ["chanSel", "chanTtl", "cmnBtn", "cursor", "balloon", "board", "letter", "calendar", "dlgWdw", "sdButton",
+            "sdChanSel", "sdChanTtl"]
 
 # Layouts name their fonts; the menu binds those names to the console's shared system fonts.
 SHARED_FONTS = {
