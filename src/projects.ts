@@ -31,7 +31,7 @@ export type Room = {
 export const rooms: Room[] = [
   {
     title: 'Wii Forwarder Channels',
-    description: 'Every forwarder channel I\'ve released, on a Wii Menu you can click around in. Open a channel to watch its banner, or hold the right mouse button to move it to another slot.',
+    description: 'Every forwarder channel I\'ve released, on a Wii Menu.',
     color: 'cyan',
     image: 'projects/wii-forwarders.webp',
     imageAlt: 'The Wii Menu, with cmyksoda\'s forwarder channels in its slots',
@@ -39,7 +39,7 @@ export const rooms: Room[] = [
   },
   {
     title: 'Wii Homebrew Apps',
-    description: 'My homebrew apps for the Wii, in the Homebrew Channel. Pick one to read about it and download it.',
+    description: 'My homebrew apps for the Wii, in the Homebrew Channel.',
     color: 'pink',
     image: 'projects/wii-homebrew.webp',
     imageAlt: 'The Homebrew Channel, listing cmyksoda\'s Wii homebrew apps',

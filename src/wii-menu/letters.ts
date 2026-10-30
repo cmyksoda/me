@@ -27,9 +27,6 @@ export const letters: Letter[] = [
     body: [
       'Welcome to my Wii Menu! Every channel here is a forwarder I made: a little Wii Menu channel '
         + 'that opens a homebrew app from your SD card, with its own icon, banner and sound.',
-      'Click a channel to see its banner, then Download to visit its repository on GitHub. '
-        + 'Hold the right mouse button on a channel to carry it to another slot, like holding A and B '
-        + 'on a Wii Remote.',
       'All of my forwarder channels are listed here:\ngithub.com/cmyksoda/Wii-Forwarders',
       'Have fun!\njaxi',
     ].join('\n\n'),
