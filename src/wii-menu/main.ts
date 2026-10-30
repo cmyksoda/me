@@ -62,7 +62,7 @@ canvas.addEventListener('wheel', (event) => {
 // Holding the right button is holding B, so the browser's own menu stays out of the way.
 canvas.addEventListener('contextmenu', (event) => event.preventDefault());
 
-const debug = { capture: false, png: '', menu, renderer, pointer };
+const debug = { capture: false, png: '', menu, renderer, pointer, sound };
 let last = performance.now();
 function frame(now: number) {
   // The menu runs at 60 updates per second whatever the display's refresh rate.

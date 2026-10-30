@@ -137,7 +137,9 @@ export class Sound {
     this.stopBanner();
     const request = ++this.bannerRequest;
     void (async () => {
-      const info = await fetch(new URL(`channels/${channel.id}/sound.json`, root)).then((r) => (r.ok ? r.json() : null));
+      const info = await fetch(new URL(`channels/${channel.id}/sound.json`, root))
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null);
       const buffer = info && (await this.load(`channels/${channel.id}/sound.flac`));
       // A newer request (or a stop) while this one loaded wins.
       if (!buffer || !this.enabled || request !== this.bannerRequest) return;
