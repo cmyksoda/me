@@ -9,7 +9,7 @@ channel, and the banner sound decoded by convert_channel_sound.py (its sound.bin
     public/wii-forwarders/sd-channels/<TITLE ID>/sound.flac   with sound.json
 
 plus public/wii-forwarders/sd-channels.json, in SD Card Menu order. The WADs are copies taken
-from the SD card of Jaxi's Wii; the Super Mario Bros. one is also on the Internet Archive.
+from the SD card of Jaxi's Wii. Download opens each WAD's Internet Archive page.
 
 usage: python3 tools/wii/sync_sd_channels.py
 """
@@ -23,13 +23,11 @@ from convert_channel_sound import convert
 from sync_channels import CACHE, ENGLISH, OUTPUT, ROOT, channel_names, read_u8, read_wad, unwrap
 
 WADS = ROOT / "project-data/sd-channels-src/sd-card"
-ARCHIVE = "https://archive.org/download/super-mario-bros.-25th-anniversary-en-banner-ntsc-60-hz/"
-
 # A channel without a download link waits for its WAD to be published.
 CHANNELS = [
     {
         "wad": WADS / "Super Mario Bros. 25th Anniversary (NTSC 60Hz) - FFXP [cmyksoda].wad",
-        "download": ARCHIVE + "Super%20Mario%20Bros.%2025th%20Anniversary%20(EN%20Banner%2C%20NTSC%2060Hz).wad",
+        "download": "https://archive.org/details/super-mario-bros.-25th-anniversary-en-banner-ntsc-60-hz",
     },
     {"wad": WADS / "Internet Channel (NetSurf) - HADE [cmyksoda].wad", "download": None},
     {"wad": WADS / "Forecast Channel (Japanese Symbols) - HAFE [cmyksoda].wad", "download": None},
