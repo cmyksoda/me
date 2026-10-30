@@ -34,6 +34,11 @@ export class Scenes {
     menu.grid.onOptions = () => {
       this.sound.setEnabled(!this.sound.enabled);
       footer.setSound(this.sound.enabled);
+      // Banner sounds load once sound is on, so each preview's can start with its picture.
+      this.sound.preloadBanners([
+        ...this.assets.channels.map((channel) => `channels/${channel.id}`),
+        ...this.assets.sdChannels.map((channel) => `sd-channels/${channel.id}`),
+      ]);
     };
     menu.grid.onSd = () => this.leave('sd');
     return menu;
@@ -55,6 +60,7 @@ export class Scenes {
         const { sdChanTtl } = this.assets.menu;
         this.renderer.prepare(sdChanTtl.layout('mn_SdcardMenuBanner_bc'), sdChanTtl.files);
         for (const channel of this.assets.sdChannels) this.renderer.prepare(channel.banner.layout('banner'), channel.banner.files);
+        this.sound.preloadBanners(this.assets.sdChannels.map((channel) => `sd-channels/${channel.id}`));
       }, () => (this.sdFiles = 'failed'));
     }
   }

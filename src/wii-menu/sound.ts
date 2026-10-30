@@ -33,6 +33,14 @@ interface Hold {
   controls: HoldControls;
 }
 
+/** A banner sound's sound.json. */
+interface BannerInfo {
+  gain?: number;
+  loop?: boolean;
+  loopStart?: number;
+  loopEnd?: number;
+}
+
 interface StartOptions {
   loop?: { start?: number; end?: number };
   pan?: { cue: Cue; value: number };
@@ -102,6 +110,8 @@ export class Sound {
   private booted = false;
   private banner: Voice | null = null;
   private bannerRequest = 0;
+  private readonly bannerSounds = new Map<string, Promise<{ info: BannerInfo; buffer: AudioBuffer } | null>>();
+  private readonly settledBanners = new Set<string>();
 
   /** Browsers only let audio start inside a click, so every press comes through here first. */
   unlock(): void {
@@ -284,24 +294,54 @@ export class Sound {
 
   /**
    * A channel's banner sound, `sound.flac` and `sound.json` in its folder (written by
-   * tools/wii/convert_channel_sound.py), starting `delayFrames` updates from now.
+   * tools/wii/convert_channel_sound.py), fetched and decoded once.
    */
+  private bannerSound(folder: string) {
+    let sound = this.bannerSounds.get(folder);
+    if (!sound) {
+      sound = fetch(new URL(`${folder}/sound.json`, root))
+        .then((r) => (r.ok ? (r.json() as Promise<BannerInfo>) : null))
+        .catch(() => null)
+        .then(async (info) => {
+          const buffer = info && (await this.load(`${folder}/sound.flac`));
+          return info && buffer ? { info, buffer } : null;
+        })
+        .finally(() => this.settledBanners.add(folder));
+      this.bannerSounds.set(folder, sound);
+    }
+    return sound;
+  }
+
+  /** Gets banner sounds loading one after another, so a preview's sound can start with its picture. */
+  preloadBanners(folders: string[]): void {
+    if (!this.enabled || !this.context) return;
+    void folders.reduce<Promise<unknown>>((before, folder) => before.then(() => this.bannerSound(folder)), Promise.resolve());
+  }
+
+  /** Starts one banner sound loading now, ahead of the others. */
+  prepareBanner(folder: string): void {
+    if (this.enabled && this.context) void this.bannerSound(folder);
+  }
+
+  /** True once a banner's sound can start at once, or when there's nothing to wait for. */
+  bannerReady(folder: string): boolean {
+    return !this.enabled || !this.context || this.settledBanners.has(folder);
+  }
+
+  /** Starts a channel's banner sound `delayFrames` updates from now. */
   playBanner(folder: string, delayFrames = 0): void {
     if (!this.enabled || !this.context) return;
     this.stopBanner();
     const request = ++this.bannerRequest;
-    void (async () => {
-      const info = await fetch(new URL(`${folder}/sound.json`, root))
-        .then((r) => (r.ok ? r.json() : null))
-        .catch(() => null);
-      const buffer = info && (await this.load(`${folder}/sound.flac`));
+    void this.bannerSound(folder).then((sound) => {
       // A newer request (or a stop) while this one loaded wins.
-      if (!buffer || !this.enabled || request !== this.bannerRequest) return;
+      if (!sound || !this.enabled || request !== this.bannerRequest) return;
+      const { info, buffer } = sound;
       this.banner = this.start(buffer, info.gain ?? 1, {
         loop: info.loop ? { start: info.loopStart, end: info.loopEnd } : undefined,
         delay: delayFrames * UPDATE,
       });
-    })();
+    });
   }
 
   /** Stops the banner sound, at once or over `frames` updates. */

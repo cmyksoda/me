@@ -68,6 +68,7 @@ export class Menu {
 
   private close(): void {
     const preview = this.preview!;
+    preview.halt();
     this.grid.showPage(this.grid.locate(preview.channel).page);
     this.slotRect = this.rectFor(preview.channel);
     this.grid.zoomMask(false);
