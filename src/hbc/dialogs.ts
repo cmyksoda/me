@@ -19,12 +19,12 @@ const notice = [
   'About this page',
   '',
   "This page recreates the Homebrew Channel in your browser to list cmyksoda's Wii homebrew apps. "
-    + 'Its code is free software under the GNU AGPLv3.',
+    + "The page's code is free software under the GNU AGPLv3.",
   '',
   `Source code: ${SOURCE_URL}`,
   '',
-  "The Homebrew Channel's graphics and fonts come from its open source release by Team Twiizers, "
-    + 'under the GNU GPLv2 or later. The Droid Sans fonts are by Google, under the Apache License 2.0.',
+  "The Homebrew Channel's graphics come from its open source release by Team Twiizers, "
+    + 'under the GNU GPLv2 or later. Its Droid Sans fonts are by Google, under the Apache License 2.0.',
   '',
   'Not affiliated with Nintendo or Team Twiizers. Wii is a trademark of Nintendo.',
 ].join('\n');
