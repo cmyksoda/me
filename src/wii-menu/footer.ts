@@ -6,7 +6,19 @@ import { AnimationPlayer, identity, type LayoutInstance, type PaneNode } from '.
 import type { Renderer } from './lyt/renderer';
 import type { Sound } from './sound';
 
-export type FooterTarget = 'options' | 'board' | 'left' | 'right' | 'sd';
+export type FooterTarget = 'options' | 'board' | 'left' | 'right' | 'sd' | 'calendar' | 'create' | 'menu' | 'back' | 'trash';
+
+type Mode = 'grid' | 'board' | 'reader';
+
+// Footer buttons with a text balloon, and the bounding pane that is each one's hit area.
+const BUTTONS: Partial<Record<FooterTarget, string>> = {
+  options: 'B_Set', board: 'B_Bbs', calendar: 'B_Cal', create: 'B_Add', menu: 'B_Ch', back: 'B_CalExit', trash: 'B_Dust',
+};
+const TARGETS: Record<Mode, FooterTarget[]> = {
+  grid: ['sd', 'options', 'board', 'left', 'right'],
+  board: ['calendar', 'create', 'menu'],
+  reader: ['back', 'trash'],
+};
 
 const BALLOON_DELAY = 16;
 const NEW_MAIL_EVERY = 3000;
@@ -25,7 +37,9 @@ export class Footer {
   private readonly layout: LayoutInstance;
   private readonly sd: LayoutInstance;
   private readonly clips = new Map<string, AnimationPlayer>();
-  private readonly balloons: Record<'options' | 'board' | 'sd', Balloon>;
+  private readonly balloons: Partial<Record<FooterTarget, Balloon>>;
+  private mode: Mode = 'grid';
+  private queue: AnimationPlayer[] = [];
   private readonly arrowShown = { left: false, right: false };
   private mailCount = 0;
   private newMailSince: number | null = null;
@@ -57,6 +71,29 @@ export class Footer {
     range('pressBoard', group('G_Bbs'), 1000, 1020);
     range('mail', group('G_BbsSignal'), 1, 400, true);
     range('newMail', group('G_BbsSignal_new'), 1, 160);
+    // Board transitions: each range moves only the panes it has keys for, as its group binding does.
+    const keyed = (name: string, from: number, to: number) => {
+      this.clips.set(name, new AnimationPlayer(footer, this.layout, { from, to, keyedOnly: true }));
+    };
+    keyed('toBoard', 1000, 1040);
+    keyed('toGrid', 6000, 6040);
+    keyed('lettersOut', 3100, 3113);
+    keyed('readerIn', 3600, 3613);
+    keyed('backPress', 3000, 3020);
+    keyed('readerOut', 3620, 3633);
+    keyed('lettersIn', 3426, 3439);
+    for (const [name, groupName, inFrom, inTo, outFrom, outTo] of [
+      ['Calendar', 'G_Cal', 1900, 1906, 1930, 1938],
+      ['Create', 'G_Add', 3900, 3906, 3930, 3938],
+      ['Menu', 'G_Ch', 5900, 5906, 5930, 5938],
+      ['Back', 'G_CalExit', 2900, 2906, 2930, 2938],
+      ['Trash', 'G_Dust', 2900, 2909, 2930, 2938],
+    ] as const) {
+      range(`point${name}`, group(groupName), inFrom, inTo);
+      range(`leave${name}`, group(groupName), outFrom, outTo);
+    }
+    this.layout.pane('T_CalExit').text = assets.messages['315'];
+    this.layout.pane('T_Dust').text = assets.messages['40'];
     this.clips.get('arrowLoop')!.play();
     this.clips.get('mail')!.seek(0);
 
@@ -66,19 +103,62 @@ export class Footer {
     this.clips.set('sdLoop', sdClip('On_Roop', true).play());
     this.clips.set('sdPoint', sdClip('BtnL_RollOver'));
     this.clips.set('sdLeave', sdClip('BtnL_RollOut'));
+    this.clips.set('sdOut', sdClip('BtnL_Out'));
     this.sd.pane('N_Btn_On').visible = false;
 
-    this.balloons = {
-      options: new Balloon(balloon, sound, BALLOON_DELAY, true),
-      board: new Balloon(balloon, sound, BALLOON_DELAY, true),
-      sd: new Balloon(balloon, sound, BALLOON_DELAY, true),
-    };
-    this.balloons.board.setText(renderer, assets.messages['15']);
-    this.balloons.sd.setText(renderer, assets.messages['161']);
+    const labels: [FooterTarget, string][] = [['board', '15'], ['sd', '161'], ['calendar', '17'], ['create', '18'], ['menu', '16']];
+    this.balloons = { options: new Balloon(balloon, sound, BALLOON_DELAY, true) };
+    for (const [target, message] of labels) {
+      const label = new Balloon(balloon, sound, BALLOON_DELAY, true);
+      label.setText(renderer, assets.messages[message]);
+      this.balloons[target] = label;
+    }
+  }
+
+  private play(name: string, backward = false): void {
+    this.clips.get(name)!.play(backward);
+  }
+
+  /** Plays clips one after another, as the footer's queued scene animations do. */
+  private sequence(...names: string[]): void {
+    this.queue = names.map((name) => this.clips.get(name)!);
+    this.queue[0].play();
+  }
+
+  /** Footer transitions lock its buttons until they finish (Button::isActive). */
+  get busy(): boolean {
+    return this.queue.length > 0 || ['toBoard', 'toGrid'].some((name) => this.clips.get(name)!.playing);
+  }
+
+  enterBoard(): void {
+    this.releaseAll();
+    this.mode = 'board';
+    this.play('toBoard');
+    this.play('sdOut');
+    this.setArrows(false, false);
+  }
+
+  openLetter(): void {
+    this.releaseAll();
+    this.mode = 'reader';
+    this.sequence('lettersOut', 'readerIn');
+  }
+
+  closeLetter(): void {
+    this.releaseAll();
+    this.mode = 'board';
+    this.sequence('backPress', 'readerOut', 'lettersIn');
+  }
+
+  leaveBoard(): void {
+    this.releaseAll();
+    this.mode = 'grid';
+    this.play('toGrid');
+    this.play('sdOut', true);
   }
 
   setSoundLabel(on: boolean): void {
-    this.balloons.options.setText(this.renderer, on ? 'Sound: On' : 'Sound: Off');
+    this.balloons.options!.setText(this.renderer, on ? 'Sound: On' : 'Sound: Off');
   }
 
   /** Shows or hides each page arrow at once, as initArrowAppearance does at startup. */
@@ -121,36 +201,45 @@ export class Footer {
 
   /** Which footer control the pointer is over, in the order the GUI manager resolves them. */
   hit(x: number, y: number): FooterTarget | null {
-    const panes: [FooterTarget, PaneNode][] = [
-      ['sd', this.sd.pane('N_Btn')],
-      ['options', this.layout.pane('B_Set')],
-      ['board', this.layout.pane('B_Bbs')],
-      ['left', this.layout.pane('B_ArwL')],
-      ['right', this.layout.pane('B_ArwR')],
-    ];
+    if (this.busy) return null;
+    const pane = (target: FooterTarget): PaneNode => {
+      if (target === 'sd') return this.sd.pane('N_Btn');
+      if (target === 'left' || target === 'right') return this.layout.pane(target === 'left' ? 'B_ArwL' : 'B_ArwR');
+      return this.layout.pane(BUTTONS[target]!);
+    };
     let found: FooterTarget | null = null;
-    for (const [target, pane] of panes) {
+    for (const target of TARGETS[this.mode]) {
       if ((target === 'left' || target === 'right') && !this.arrowShown[target]) continue;
-      if (contains(pane, x, y)) found = target;
+      if (contains(pane(target), x, y)) found = target;
     }
     return found;
+  }
+
+  /** The arrows work in any mode (they page the preview, the grid, or nothing on the board). */
+  hitArrow(x: number, y: number): 'left' | 'right' | null {
+    for (const side of ['left', 'right'] as const) {
+      if (this.arrowShown[side] && contains(this.layout.pane(side === 'left' ? 'B_ArwL' : 'B_ArwR'), x, y)) return side;
+    }
+    return null;
+  }
+
+  private clipName(target: FooterTarget): string {
+    if (target === 'left' || target === 'right') return target === 'left' ? 'L' : 'R';
+    if (target === 'sd') return 'sd';
+    return target[0].toUpperCase() + target.slice(1);
   }
 
   point(target: FooterTarget): void {
     this.hovered = target;
     this.sound.play('WIPL_SE_BT_TARGETTING');
-    if (target === 'left' || target === 'right') this.clips.get(`point${target === 'left' ? 'L' : 'R'}`)!.play();
-    else if (target === 'sd') this.clips.get('sdPoint')!.play();
-    else this.clips.get(target === 'options' ? 'pointOptions' : 'pointBoard')!.play();
-    if (target !== 'left' && target !== 'right') this.balloons[target].point();
+    this.play(target === 'sd' ? 'sdPoint' : `point${this.clipName(target)}`);
+    this.balloons[target]?.point();
   }
 
   leave(target: FooterTarget): void {
     if (this.hovered === target) this.hovered = null;
-    if (target === 'left' || target === 'right') this.clips.get(`leave${target === 'left' ? 'L' : 'R'}`)!.play();
-    else if (target === 'sd') this.clips.get('sdLeave')!.play();
-    else this.clips.get(target === 'options' ? 'leaveOptions' : 'leaveBoard')!.play();
-    if (target !== 'left' && target !== 'right') this.balloons[target].leave();
+    this.play(target === 'sd' ? 'sdLeave' : `leave${this.clipName(target)}`);
+    this.balloons[target]?.leave();
   }
 
   press(target: FooterTarget): void {
@@ -169,12 +258,16 @@ export class Footer {
   /** Lets go of every hover at once, as the menu does when it leaves its normal state. */
   releaseAll(): void {
     if (this.hovered) this.leave(this.hovered);
-    for (const balloon of Object.values(this.balloons)) balloon.hideNow();
+    for (const balloon of Object.values(this.balloons)) balloon!.hideNow();
   }
 
   update(frames: number): void {
     for (const clip of this.clips.values()) clip.step(frames);
-    for (const balloon of Object.values(this.balloons)) balloon.update(frames);
+    if (this.queue.length && !this.queue[0].playing) {
+      this.queue.shift();
+      this.queue[0]?.play();
+    }
+    for (const balloon of Object.values(this.balloons)) balloon!.update(frames);
     if (this.newMailSince !== null && performance.now() - this.newMailSince >= NEW_MAIL_EVERY) {
       this.newMailSince = performance.now();
       this.clips.get('newMail')!.play();
@@ -202,12 +295,12 @@ export class Footer {
     this.renderer.drawLayout(this.layout, (pane) => isUnder(pane, ['N_ArwL', 'N_ArwR']));
     this.renderer.camera = camera;
     const margin = screen.wide ? 120 : 30;
-    for (const [target, pane] of [['options', 'B_Set'], ['board', 'B_Bbs']] as const) {
+    for (const [target, pane] of Object.entries(BUTTONS) as [FooterTarget, string][]) {
       const [x, y] = center(this.layout.pane(pane));
-      this.balloons[target].draw(this.renderer, screen, x, y + 50, margin);
+      this.balloons[target]?.draw(this.renderer, screen, x, y + 50, margin);
     }
     const [sx, sy] = center(this.sd.pane('N_Btn'));
-    this.balloons.sd.draw(this.renderer, screen, sx, sy + 50, screen.wide ? 200 : 110);
+    this.balloons.sd!.draw(this.renderer, screen, sx, sy + 50, screen.wide ? 200 : 110);
   }
 
   get mail(): number {

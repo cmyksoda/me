@@ -1,7 +1,10 @@
 import type { Assets, Channel } from './assets';
+import { Board } from './board';
 import { Cursor } from './cursor';
 import { SCREEN_HEIGHT, type Screen } from './display';
+import type { FooterTarget } from './footer';
 import { ChannelGrid, type Pointer } from './grid';
+import { letters } from './letters';
 import { center } from './lyt/hit';
 import type { Rect, Renderer } from './lyt/renderer';
 import { Preview } from './preview';
@@ -9,15 +12,19 @@ import type { Sound } from './sound';
 
 const ZOOM_FRAMES = 28;
 const FADE_FRAMES = 20;
+const READ_KEY = 'wii-forwarders.read';
 
-type State = 'grid' | 'zoomIn' | 'preview' | 'zoomOut';
+type State = 'grid' | 'zoomIn' | 'preview' | 'zoomOut' | 'board';
+
+export type MenuPointer = Pointer & { inside: boolean };
 
 /** Smoothstep, as the menu's zero-tangent HermiteIntp. */
 const ease = (t: number) => t * t * (3 - 2 * t);
 
-/** Runs the scenes the way the menu's scene tree does: grid, the zoom, the preview and back. */
+/** Runs the scenes the way the menu's scene tree does: the board under the grid, the zoom, the preview. */
 export class Menu {
   readonly grid: ChannelGrid;
+  readonly board: Board;
   private readonly cursor: Cursor;
   private state: State = 'grid';
   private preview: Preview | null = null;
@@ -26,26 +33,30 @@ export class Menu {
   private slotRect: Rect = [0, 0, 0, 0];
   private screen: Screen | null = null;
 
-  constructor(
-    private readonly assets: Assets,
-    private readonly renderer: Renderer,
-    private readonly sound: Sound,
-  ) {
+  constructor(private readonly assets: Assets, private readonly renderer: Renderer, private readonly sound: Sound) {
     this.grid = new ChannelGrid(assets, renderer, sound);
+    this.board = new Board(assets, renderer, sound, letters);
     this.cursor = new Cursor(assets.menu.cursor);
     this.grid.onSelect = (channel) => this.open(channel);
+    this.grid.onBoard = () => this.openBoard();
+    this.board.onOpened = () => this.grid.footer.openLetter();
+    let read = false;
+    try {
+      read = localStorage.getItem(READ_KEY) === '1';
+    } catch {}
+    this.grid.footer.setMail(this.board.letterCount, !read);
   }
 
-  private rectFor(screen: Screen, channel: Channel): Rect {
+  private rectFor(channel: Channel): Rect {
     const { index } = this.grid.locate(channel);
     const [x, y] = center(this.grid.slotPane(index));
-    const halfWidth = screen.wide ? 85 : 64;
+    const halfWidth = this.screen!.wide ? 85 : 64;
     return [x - halfWidth, y + 48, x + halfWidth, y - 48];
   }
 
   private open(channel: Channel): void {
     this.preview = new Preview(this.assets, this.renderer, this.sound, channel);
-    this.slotRect = this.rectFor(this.screen!, channel);
+    this.slotRect = this.rectFor(channel);
     this.grid.footer.setArrows(false, false);
     this.grid.zoomMask(true);
     this.sound.stopMusic(5);
@@ -56,14 +67,31 @@ export class Menu {
 
   private close(): void {
     const preview = this.preview!;
-    const { page } = this.grid.locate(preview.channel);
-    this.grid.showPage(page);
-    this.slotRect = this.rectFor(this.screen!, preview.channel);
+    this.grid.showPage(this.grid.locate(preview.channel).page);
+    this.slotRect = this.rectFor(preview.channel);
     this.grid.zoomMask(false);
     this.sound.play('WIPL_SE_CH_UNSELECT');
     this.sound.stopBanner(ZOOM_FRAMES);
     this.grid.footer.setArrows(false, false);
     this.state = 'zoomOut';
+  }
+
+  private openBoard(): void {
+    this.state = 'board';
+    this.grid.footer.enterBoard();
+    this.grid.footer.stopNewMail();
+    this.grid.slideAway();
+    this.board.show();
+    try {
+      localStorage.setItem(READ_KEY, '1');
+    } catch {}
+  }
+
+  private closeBoard(): void {
+    this.board.hide();
+    this.grid.footer.leaveBoard();
+    this.grid.slideBack();
+    this.state = 'grid';
   }
 
   /** The Download button must open its link inside the click itself, or browsers block the new tab. */
@@ -72,10 +100,16 @@ export class Menu {
     return this.preview.hit(x, y) === 'download' ? this.preview.channel.repo : null;
   }
 
-  update(frames: number, pointer: Pointer & { inside: boolean }): void {
+  wheel(delta: number): void {
+    this.board.wheel(delta);
+  }
+
+  update(frames: number, pointer: MenuPointer): void {
     const ready = this.fade >= FADE_FRAMES;
     this.fade = Math.min(FADE_FRAMES, this.fade + frames);
-    this.grid.update(frames, pointer, this.state === 'grid' && ready && pointer.inside);
+    const live = ready && pointer.inside;
+    this.grid.update(frames, pointer, this.state === 'grid' && live);
+    this.board.update(frames, pointer, this.state === 'board' && live, this.screen!);
     this.preview?.update(frames);
 
     if (this.state === 'zoomIn') {
@@ -95,18 +129,45 @@ export class Menu {
       }
     } else if (this.state === 'preview') {
       this.updatePreview(pointer);
+    } else if (this.state === 'board' && live) {
+      this.updateBoardFooter(pointer);
     }
   }
 
-  private updatePreview(pointer: Pointer & { inside: boolean }): void {
+  private updateBoardFooter(pointer: MenuPointer): void {
+    const footer = this.grid.footer;
+    if (this.board.bScrolling) return;
+    const target = this.board.state === 'normal' || this.board.state === 'reading' ? footer.hit(pointer.x, pointer.y) : null;
+    if (target !== footer.hovered) {
+      if (footer.hovered) footer.leave(footer.hovered);
+      if (target) footer.point(target);
+    }
+    if (!pointer.aPressed || !target) return;
+    this.pressBoardButton(target);
+  }
+
+  private pressBoardButton(target: FooterTarget): void {
+    const footer = this.grid.footer;
+    if (target === 'menu') {
+      this.sound.play('WIPL_SE_DECIDE');
+      this.closeBoard();
+    } else if (target === 'back') {
+      this.board.closeLetter();
+      footer.closeLetter();
+    } else {
+      // Calendar, Create Message and Trash belong to scenes this page doesn't have.
+      this.sound.play('WIPL_SE_GRAY_BUTTON');
+    }
+  }
+
+  private updatePreview(pointer: MenuPointer): void {
     const preview = this.preview!;
+    const footer = this.grid.footer;
     if (preview.busy || !pointer.inside) {
       preview.release();
       return;
     }
-    const footer = this.grid.footer;
-    const arrow = footer.hit(pointer.x, pointer.y);
-    const side = arrow === 'left' || arrow === 'right' ? arrow : null;
+    const side = footer.hitArrow(pointer.x, pointer.y);
     if (side !== footer.hovered) {
       if (footer.hovered) footer.leave(footer.hovered);
       if (side) footer.point(side);
@@ -131,15 +192,12 @@ export class Menu {
     return full.map((value, i) => value + (this.slotRect[i] - value) * h) as Rect;
   }
 
-  draw(screen: Screen, pointer: Pointer & { inside: boolean }): void {
+  draw(screen: Screen, pointer: MenuPointer): void {
     this.screen = screen;
     const renderer = this.renderer;
-    if (this.state === 'grid') {
-      this.grid.draw(screen);
-    } else if (this.state === 'preview') {
-      this.preview!.draw(screen);
-    } else {
-      // The grid zooms toward the slot while the captured preview fades in over it, black around it.
+    const zooming = this.state === 'zoomIn' || this.state === 'zoomOut';
+    if (zooming) {
+      // setOrthoTransAndScale: the camera frames the rectangle shrinking toward the chosen slot.
       const [left, top, right, bottom] = this.zoomRect();
       renderer.camera = {
         x: (left + right) / 2,
@@ -147,7 +205,17 @@ export class Menu {
         scaleX: screen.width / (right - left),
         scaleY: SCREEN_HEIGHT / (top - bottom),
       };
+    }
+    if (this.state === 'preview') {
+      this.preview!.draw(screen);
+    } else {
+      // Board, then the footer's Button scene, then the grid over both.
+      this.board.draw(screen);
+      this.grid.footer.drawPods(screen);
       this.grid.draw(screen);
+    }
+    if (zooming) {
+      // The captured preview fades in over the slot with black all around it.
       renderer.capture(() => this.preview!.draw(screen));
       const alpha = Math.floor(ease(this.zoom / ZOOM_FRAMES) * 255) / 255;
       const [sl, st, sr, sb] = this.slotRect;
@@ -161,7 +229,10 @@ export class Menu {
       renderer.camera = null;
     }
     this.grid.footer.drawArrows(screen);
-    if (pointer.inside) this.cursor.draw(renderer, screen, pointer.x, pointer.y, false);
+    if (pointer.inside) {
+      if (this.board.bScrolling) this.board.drawCursor(screen, pointer.x, pointer.y);
+      else this.cursor.draw(renderer, screen, pointer.x, pointer.y, false);
+    }
     if (this.fade < FADE_FRAMES) {
       const alpha = 255 - Math.floor((this.fade * 255) / FADE_FRAMES);
       const half = screen.width / 2;
@@ -169,4 +240,3 @@ export class Menu {
     }
   }
 }
-

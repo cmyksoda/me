@@ -1,8 +1,7 @@
 import { loadAssets } from './assets';
 import { measureScreen, SCREEN_HEIGHT, toScreen, type Screen } from './display';
-import type { Pointer } from './grid';
 import { Renderer } from './lyt/renderer';
-import { Menu } from './menu';
+import { Menu, type MenuPointer } from './menu';
 import { Sound } from './sound';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#screen')!;
@@ -24,7 +23,7 @@ for (const channel of assets.channels) {
   links.append(link);
 }
 
-const pointer: Pointer & { inside: boolean } = {
+const pointer: MenuPointer = {
   x: 0, y: 0, a: false, b: false, aPressed: false, sincePress: null, inside: false,
 };
 let screen: Screen = measureScreen(canvas);
@@ -53,6 +52,10 @@ canvas.addEventListener('pointerup', (event) => {
   if (event.button === 0) pointer.a = false;
   else if (event.button === 2) pointer.b = false;
 });
+canvas.addEventListener('wheel', (event) => {
+  event.preventDefault();
+  menu.wheel(event.deltaY * (SCREEN_HEIGHT / screen.viewport[3]) * devicePixelRatio);
+}, { passive: false });
 // Holding the right button is holding B, so the browser's own menu stays out of the way.
 canvas.addEventListener('contextmenu', (event) => event.preventDefault());
 

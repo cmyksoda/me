@@ -176,6 +176,8 @@ export interface PlaybackOptions {
   to?: number;
   /** Wrap at the end instead of stopping; the default is to play once. */
   loop?: boolean;
+  /** Only bind targets with a key inside from–to, as binding the clip's own group would. */
+  keyedOnly?: boolean;
 }
 
 /**
@@ -198,10 +200,12 @@ export class AnimationPlayer {
     this.to = options.to ?? (this.loop ? animation.frameSize : animation.frameSize - 1);
     this.frame = this.from;
     const scope = options.panes ? this.scope(options.panes, options.recursive ?? false) : null;
+    const keyed = (tracks: Track[]) => tracks.some((t) => t.keys.some((k) => k.frame >= this.from && k.frame <= this.to));
     for (const target of animation.targets) {
       const pane = target.isMaterial ? undefined : instance.panes.get(target.name);
       const material = target.isMaterial ? instance.material(target.name) : undefined;
       if (scope && !(pane ? scope.panes.has(pane) : material && scope.materials.has(material))) continue;
+      if (options.keyedOnly && !keyed(target.tracks)) continue;
       if (!pane && !material) continue;
       for (const track of target.tracks) this.bindings.push({ track, pane, material });
     }

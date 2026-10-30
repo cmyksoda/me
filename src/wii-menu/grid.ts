@@ -15,7 +15,6 @@ const DECIDE_AFTER = 5;
 const CHANNEL_BALLOON_DELAY = 20;
 const ORDER_KEY = 'wii-forwarders.order';
 const PAGE_KEY = 'wii-forwarders.page';
-const WEEKDAYS = [116, 110, 111, 112, 113, 114, 115];
 const OTHER_LANGUAGES = ['JPN', 'GER', 'FRA', 'SPA', 'ITA', 'NED', 'CHN', 'KOR'];
 
 export interface Pointer {
@@ -47,7 +46,7 @@ interface Slot {
   balloon: Balloon;
 }
 
-type State = 'normal' | 'scroll' | 'selected';
+type State = 'normal' | 'scroll' | 'selected' | 'away' | 'sliding';
 
 export function translation(x: number, y: number): Mtx34 {
   const m = identity();
@@ -67,7 +66,6 @@ export class ChannelGrid {
   onOptions: (() => void) | null = null;
 
   private readonly top: LayoutInstance;
-  private readonly board: LayoutInstance;
   private readonly clock: Clock;
   private readonly icons = new Map<string, Icon>();
   private readonly statics: { instance: LayoutInstance; clip: AnimationPlayer }[] = [];
@@ -75,12 +73,13 @@ export class ChannelGrid {
   private readonly scroll: Record<'left' | 'right', AnimationPlayer>;
   private readonly mask: AnimationPlayer;
   private masking = false;
+  private readonly slide: Record<'up' | 'down', AnimationPlayer>;
   private scrolling: -1 | 0 | 1 = 0;
   private hoveredSlot = -1;
   private screen: Screen | null = null;
 
   constructor(private readonly assets: Assets, private readonly renderer: Renderer, private readonly sound: Sound) {
-    const { chanSel, board } = assets.menu;
+    const { chanSel } = assets.menu;
     this.top = chanSel.instance('my_IplTop_a');
     const topClip = chanSel.animation('my_IplTop_a')!;
     this.scroll = {
@@ -88,11 +87,11 @@ export class ChannelGrid {
       right: new AnimationPlayer(topClip, this.top, { from: 40, to: 60 }),
     };
     this.mask = new AnimationPlayer(topClip, this.top, { from: 200, to: 228, panes: ['ChMask'] });
+    this.slide = {
+      up: new AnimationPlayer(topClip, this.top, { from: 70, to: 90, panes: ['N_Ch'] }),
+      down: new AnimationPlayer(topClip, this.top, { from: 100, to: 120, panes: ['N_Ch'] }),
+    };
     this.top.pane('ChMask').visible = false;
-
-    this.board = board.instance('my_IplTop_c');
-    new AnimationPlayer(board.animation('my_IplTop_c')!, this.board, { from: 0, to: 0 }).seek(0);
-    this.setDate(new Date());
 
     this.clock = new Clock(chanSel, assets.messages);
     this.footer = new Footer(assets, renderer, sound);
@@ -209,16 +208,6 @@ export class ChannelGrid {
     this.slots.forEach((slot, index) => {
       const channel = this.channelAt(this.page * SLOTS_PER_PAGE + index);
       slot.balloon.setText(this.renderer, channel?.name.split('\n')[0] ?? '');
-    });
-  }
-
-  /** "Fri 10/30": yesterday, today and tomorrow sit side by side for the midnight slide. */
-  private setDate(today: Date): void {
-    ['a', 'b', 'c'].forEach((suffix, i) => {
-      const day = new Date(today);
-      day.setDate(today.getDate() + i - 1);
-      const weekday = this.assets.messages[String(WEEKDAYS[day.getDay()])];
-      this.board.pane(`T_Day_${suffix}`).text = `${weekday} ${day.getMonth() + 1}/${day.getDate()}`;
     });
   }
 
@@ -349,6 +338,14 @@ export class ChannelGrid {
       if (!this.mask.playing && this.mask.backward) this.masking = false;
     }
 
+    if (this.state === 'sliding') {
+      const clip = this.slide.up.playing ? this.slide.up : this.slide.down;
+      clip.step(frames);
+      if (!this.slide.up.playing && !this.slide.down.playing) {
+        if (clip === this.slide.up) this.state = 'away';
+        else this.resume();
+      }
+    }
     if (this.state === 'scroll') {
       const clip = this.scroll[this.scrolling < 0 ? 'left' : 'right'];
       clip.step(frames);
@@ -393,6 +390,23 @@ export class ChannelGrid {
     this.onSelect?.(channel, this.slots[index].pane);
   }
 
+  /** To the Message Board: the tiles, frames, bottom bar and clock slide up off the screen. */
+  slideAway(): void {
+    this.resetHovers();
+    this.state = 'sliding';
+    this.slide.up.play();
+  }
+
+  /** Back from the board: the grid slides down into place. */
+  slideBack(): void {
+    this.state = 'sliding';
+    this.slide.down.play();
+  }
+
+  get visible(): boolean {
+    return this.state !== 'away';
+  }
+
   /** Back from the preview or the board: the grid takes input again. */
   resume(): void {
     this.state = 'normal';
@@ -401,12 +415,8 @@ export class ChannelGrid {
 
   draw(screen: Screen): void {
     this.screen = screen;
+    if (this.state === 'away') return;
     const view = identity();
-    // Board scene: the backdrop with the date. Button scene: SD icon and the footer pods.
-    this.board.update(view, screen);
-    this.renderer.drawLayout(this.board);
-    this.footer.drawPods(screen);
-
     // ChannelSelect::draw: slot backdrops, thumbnails, then frames and the bottom bar over them.
     for (let relative = -2; relative <= 2; relative++) {
       const page = this.page + relative;
