@@ -33,11 +33,6 @@ export function measureScreen(canvas: HTMLCanvasElement): Screen {
   };
 }
 
-/** How far up or down the remote still reads, in screen units: 10% past the picture, ×1.15 more on a wide TV. */
-export function remoteReach(screen: Screen): number {
-  return screen.wide ? 289 : 251;
-}
-
 /** Converts a mouse position (CSS pixels) to logical screen space: origin at the center, y up. */
 export function toScreen(screen: Screen, canvas: HTMLCanvasElement, clientX: number, clientY: number): [number, number] {
   const rect = canvas.getBoundingClientRect();

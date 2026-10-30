@@ -1,5 +1,5 @@
 import { loadAssets, root } from './assets';
-import { measureScreen, remoteReach, SCREEN_HEIGHT, toScreen, type Screen } from './display';
+import { measureScreen, SCREEN_HEIGHT, toScreen, type Screen } from './display';
 import { Renderer } from './lyt/renderer';
 import type { MenuPointer } from './menu';
 import { Scenes } from './scenes';
@@ -42,15 +42,7 @@ let pressed = false;
 let pressedB = false;
 
 function track(event: PointerEvent) {
-  if (document.pointerLockElement === canvas) {
-    // Locked, the mouse only reports motion, and the hand stops at the remote's reach.
-    const [, , width, height] = screen.viewport;
-    const reach = remoteReach(screen);
-    pointer.x = Math.max(-screen.width / 2, Math.min(screen.width / 2, pointer.x + (event.movementX * devicePixelRatio * screen.width) / width));
-    pointer.y = Math.max(-reach, Math.min(reach, pointer.y - (event.movementY * devicePixelRatio * SCREEN_HEIGHT) / height));
-  } else {
-    [pointer.x, pointer.y] = toScreen(screen, canvas, event.clientX, event.clientY);
-  }
+  [pointer.x, pointer.y] = toScreen(screen, canvas, event.clientX, event.clientY);
   // Past the TV's edges the hand is gone, as when a Wii Remote points away, so the system cursor returns.
   pointer.inside = Math.abs(pointer.x) <= screen.width / 2 && Math.abs(pointer.y) <= SCREEN_HEIGHT / 2;
   canvas.style.cursor = pointer.inside ? 'none' : 'auto';
@@ -70,14 +62,11 @@ canvas.addEventListener('pointerdown', (event) => {
     pointer.b = true;
     pressedB = true;
     pointer.sincePress = null;
-    // A letter's B-scroll keeps the mouse on the page, so letting go never lands on the tabs or taskbar.
-    if (scenes.menu?.board.reading) canvas.requestPointerLock()?.catch(() => {});
   }
 });
 canvas.addEventListener('pointerup', (event) => {
   if (event.button === 0) pointer.a = false;
   else if (event.button === 2) pointer.b = false;
-  if (!pointer.b && document.pointerLockElement === canvas) document.exitPointerLock();
 });
 // A button released while the page can't see it (another window took focus) must not stay held.
 const releaseAll = () => (pointer.a = pointer.b = false);
