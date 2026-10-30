@@ -100,13 +100,14 @@ export class Footer {
     this.clips.get('arrowLoop')!.play();
     this.clips.get('mail')!.seek(0);
 
-    const sdClip = (name: string, loop = false) => (
-      new AnimationPlayer(cmnBtn.animation(`mn_Sdcard_Btn_${name}`)!, this.sd, { loop })
+    // SDMenuButton binds each clip to its own group; the icon rests at the Out clip's first frame (In is Out reversed).
+    const sdClip = (name: string, group: string, loop = false) => new AnimationPlayer(
+      cmnBtn.animation(`mn_Sdcard_Btn_${name}`)!, this.sd, { loop, panes: this.sd.layout.groups.get(group) ?? [] },
     );
-    this.clips.set('sdLoop', sdClip('On_Roop', true).play());
-    this.clips.set('sdPoint', sdClip('BtnL_RollOver'));
-    this.clips.set('sdLeave', sdClip('BtnL_RollOut'));
-    this.clips.set('sdOut', sdClip('BtnL_Out'));
+    this.clips.set('sdLoop', sdClip('On_Roop', 'On_Roop', true).play());
+    this.clips.set('sdPoint', sdClip('BtnL_RollOver', 'Btn_L_Roll'));
+    this.clips.set('sdLeave', sdClip('BtnL_RollOut', 'Btn_L_Roll'));
+    this.clips.set('sdOut', sdClip('BtnL_Out', 'Btn_L_InOut').seek(0));
     this.sd.pane('N_Btn_On').visible = false;
 
     // The Wii button shows the page's sound instead of the Wii logo, in the logo's own shade.
@@ -272,7 +273,8 @@ export class Footer {
   /** Lets go of every hover at once, as the menu does when it leaves its normal state. */
   releaseAll(): void {
     if (this.hovered) this.leave(this.hovered);
-    for (const balloon of Object.values(this.balloons)) balloon!.hideNow();
+    // fadeoutForce: a pressed button's balloon plays its out clip instead of vanishing.
+    for (const balloon of Object.values(this.balloons)) balloon!.leave();
   }
 
   update(frames: number): void {

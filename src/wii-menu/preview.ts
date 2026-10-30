@@ -4,6 +4,7 @@ import { contains } from './lyt/hit';
 import { AnimationPlayer, identity, type LayoutInstance } from './lyt/layout';
 import type { Renderer } from './lyt/renderer';
 import type { Sound } from './sound';
+import { useWideTextures } from './wide';
 
 export type PreviewButton = 'back' | 'download';
 
@@ -153,14 +154,7 @@ export class Preview {
   draw(screen: Screen): void {
     if (screen.wide !== this.wide) {
       this.wide = screen.wide;
-      if (screen.wide) {
-        for (const [donor, targets] of WIDE_FRAME_TEXTURES) {
-          const texture = this.frame.materials[this.frame.pane(donor).source.picture!.material].textures[0];
-          for (const target of targets) {
-            this.frame.materials[this.frame.pane(target).source.picture!.material].textures[0] = texture;
-          }
-        }
-      }
+      useWideTextures(this.frame, WIDE_FRAME_TEXTURES, screen.wide);
     }
     const view = identity();
     this.banner.instance.update(view, screen);

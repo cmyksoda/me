@@ -12,9 +12,11 @@ import type { Sound } from './sound';
 
 const ZOOM_FRAMES = 28;
 const FADE_FRAMES = 20;
+// The banner loads before the zoom starts: WIPL_SE_CH_SELECT comes 4 to 12 updates after the click.
+const ZOOM_WAIT = 12;
 const READ_KEY = 'wii-forwarders.read';
 
-type State = 'grid' | 'zoomIn' | 'preview' | 'zoomOut' | 'board';
+type State = 'grid' | 'opening' | 'zoomIn' | 'preview' | 'zoomOut' | 'board';
 
 export type MenuPointer = Pointer & { inside: boolean };
 
@@ -29,6 +31,7 @@ export class Menu {
   private state: State = 'grid';
   private preview: Preview | null = null;
   private zoom = 0;
+  private wait = 0;
   private fade = 0;
   private slotRect: Rect = [0, 0, 0, 0];
   private screen: Screen | null = null;
@@ -58,11 +61,9 @@ export class Menu {
     this.preview = new Preview(this.assets, this.renderer, this.sound, channel);
     this.slotRect = this.rectFor(channel);
     this.grid.footer.setArrows(false, false);
-    this.grid.zoomMask(true);
     this.sound.stopMusic(5);
-    this.sound.play('WIPL_SE_CH_SELECT');
-    this.state = 'zoomIn';
-    this.zoom = 0;
+    this.state = 'opening';
+    this.wait = ZOOM_WAIT;
   }
 
   private close(): void {
@@ -113,8 +114,23 @@ export class Menu {
     this.grid.update(frames, pointer, this.state === 'grid' && live);
     this.board.update(frames, pointer, this.state === 'board' && live, this.screen!);
     this.preview?.update(frames);
+    if (ready && !pointer.inside) {
+      if (this.state === 'grid') this.grid.pointAway();
+      if (this.state === 'board') {
+        this.board.pointAway();
+        if (this.grid.footer.hovered) this.grid.footer.leave(this.grid.footer.hovered);
+      }
+    }
 
-    if (this.state === 'zoomIn') {
+    if (this.state === 'opening') {
+      this.wait -= frames;
+      if (this.wait <= 0) {
+        this.grid.zoomMask(true);
+        this.sound.play('WIPL_SE_CH_SELECT');
+        this.state = 'zoomIn';
+        this.zoom = 0;
+      }
+    } else if (this.state === 'zoomIn') {
       this.zoom = Math.min(ZOOM_FRAMES, this.zoom + frames);
       if (this.zoom >= ZOOM_FRAMES) {
         this.state = 'preview';
@@ -169,6 +185,7 @@ export class Menu {
     const footer = this.grid.footer;
     if (preview.busy || !pointer.inside) {
       preview.release();
+      if (!pointer.inside && footer.hovered) footer.leave(footer.hovered);
       return;
     }
     const side = footer.hitArrow(pointer.x, pointer.y);

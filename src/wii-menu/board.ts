@@ -262,6 +262,19 @@ export class Board {
     return link.href;
   }
 
+  /** A remote pointing off the TV leaves the cards, the reader's arrows and its links. */
+  pointAway(): void {
+    for (const card of this.cards) this.leaveCard(card);
+    if (this.hoveredArrow) {
+      this.readerClips[`${this.hoveredArrow}Off`].play();
+      this.hoveredArrow = null;
+    }
+    if (this.pointedLink) {
+      this.pointedLink = null;
+      this.colorLinks();
+    }
+  }
+
   /** Footer's Back: the letter flies back to its card while the dimmer lifts. */
   closeLetter(): void {
     if (this.state !== 'reading' || !this.open) return;

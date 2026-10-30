@@ -8,11 +8,17 @@ import { center, contains } from './lyt/hit';
 import { AnimationPlayer, identity, type LayoutInstance, type Mtx34, type PaneNode } from './lyt/layout';
 import type { Renderer } from './lyt/renderer';
 import type { Sound } from './sound';
+import { useWideTextures } from './wide';
 
 export const PAGES = 4;
 const SLOTS_PER_PAGE = 12;
 const RELATIVE_PAGES = 'abcde';
 const DECIDE_AFTER = 5;
+// ChannelSelect::createBaseLayout gives the tile frames and edge strips their 16:9 masks on a widescreen TV.
+const WIDE_MASKS: [string, string[]][] = [
+  ['ChangeTex16x9', ['Picture_00', 'Picture_01', 'Picture_02', 'Picture_03', 'Picture_04']],
+  ['Picture_16', ['Edge0', 'Edge1', 'Edge2', 'Edge3', 'Edge4']],
+];
 const CHANNEL_BALLOON_DELAY = 20;
 const ORDER_KEY = 'wii-forwarders.order';
 const PAGE_KEY = 'wii-forwarders.page';
@@ -82,6 +88,7 @@ export class ChannelGrid {
   private screen: Screen | null = null;
   private dragFrom: [number, number] | null = null;
   private dragPitch = 1;
+  private wide: boolean | null = null;
 
   constructor(private readonly assets: Assets, private readonly renderer: Renderer, private readonly sound: Sound) {
     const { chanSel } = assets.menu;
@@ -519,6 +526,13 @@ export class ChannelGrid {
     else if (target === 'options') this.onOptions?.();
   }
 
+  /** A remote pointing off the TV leaves whatever it was on: the tile, its balloon, a footer button. */
+  pointAway(): void {
+    if (this.state !== 'normal') return;
+    this.pointSlot(-1);
+    if (this.footer.hovered) this.footer.leave(this.footer.hovered);
+  }
+
   private select(index: number): void {
     const channel = this.channelAt(this.page * SLOTS_PER_PAGE + index);
     if (!channel) return;
@@ -554,6 +568,10 @@ export class ChannelGrid {
   draw(screen: Screen): void {
     this.screen = screen;
     if (this.state === 'away') return;
+    if (screen.wide !== this.wide) {
+      this.wide = screen.wide;
+      useWideTextures(this.top, WIDE_MASKS, screen.wide);
+    }
     const view = identity();
     // ChannelSelect::draw: slot backdrops, thumbnails, then frames and the bottom bar over them.
     for (let relative = -2; relative <= 2; relative++) {
