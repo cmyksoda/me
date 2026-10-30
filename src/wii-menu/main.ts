@@ -90,6 +90,7 @@ function frame(now: number) {
   else if (pointer.sincePress !== null) pointer.sincePress += frames;
   pressed = false;
   menu.update(frames, pointer);
+  sound.endUpdate();
 
   renderer.beginFrame([screen.width, SCREEN_HEIGHT], screen.viewport);
   menu.draw(screen, pointer);

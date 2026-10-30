@@ -82,10 +82,10 @@ export class Preview {
   }
 
   /** Zoom finished (calcFadein): the banner's Start clip, or its loop, begins with its sound. */
-  begin(): void {
+  begin(soundDelay = 0): void {
     if (this.banner.start) this.banner.start.play();
     else this.banner.loop?.play();
-    this.sound.playBanner(this.banner.channel);
+    this.sound.playBanner(`channels/${this.banner.channel.id}`, soundDelay);
   }
 
   /** Previous/next: the old banner plays on for 10 updates, then the new one holds for 10 before it starts. */

@@ -78,6 +78,7 @@ export class Board {
   private open: Card | null = null;
   private fly = 0;
   private scroll = 0;
+  private wheelTo: number | null = null;
   private scrollMax = 0;
   private sections = 1;
   private target: { from: number; to: number; frame: number } | null = null;
@@ -229,6 +230,7 @@ export class Board {
     this.sections = Math.max(1, Math.ceil((lines * LINE) / SECTION));
     this.scrollMax = Math.max(0, 160 + this.sections * SECTION + 144 + 64 - 456);
     this.scroll = 0;
+    this.wheelTo = null;
     this.target = null;
     this.readerClips.upLoop.play();
   }
@@ -281,12 +283,14 @@ export class Board {
   private scrollBy(amount: number): void {
     const to = Math.min(this.scrollMax, Math.max(0, this.scroll + amount));
     this.target = { from: this.scroll, to, frame: 0 };
+    this.wheelTo = null;
   }
 
+  /** The wheel glides toward where its notches point, damped like the D-pad's scroll (Scroller::calc). */
   wheel(delta: number): void {
-    if (this.state !== 'reading') return;
+    if (this.state !== 'reading' || this.bOrigin) return;
     this.target = null;
-    this.scroll = Math.min(this.scrollMax, Math.max(0, this.scroll + delta));
+    this.wheelTo = Math.min(this.scrollMax, Math.max(0, (this.wheelTo ?? this.scroll) + delta));
   }
 
   get reading(): boolean {
@@ -335,12 +339,14 @@ export class Board {
 
   private updateReader(frames: number, pointer: { x: number; y: number; b: boolean; aPressed: boolean },
     active: boolean, screen: Screen): void {
+    const start = this.scroll;
     // B is a rate control: the farther from where it went down, the faster the letter keeps moving.
     if (pointer.b && active) {
       this.bOrigin ??= [pointer.x, pointer.y];
       const delta = (this.bOrigin[1] - pointer.y) / (screen.wide ? 289 : 251);
       this.bSpeed = Math.abs(delta) < 0.01 ? 0 : Math.sign(delta) * 10 * delta * delta;
       this.target = null;
+      this.wheelTo = null;
       const before = this.scroll;
       this.scroll = Math.min(this.scrollMax, Math.max(0, this.scroll + this.bSpeed * frames));
       this.scrolled += Math.abs(this.scroll - before);
@@ -359,6 +365,15 @@ export class Board {
       this.scroll = this.target.from + (this.target.to - this.target.from) * t * t * (3 - 2 * t);
       if (this.target.frame >= ARROW_FRAMES) this.target = null;
     }
+    if (this.wheelTo !== null) {
+      this.scroll += (this.wheelTo - this.scroll) * (1 - 0.6 ** frames);
+      if (Math.abs(this.wheelTo - this.scroll) < 0.5) {
+        this.scroll = this.wheelTo;
+        this.wheelTo = null;
+      }
+    }
+    // The scroll sound holds while the letter moves more than a unit an update; B scrolling ticks instead.
+    if (!this.bOrigin && Math.abs(this.scroll - start) > frames) this.sound.hold('WIPL_SE_MESSAGE_SCROLL');
     this.setArrow('up', this.scroll > 0);
     this.setArrow('down', this.scroll < this.scrollMax);
 

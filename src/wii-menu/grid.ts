@@ -80,6 +80,8 @@ export class ChannelGrid {
   private scrolling: -1 | 0 | 1 = 0;
   private hoveredSlot = -1;
   private screen: Screen | null = null;
+  private dragFrom: [number, number] | null = null;
+  private dragPitch = 1;
 
   constructor(private readonly assets: Assets, private readonly renderer: Renderer, private readonly sound: Sound) {
     const { chanSel } = assets.menu;
@@ -334,17 +336,35 @@ export class ChannelGrid {
     this.carry.start(absolute);
     this.state = 'carry';
     this.hoveredSlot = index;
+    this.dragFrom = null;
+    this.dragPitch = 1;
     this.sound.play('WIPL_SE_CH_HOLD');
   }
 
+  /** moveDrag: the carry hum gets louder and higher the faster the hand moves, and pans with it. */
+  private holdDragSound(frames: number, pointer: Pointer, valid: boolean): void {
+    if (!valid) {
+      this.dragFrom = null;
+      this.dragPitch = 1;
+      return;
+    }
+    const [x, y] = this.dragFrom ?? [pointer.x, pointer.y];
+    this.dragFrom = [pointer.x, pointer.y];
+    const moved = Math.hypot(pointer.x - x, pointer.y - y) / Math.max(frames, 1e-3);
+    if (moved > 30) this.dragPitch = moved / 30;
+    // holdSEwithPosDis divides by the 4:3 half-width even on a widescreen TV.
+    this.sound.hold('WIPL_SE_CH_DRAG', { pan: pointer.x / 304, volume: Math.min(1, (2 * moved) / 304), pitch: this.dragPitch });
+  }
+
   /** A drop is legal on an empty slot or back on its own slot; there is no swapping. */
-  private drop(index: number | null): void {
+  private drop(index: number | null, x: number): void {
     const source = this.carry.source;
+    const pan = x / ((this.screen?.width ?? 608) / 2);
     const target = index === null ? null : this.page * SLOTS_PER_PAGE + index;
     const legal = target !== null && (target === source || (this.order[target] === null && !this.pinned(target)));
     this.state = 'dropping';
     if (legal) {
-      this.sound.play('WIPL_SE_CH_SET');
+      this.sound.play('WIPL_SE_CH_SET', pan);
       this.carry.land(target, () => {
         if (target === source) return;
         this.order[target] = this.order[source];
@@ -353,7 +373,7 @@ export class ChannelGrid {
         this.labelSlots();
       });
     } else {
-      this.sound.play('WIPL_SE_CH_NOT_MOVE');
+      this.sound.play('WIPL_SE_CH_NOT_MOVE', pan);
       this.carry.refuse();
     }
     for (const slot of this.slots) {
@@ -398,7 +418,7 @@ export class ChannelGrid {
     }
     if (!pointer.b && this.carry.ready) {
       const under = this.slots.findIndex((slot) => contains(slot.pane, pointer.x, pointer.y));
-      this.drop(under >= 0 ? under : null);
+      this.drop(under >= 0 ? under : null, pointer.x);
     }
   }
 
@@ -449,15 +469,19 @@ export class ChannelGrid {
     if (this.state === 'scroll') {
       const clip = this.scroll[this.scrolling < 0 ? 'left' : 'right'];
       clip.step(frames);
-      if (this.carry.active) this.carry.follow(pointer.x, pointer.y);
+      if (this.carry.active) {
+        this.carry.follow(pointer.x, pointer.y);
+        this.holdDragSound(frames, pointer, active);
+      }
       if (!clip.playing) {
         this.finishScroll();
         // Letting go during the slide is an illegal drop once the slide ends.
-        if (this.carry.active && !pointer.b) this.drop(null);
+        if (this.carry.active && !pointer.b) this.drop(null, pointer.x);
       }
     }
     if (this.state === 'dropping' && !this.carry.busy) this.state = 'normal';
     if (this.state === 'carry') {
+      this.holdDragSound(frames, pointer, active);
       this.updateCarry(frames, pointer);
       return;
     }

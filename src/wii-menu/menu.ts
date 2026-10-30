@@ -118,7 +118,8 @@ export class Menu {
       this.zoom = Math.min(ZOOM_FRAMES, this.zoom + frames);
       if (this.zoom >= ZOOM_FRAMES) {
         this.state = 'preview';
-        this.preview!.begin();
+        // The banner sound lands 0.48 s after WIPL_SE_CH_SELECT, one update after the zoom.
+        this.preview!.begin(1);
         this.grid.footer.setArrows(true, true);
       }
     } else if (this.state === 'zoomOut') {
@@ -127,7 +128,8 @@ export class Menu {
         this.state = 'grid';
         this.preview = null;
         this.grid.resume();
-        this.sound.startMusic();
+        // The music starts over 0.5 s after Back was pressed, two updates after the zoom.
+        this.sound.startMusic(2);
       }
     } else if (this.state === 'preview') {
       this.updatePreview(pointer);
