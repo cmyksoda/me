@@ -1,7 +1,7 @@
 import type { Assets, Channel } from './assets';
 import { Board } from './board';
 import { Cursor } from './cursor';
-import { SCREEN_HEIGHT, type Screen } from './display';
+import { perMode, SCREEN_HEIGHT, type Screen } from './display';
 import type { FooterTarget } from './footer';
 import { ChannelGrid, type Pointer } from './grid';
 import { letters } from './letters';
@@ -53,7 +53,7 @@ export class Menu {
   private rectFor(channel: Channel): Rect {
     const { index } = this.grid.locate(channel);
     const [x, y] = center(this.grid.slotPane(index));
-    const halfWidth = this.screen!.wide ? 85 : 64;
+    const halfWidth = perMode(this.screen!, 64, 85);
     return [x - halfWidth, y + 48, x + halfWidth, y - 48];
   }
 
@@ -208,7 +208,8 @@ export class Menu {
 
   private zoomRect(): Rect {
     const h = ease(this.zoom / ZOOM_FRAMES);
-    const half = this.screen!.width / 2;
+    // The zoom starts from the console's picture, which a window wider than 16:9 shows in its middle.
+    const half = this.screen!.projection / 2;
     const full: Rect = [-half, SCREEN_HEIGHT / 2, half, -SCREEN_HEIGHT / 2];
     return full.map((value, i) => value + (this.slotRect[i] - value) * h) as Rect;
   }
@@ -223,7 +224,7 @@ export class Menu {
       renderer.camera = {
         x: (left + right) / 2,
         y: (top + bottom) / 2,
-        scaleX: screen.width / (right - left),
+        scaleX: screen.projection / (right - left),
         scaleY: SCREEN_HEIGHT / (top - bottom),
       };
     }
@@ -246,10 +247,14 @@ export class Menu {
       renderer.fill([-far, sb, far, -far], black);
       renderer.fill([-far, st, sl, sb], black);
       renderer.fill([sr, st, far, sb], black);
-      renderer.drawCapture(this.slotRect, alpha);
+      renderer.drawCapture(this.slotRect, alpha, screen.projection / screen.width);
       renderer.camera = null;
     }
-    this.grid.footer.drawArrows(screen);
+    // On a window wider than 16:9 the preview's arrows stay on its 16:9 picture, which hides them past its edges as a TV's would.
+    const onPicture = (this.state === 'preview' || this.state === 'zoomOut') && screen.width > screen.projection;
+    if (onPicture) renderer.setClip([-screen.projection / 2, SCREEN_HEIGHT / 2, screen.projection / 2, -SCREEN_HEIGHT / 2]);
+    this.grid.footer.drawArrows(onPicture ? { ...screen, width: screen.projection } : screen);
+    if (onPicture) renderer.setClip(null);
     if (pointer.inside) {
       if (this.board.bScrolling) this.board.drawCursor(screen, pointer.x, pointer.y);
       else this.cursor.draw(renderer, screen, pointer.x, pointer.y, this.grid.grabbing);

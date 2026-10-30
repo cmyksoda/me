@@ -8,6 +8,7 @@ import type { Letter } from './letters';
 import type { Sound } from './sound';
 import type { RGBA } from './lyt/binary';
 import { translation } from './grid';
+import { cover, spreadPages } from './wide';
 
 const WEEKDAYS = [116, 110, 111, 112, 113, 114, 115];
 const FLY_FRAMES = 17;
@@ -418,6 +419,8 @@ export class Board {
 
   draw(screen: Screen): void {
     const view = identity();
+    // The days either side spread out with a window wider than 16:9, so their dates stay off it.
+    spreadPages(this.backdrop, ['TopBack_a', 'TopBack_b', 'TopBack_c'], screen);
     this.backdrop.update(view, screen);
     this.renderer.drawLayout(this.backdrop);
     for (const card of this.cards) {
@@ -428,6 +431,7 @@ export class Board {
     }
     if (this.masked) {
       (this.maskOut.playing || this.state === 'normal' ? this.maskOut : this.maskIn).apply();
+      cover(this.mask.pane('Picture_00'), screen);
       this.mask.update(view, screen);
       this.renderer.drawLayout(this.mask);
     }
@@ -438,7 +442,9 @@ export class Board {
     // The reader flies in a straight line from its card to the middle of the screen.
     const [cardX, cardY] = this.open!.letter.position;
     const t = this.state === 'closing' ? 1 - this.fly / FLY_FRAMES : this.fly / FLY_FRAMES;
-    const view = translation(cardX * (1 - t), cardY * (1 - t));
+    // Past 16:9 the cards spread further, so the flight starts as near its card as it does on a 16:9 TV.
+    const startX = cardX * (1 + (screen.width - screen.projection) / 608);
+    const view = translation(startX * (1 - t), cardY * (1 - t));
     const memo = this.reader.pane('N_Memo');
     memo.translate[1] = this.scroll;
     const [header, body, footer, text, buttons] = ['N_Header', 'N_Body', 'N_Footer', 'T_Letter', 'N_TopBtn']

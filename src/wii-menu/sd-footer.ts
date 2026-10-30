@@ -1,10 +1,11 @@
 import type { Assets } from './assets';
 import { Balloon } from './balloon';
-import type { Screen } from './display';
+import { perMode, type Screen } from './display';
 import { center, contains } from './lyt/hit';
 import { AnimationPlayer, identity, type LayoutInstance, type PaneNode } from './lyt/layout';
 import type { Renderer } from './lyt/renderer';
 import type { Sound } from './sound';
+import { cover } from './wide';
 
 export type SdFooterTarget = 'menu' | 'help' | 'left' | 'right';
 
@@ -162,6 +163,7 @@ export class SdFooter {
 
   /** SDButton::draw: the backdrop, the round buttons and the label; the arrows wait for SDArrow. */
   draw(screen: Screen): void {
+    cover(this.layout.pane('background'), screen);
     this.layout.update(identity(), screen);
     this.renderer.drawLayout(this.layout, (pane) => !isUnder(pane, ARROWS));
   }
@@ -173,7 +175,7 @@ export class SdFooter {
     this.layout.update(identity(), screen);
     this.renderer.drawLayout(this.layout, (pane) => isUnder(pane, ARROWS));
     this.renderer.camera = camera;
-    const margin = screen.wide ? 120 : 30;
+    const margin = perMode(screen, 30, 120);
     for (const [target, pane] of [['menu', 'B_Wiimenu'], ['help', 'B_Help']] as const) {
       const [x, y] = center(this.layout.pane(pane));
       this.balloons[target].draw(this.renderer, screen, x, y + 50, margin);

@@ -2,13 +2,13 @@ import type { Assets, Channel } from './assets';
 import { Balloon } from './balloon';
 import { Carry } from './carry';
 import { Clock } from './clock';
-import type { Screen } from './display';
+import { perMode, type Screen } from './display';
 import { Footer, type FooterTarget } from './footer';
 import { center, contains } from './lyt/hit';
 import { AnimationPlayer, identity, type LayoutInstance, type Mtx34, type PaneNode } from './lyt/layout';
 import type { Renderer } from './lyt/renderer';
 import type { Sound } from './sound';
-import { useWideTextures } from './wide';
+import { useWideTextures, WideGrid } from './wide';
 
 export const PAGES = 4;
 const SLOTS_PER_PAGE = 12;
@@ -84,6 +84,7 @@ export class ChannelGrid {
   private masking = false;
   private readonly slide: Record<'up' | 'down', AnimationPlayer>;
   private readonly carry: Carry;
+  private readonly wideGrid: WideGrid;
   private scrolling: -1 | 0 | 1 = 0;
   private hoveredSlot = -1;
   private screen: Screen | null = null;
@@ -142,6 +143,7 @@ export class ChannelGrid {
       });
     }
     this.labelSlots();
+    this.wideGrid = new WideGrid(this.top);
 
     for (const [name, pane] of this.top.panes) {
       const match = /^N_Ch_([a-e])(\d\d)$/.exec(name);
@@ -241,9 +243,9 @@ export class ChannelGrid {
     const page = this.page + relative;
     if (page < 0 || page >= PAGES) return;
     const [x, y] = center(slot);
-    const halfWidth = screen.wide ? 85 : 64;
+    const halfWidth = perMode(screen, 64, 85);
     if (x + halfWidth < -screen.width / 2 || x - halfWidth > screen.width / 2) return;
-    const pixel = screen.width / 640;
+    const pixel = screen.projection / 640;
     this.renderer.setClip([x - halfWidth - pixel, y + 48 + 1, x + halfWidth + pixel, y - 48 - 1]);
     const channel = this.channelAt(page * SLOTS_PER_PAGE + index);
     let instance: LayoutInstance;
@@ -253,7 +255,7 @@ export class ChannelGrid {
       const empty = this.emptyStatic((relative + 2) * SLOTS_PER_PAGE + index);
       instance = empty.instance;
     }
-    instance.update(translation(x, y), screen);
+    instance.update(translation(x, y), screen.tv);
     this.renderer.drawLayout(instance);
     const absolute = page * SLOTS_PER_PAGE + index;
     this.carry.drawSlot(this.renderer, screen, absolute, channel !== null, x, y);
@@ -586,7 +588,8 @@ export class ChannelGrid {
       const edge = this.top.panes.get(`Edge${relative + 2}`);
       if (edge && relative !== 0) edge.visible = page >= 0 && page < PAGES;
     }
-    this.top.update(view, screen);
+    this.wideGrid.place(screen);
+    this.top.update(view, screen.tv);
     const isMask = (pane: PaneNode) => pane.name.startsWith('BaseMask');
     this.renderer.drawLayout(this.top, (pane) => pane.source.kind !== 'pic1' || isMask(pane));
     this.renderer.drawLayout(this.top, (pane) => pane.source.kind === 'pic1' && !isMask(pane));
@@ -605,7 +608,7 @@ export class ChannelGrid {
     if (this.masking) {
       const mask = this.top.pane('ChMask');
       mask.visible = true;
-      this.top.update(view, screen);
+      this.top.update(view, screen.tv);
       this.renderer.drawLayout(this.top, (pane) => pane === mask);
       mask.visible = false;
     }

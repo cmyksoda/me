@@ -27,7 +27,7 @@ export function transformPoint(m: Mtx34, x: number, y: number): [number, number]
 }
 
 /** Pane::CalculateMtx: T * Rz * Ry * Rx * S. */
-function paneMatrix(pane: PaneNode, scaleX: number, out: Mtx34): void {
+function paneMatrix(pane: PaneNode, x: number, scaleX: number, out: Mtx34): void {
   const [rx, ry, rz] = pane.rotate;
   const cx = Math.cos(rx * DEG), sx = Math.sin(rx * DEG);
   const cy = Math.cos(ry * DEG), sy = Math.sin(ry * DEG);
@@ -36,7 +36,7 @@ function paneMatrix(pane: PaneNode, scaleX: number, out: Mtx34): void {
   out[0] = cz * cy * scaleX;
   out[1] = (cz * sy * sx - sz * cx) * scaleY;
   out[2] = cz * sy * cx + sz * sx;
-  out[3] = pane.translate[0];
+  out[3] = x;
   out[4] = sz * cy * scaleX;
   out[5] = (sz * sy * sx + cz * cx) * scaleY;
   out[6] = sz * sy * cx - cz * sx;
@@ -82,8 +82,10 @@ export interface MaterialState {
 }
 
 export interface Display {
-  /** Logical screen width: 608 for 4:3, 832 for 16:9. Height is always 456. */
+  /** Logical screen width: 608 for 4:3, 832 for 16:9, more on a wider window. Height is always 456. */
   width: number;
+  /** The console projection's width (608 to 832), the one layouts stretch their root to. */
+  projection: number;
   /** IPL layouts stretch their root to the wide screen and un-stretch panes flagged for it. */
   adjustLocation: boolean;
 }
@@ -138,21 +140,32 @@ export class LayoutInstance {
     return pane;
   }
 
+  /** Adds a pane the layout doesn't have under `parent`, right after `after` or after all its children. */
+  addPane(parent: PaneNode, source: Pane, after?: PaneNode): PaneNode {
+    const node = this.build(source, parent);
+    parent.children.splice(after ? parent.children.indexOf(after) + 1 : parent.children.length, 0, node);
+    return node;
+  }
+
   material(name: string): MaterialState | undefined {
     return this.materials.find((m) => m.source.name === name);
   }
 
   /** Recomputes world matrices and alpha for every visible pane (Pane::CalculateMtx). */
   update(view: Mtx34, display: Display): void {
-    const wideScale = display.width / 608;
+    const wideScale = display.projection / 608;
+    // Past the projection, flagged panes keep their place relative to the window's edges.
+    const spread = display.width / display.projection;
     // The menu sets SetInvisiblePaneCalculateMtx: hidden panes still get matrices, as anchors.
     const walk = (pane: PaneNode, parentWorld: Mtx34, inherited: number | null) => {
       let scaleX = pane.scale[0];
-      if (display.adjustLocation && display.width !== 608) {
+      let x = pane.translate[0];
+      if (display.adjustLocation && display.projection !== 608) {
         if (pane.parent === null) scaleX *= wideScale;
         if (pane.source.flags & 4) scaleX /= wideScale;
       }
-      paneMatrix(pane, scaleX, this.scratch);
+      if (display.adjustLocation && spread !== 1 && pane.source.flags & 4) x *= spread;
+      paneMatrix(pane, x, scaleX, this.scratch);
       multiply(parentWorld, this.scratch, pane.world);
       const own = pane.alpha / 255;
       pane.globalAlpha = inherited === null ? own : own * inherited;

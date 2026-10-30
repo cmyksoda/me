@@ -1,5 +1,5 @@
 import type { Archive } from './assets';
-import type { Screen } from './display';
+import { podShift, type Screen } from './display';
 import { measureText } from './lyt/font';
 import { AnimationPlayer, identity, type LayoutInstance } from './lyt/layout';
 import type { Renderer } from './lyt/renderer';
@@ -112,17 +112,18 @@ export class Balloon {
   /** Draws with its tail centered at (x, y), keeping `margin` units inside the screen edges. */
   draw(renderer: Renderer, screen: Screen, x: number, y: number, margin: number): void {
     if (!this.visible) return;
-    const minimum = 160 * (screen.width / 608);
+    const minimum = 160 * (screen.projection / 608);
     const base = this.instance.pane('W_Base');
     if (base.size[0] < minimum) {
       base.size[0] = minimum;
       this.instance.pane('W_Shade').size[0] = minimum;
     }
     const half = base.size[0] / 2;
-    const edge = screen.width / 2 - margin;
-    // Footer balloons (TextBalloon) clamp in 4:3 units, then the root's 16:9 stretch carries them out.
-    const stretch = this.reverses ? screen.width / 608 : 1;
-    const shifted = stretch * Math.min(edge - half, Math.max(-edge + half, x / stretch));
+    const edge = (this.reverses ? screen.projection : screen.width) / 2 - margin;
+    // Footer balloons (TextBalloon) clamp in 4:3 units, then the root's 16:9 stretch carries them out; past 16:9 they ride out with the pods.
+    const stretch = this.reverses ? screen.projection / 608 : 1;
+    const shift = this.reverses ? podShift(screen, x) : 0;
+    const shifted = shift + stretch * Math.min(edge - half, Math.max(-edge + half, (x - shift) / stretch));
     const view = identity();
     view[3] = shifted;
     view[7] = y;

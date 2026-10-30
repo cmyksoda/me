@@ -1,6 +1,6 @@
 import type { Assets } from './assets';
 import { Balloon } from './balloon';
-import type { Screen } from './display';
+import { perMode, podShift, type Screen } from './display';
 import { contains, center } from './lyt/hit';
 import { AnimationPlayer, identity, type LayoutInstance, type PaneNode } from './lyt/layout';
 import type { Renderer } from './lyt/renderer';
@@ -300,7 +300,7 @@ export class Footer {
   /** Button scene: the SD icon, then the pods; the arrows wait for the Arrow scene. */
   drawPods(screen: Screen): void {
     const view = identity();
-    view[3] = screen.wide ? -245 : -152;
+    view[3] = perMode(screen, -152, -245) + podShift(screen, -1);
     view[7] = -172;
     this.sd.update(view, screen);
     this.renderer.drawLayout(this.sd);
@@ -316,13 +316,13 @@ export class Footer {
     this.layout.update(identity(), screen);
     this.renderer.drawLayout(this.layout, (pane) => isUnder(pane, ['N_ArwL', 'N_ArwR']));
     this.renderer.camera = camera;
-    const margin = screen.wide ? 120 : 30;
+    const margin = perMode(screen, 30, 120);
     for (const [target, pane] of Object.entries(BUTTONS) as [FooterTarget, string][]) {
       const [x, y] = center(this.layout.pane(pane));
       this.balloons[target]?.draw(this.renderer, screen, x, y + 50, margin);
     }
     const [sx, sy] = center(this.sd.pane('N_Btn'));
-    this.balloons.sd!.draw(this.renderer, screen, sx, sy + 50, screen.wide ? 200 : 110);
+    this.balloons.sd!.draw(this.renderer, screen, sx, sy + 50, perMode(screen, 110, 200));
   }
 
   get mail(): number {

@@ -1,5 +1,5 @@
 import type { Archive, Assets, Channel, ChannelBase } from './assets';
-import type { Screen } from './display';
+import { SCREEN_HEIGHT, type Screen } from './display';
 import { contains } from './lyt/hit';
 import { AnimationPlayer, identity, type LayoutInstance } from './lyt/layout';
 import type { Renderer } from './lyt/renderer';
@@ -182,9 +182,14 @@ export class Preview<C extends ChannelBase = Channel> {
       useWideTextures(this.frame, WIDE_FRAME_TEXTURES, screen.wide);
     }
     const view = identity();
-    this.banner.instance.update(view, screen);
+    // A banner never stretches past 16:9: a wider window shows it in a 16:9 picture, cut at its edges as a TV's would.
+    const cut = screen.width > screen.projection;
+    const half = screen.projection / 2;
+    if (cut) this.renderer.setClip([-half, SCREEN_HEIGHT / 2, half, -SCREEN_HEIGHT / 2]);
+    this.banner.instance.update(view, screen.tv);
     this.renderer.drawLayout(this.banner.instance);
-    this.frame.update(view, screen);
+    if (cut) this.renderer.setClip(null);
+    this.frame.update(view, screen.tv);
     this.renderer.drawLayout(this.frame);
   }
 }

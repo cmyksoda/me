@@ -1,7 +1,7 @@
 import type { Assets, SdChannel } from './assets';
 import { Balloon } from './balloon';
 import { CardPanel } from './card-panel';
-import type { Screen } from './display';
+import { perMode, type Screen } from './display';
 import { FocusFrame } from './focus';
 import { translation, type Pointer } from './grid';
 import { center, contains } from './lyt/hit';
@@ -9,6 +9,7 @@ import { AnimationPlayer, identity, type LayoutInstance, type PaneNode } from '.
 import type { Renderer } from './lyt/renderer';
 import { SdFooter, type SdFooterTarget } from './sd-footer';
 import type { Sound } from './sound';
+import { WideGrid } from './wide';
 
 export const SD_PAGES = 20;
 const SLOTS_PER_PAGE = 12;
@@ -66,6 +67,7 @@ export class SdGrid {
   private reading = false;
   private wide: boolean | null = null;
   private screen: Screen | null = null;
+  private readonly wideGrid: WideGrid;
 
   constructor(private readonly assets: Assets, private readonly renderer: Renderer, private readonly sound: Sound) {
     const { sdChanSel } = assets.menu;
@@ -108,6 +110,7 @@ export class SdGrid {
         balloon: new Balloon(sdChanSel, sound, CHANNEL_BALLOON_DELAY, false),
       });
     }
+    this.wideGrid = new WideGrid(this.top);
     for (const [name, pane] of this.top.panes) {
       const match = /^N_Ch_([a-e])(\d\d)$/.exec(name);
       if (!match) continue;
@@ -182,13 +185,13 @@ export class SdGrid {
     const page = this.page + relative;
     if (page < 0 || page >= SD_PAGES) return;
     const [x, y] = center(slot);
-    const halfWidth = screen.wide ? 85 : 64;
+    const halfWidth = perMode(screen, 64, 85);
     if (x + halfWidth < -screen.width / 2 || x - halfWidth > screen.width / 2) return;
-    const pixel = screen.width / 640;
+    const pixel = screen.projection / 640;
     this.renderer.setClip([x - halfWidth - pixel, y + 48 + 1, x + halfWidth + pixel, y - 48 - 1]);
     const channel = this.channelAt(page * SLOTS_PER_PAGE + index);
     const tile = channel ? this.icons.get(channel.id)! : this.emptyStatic((relative + 2) * SLOTS_PER_PAGE + index);
-    tile.instance.update(translation(x, y), screen);
+    tile.instance.update(translation(x, y), screen.tv);
     this.renderer.drawLayout(tile.instance);
     this.renderer.setClip(null);
   }
@@ -339,11 +342,13 @@ export class SdGrid {
     // Edge0/1 stand for the pages before this one and Edge3/4 for those after; Edge2 is never touched.
     const before = this.page > 0;
     const after = this.page < SD_PAGES - 1;
-    for (const [index, shown] of [[0, before], [1, before], [3, after], [4, after]] as const) {
+    // A window wider than 16:9 can see two pages over, so those edges need a page of their own.
+    for (const [index, shown] of [[0, this.page > 1], [1, before], [3, after], [4, this.page < SD_PAGES - 2]] as const) {
       this.top.pane(`Edge${index}`).visible = shown;
     }
     const view = identity();
-    this.top.update(view, screen);
+    this.wideGrid.place(screen);
+    this.top.update(view, screen.tv);
     // SDChannelSelect::draw: slot backdrops and thumbnails, then the frames, strips and bar over them.
     const isMask = (pane: PaneNode) => pane.name.startsWith('BaseMask');
     this.renderer.drawLayout(this.top, (pane) => pane.source.kind !== 'pic1' || isMask(pane));
@@ -353,7 +358,8 @@ export class SdGrid {
     for (let i = 0; i < 3; i++) {
       const anchor = this.top.pane(`N_Clock${i}`);
       this.counter.pane('TextBox_00').text = String(this.page + i);
-      this.counter.update(translation(anchor.world[3], anchor.world[7]), screen);
+      // Each number rides with its page's dip in the bar, which spreads with a window wider than 16:9.
+      this.counter.update(translation((screen.width / screen.projection) * anchor.world[3], anchor.world[7]), screen);
       this.renderer.drawLayout(this.counter);
     }
 
@@ -365,7 +371,7 @@ export class SdGrid {
     if (this.masking) {
       const mask = this.top.pane('ChMask');
       mask.visible = true;
-      this.top.update(view, screen);
+      this.top.update(view, screen.tv);
       this.renderer.drawLayout(this.top, (pane) => pane === mask);
       mask.visible = false;
     }

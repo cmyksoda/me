@@ -224,18 +224,19 @@ export class Renderer {
     gl.viewport(...outer);
   }
 
-  /** Draws the last capture into a rectangle (through the camera) at the given opacity. */
-  drawCapture(rect: Rect, alpha: number): void {
-    if (this.target) this.drawRect(CAPTURE_SHADER, rect, [255, 255, 255, alpha * 255], this.target.texture);
+  /** Draws the middle `share` of the last capture's width into a rectangle (through the camera) at the given opacity. */
+  drawCapture(rect: Rect, alpha: number, share = 1): void {
+    if (this.target) this.drawRect(CAPTURE_SHADER, rect, [255, 255, 255, alpha * 255], this.target.texture, share);
   }
 
-  private drawRect(shader: ShaderSource, rect: Rect, color: RGBA, texture: WebGLTexture | null): void {
+  private drawRect(shader: ShaderSource, rect: Rect, color: RGBA, texture: WebGLTexture | null, share = 1): void {
     const gl = this.gl;
     const program = this.program(shader);
     gl.useProgram(program.program);
     const [left, top, right, bottom] = rect;
     const out = this.vertices;
-    [[left, top, 0, 1], [right, top, 1, 1], [left, bottom, 0, 0], [right, bottom, 1, 0]].forEach(([x, y, u, v], i) => {
+    const [u0, u1] = [(1 - share) / 2, (1 + share) / 2];
+    [[left, top, u0, 1], [right, top, u1, 1], [left, bottom, u0, 0], [right, bottom, u1, 0]].forEach(([x, y, u, v], i) => {
       const o = i * FLOATS_PER_VERTEX;
       out[o] = this.cameraX(x);
       out[o + 1] = this.cameraY(y);

@@ -5,6 +5,7 @@ import { AnimationPlayer, identity, type LayoutInstance, type PaneNode } from '.
 import type { Renderer } from './lyt/renderer';
 import type { MenuPointer } from './menu';
 import type { Sound } from './sound';
+import { cover } from './wide';
 
 /** A picture a page shows over the dialog (the spinner, the "?" button), with its clip if it moves. */
 export interface DialogPicture {
@@ -238,6 +239,8 @@ export class Dialog {
   draw(renderer: Renderer, screen: Screen): void {
     const current = this.current;
     if (!current) return;
+    const shade = current.instance.panes.get('Shade');
+    if (shade) cover(shade, screen);
     current.instance.update(identity(), screen);
     renderer.drawLayout(current.instance);
     const picture = this.picture;
