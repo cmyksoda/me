@@ -49,7 +49,6 @@ export class SdGrid {
   onSelect: ((channel: SdChannel) => void) | null = null;
   onHelp: (() => void) | null = null;
   onWiiMenu: (() => void) | null = null;
-  onGrab: (() => void) | null = null;
 
   private readonly top: LayoutInstance;
   private readonly counter: LayoutInstance;
@@ -322,10 +321,8 @@ export class SdGrid {
       ));
     }
     this.pointSlot(slotIndex);
-    if (pointer.bPressed && slotIndex >= 0) {
-      this.onGrab?.();
-      return;
-    }
+    // The card is write-protected, so a channel can't be picked up here.
+    if (pointer.bPressed && slotIndex >= 0) return;
     if (pointer.aPressed && target) {
       this.pressFooter(target);
       return;

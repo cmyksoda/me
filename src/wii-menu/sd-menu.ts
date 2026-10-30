@@ -1,10 +1,9 @@
 import type { Assets, SdChannel } from './assets';
 import { Cursor } from './cursor';
-import { Dialog, type DialogPage, type DialogPicture } from './dialog';
+import { Dialog } from './dialog';
 import { SCREEN_HEIGHT, type Screen } from './display';
 import type { Fader } from './fader';
 import { center } from './lyt/hit';
-import { AnimationPlayer } from './lyt/layout';
 import type { Rect, Renderer } from './lyt/renderer';
 import type { MenuPointer } from './menu';
 import { Preview, type PreviewStyle } from './preview';
@@ -12,7 +11,10 @@ import { SdGrid } from './sd-grid';
 import type { Sound } from './sound';
 
 const ZOOM_FRAMES = 28;
-const WELCOMED_KEY = 'wii-forwarders.sd-welcomed';
+const WELCOMED_KEY = 'wii-forwarders.sd-welcome-read';
+// Jaxi's own welcome stands in for Nintendo's four pages; the line breaks follow the console's dialog widths.
+const WELCOME = 'Welcome to the SD Card Menu!\n\nHere, you can find modified\nversions of official Nintendo\n'
+  + 'channels. Their downloads are\nhosted on the Internet Archive.';
 
 type State = 'fadingIn' | 'grid' | 'zoomIn' | 'preview' | 'zoomOut' | 'leaving' | 'left';
 
@@ -21,7 +23,7 @@ const ease = (t: number) => t * t * (3 - 2 * t);
 
 /**
  * The SD Card Menu's scenes (SDButton, SDChannelSelect, SDChannelTitle, SDArrow): the grid of the
- * card's channels, the welcome and help dialogs, and the zoom into a channel's preview and back.
+ * card's channels, the welcome (also behind the "?" button), and the zoom into a channel's preview and back.
  */
 export class SdMenu {
   readonly grid: SdGrid;
@@ -29,9 +31,6 @@ export class SdMenu {
   onLeave: (() => void) | null = null;
   private readonly cursor: Cursor;
   private readonly dialog: Dialog;
-  private readonly spinner: DialogPicture;
-  private readonly welcome: DialogPage[];
-  private readonly help: DialogPage[];
   private state: State = 'fadingIn';
   private preview: Preview<SdChannel> | null = null;
   private shownChannel: SdChannel | null = null;
@@ -40,7 +39,6 @@ export class SdMenu {
   private zoom = 0;
   private slotRect: Rect = [0, 0, 0, 0];
   private screen: Screen | null = null;
-  private refused = false;
 
   constructor(
     private readonly assets: Assets,
@@ -52,31 +50,11 @@ export class SdMenu {
     this.cursor = new Cursor(assets.menu.cursor);
     this.dialog = new Dialog(assets.menu.dlgWdw, sound);
 
-    const { sdChanSel } = assets.menu;
-    const waitIcon = sdChanSel.instance('wait_icon');
-    const waitClip = new AnimationPlayer(sdChanSel.animation('wait_icon_wait_loop')!, waitIcon, { loop: true });
-    this.spinner = { instance: waitIcon, clip: waitClip, y: 74 };
-    const helpButton: DialogPicture = { instance: sdChanSel.instance('help_Btn'), clip: null, y: 108 };
-    const message = (id: number) => assets.messages[String(id)];
-    const [next, close, back] = [message(163), message(164), message(165)];
-    this.welcome = [
-      { message: message(157), right: next, left: null },
-      { message: message(158), right: next, left: back },
-      { message: message(159), right: next, left: back, picture: this.spinner },
-      { message: message(202), right: close, left: back, picture: helpButton },
-    ];
-    this.help = [
-      { message: message(201), right: next, left: back },
-      { message: message(158), right: next, left: back },
-      { message: message(159), right: close, left: back, picture: this.spinner },
-    ];
-
     this.grid.onSelect = (channel) => this.open(channel);
-    this.grid.onHelp = () => this.dialog.openPages(this.help, () => this.resetSpinner());
+    this.grid.onHelp = () => this.dialog.openOne(WELCOME, this.closeLabel, () => {});
     this.grid.onWiiMenu = () => {
       this.state = 'leaving';
     };
-    this.grid.onGrab = () => this.refuseGrab();
     // A visitor who has seen the welcome has the card read while the screen fades in.
     if (this.welcomed) this.grid.readCard();
   }
@@ -89,24 +67,16 @@ export class SdMenu {
     }
   }
 
-  private resetSpinner(): void {
-    this.spinner.clip!.seek(this.spinner.clip!.from);
+  private get closeLabel(): string {
+    return this.assets.messages['164'];
   }
 
   /** The welcome closes: didntGotoSDMenu is cleared and saved, and only then is the card read. */
   private closeWelcome(): void {
-    this.resetSpinner();
     try {
       localStorage.setItem(WELCOMED_KEY, '1');
     } catch {}
     this.grid.readCard();
-  }
-
-  /** The card is write-protected, so channels can't be moved; it says so once per visit. */
-  private refuseGrab(): void {
-    if (this.refused) return;
-    this.refused = true;
-    this.dialog.openOne(this.assets.messages['198'], this.assets.messages['46'], () => {});
   }
 
   private rectFor(channel: SdChannel): Rect {
@@ -147,7 +117,7 @@ export class SdMenu {
     this.state = 'zoomOut';
   }
 
-  /** The Download button opens its WAD inside the click itself, or browsers block the new tab. */
+  /** The Download button opens the WAD's Internet Archive page inside the click itself, or browsers block the new tab. */
   linkAt(x: number, y: number): string | null {
     const preview = this.preview;
     if (this.state !== 'preview' || !preview || preview.busy || this.live <= 0) return null;
@@ -167,7 +137,7 @@ export class SdMenu {
 
     if (this.state === 'fadingIn' && this.fader.idle) {
       this.state = 'grid';
-      if (!this.welcomed) this.dialog.openPages(this.welcome, () => this.closeWelcome());
+      if (!this.welcomed) this.dialog.openOne(WELCOME, this.closeLabel, () => this.closeWelcome());
     } else if (this.state === 'zoomIn') {
       this.zoom = Math.min(ZOOM_FRAMES, this.zoom + frames);
       if (this.zoom >= ZOOM_FRAMES) {
