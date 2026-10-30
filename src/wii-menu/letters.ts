@@ -59,8 +59,7 @@ export const letters: Letter[] = [
         + 'the Wii only, not the Wii U\'s vWii, and installing it replaces your Internet Channel.',
       'The Forecast Channel is the WiiLink version, redrawn with the Japanese weather symbols everywhere, on the '
         + 'Wii Menu tile too. Installing it replaces your Forecast Channel.',
-      'Back up your NAND before you install a channel.',
-      'cmyksoda / Jaxi',
+      'Back up your NAND before you install a channel.\ncmyksoda / Jaxi',
     ].join('\n\n'),
   },
   {
