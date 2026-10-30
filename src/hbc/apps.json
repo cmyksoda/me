@@ -20,7 +20,7 @@
     "version": "1.0.0",
     "shortDescription": "Generative music and ASCII visuals",
     "longDescription": "Press start and ASCII Odyssey makes you a brand new voyage: a tracker song composed from a seed, with a light show drawn only in text that dances to the beat.\n\nTen genres, a hundred scenes, and dozens of color palettes. <3",
-    "longDescriptionDraft": "ASCII Odyssey is a Wii app that makes you a brand new voyage every time: a tracker song composed from a seed, with a light show drawn only in text that dances to the beat.\n\nIt has ten genres, a hundred scenes, and sixty color palettes. The same seed always sails the same voyage.",
+    "longDescriptionDraft": "ASCII Odyssey is a Wii app that composes a brand-new voyage every time you press Start: a tracker song created from a seed, with a light show drawn only from text that dances to the beat.\n\nIt has ten genres, a hundred scenes, and sixty color palettes.",
     "icon": true,
     "source": "https://github.com/cmyksoda/ASCII-Odyssey",
     "download": "https://github.com/cmyksoda/ASCII-Odyssey/releases/download/v1.0.0/ASCII-Odyssey.zip"
@@ -46,7 +46,7 @@
     "version": "1.0.0",
     "shortDescription": "Create invisible forwarder channels",
     "longDescription": "Pick a homebrew app and get a WAD for a channel that looks like an unused slot on the Wii Menu and opens that app. The WAD is saved to sd:/wad; install it with a WAD manager such as YAWMM ModMii Edition.",
-    "longDescriptionDraft": "A Homebrew Channel app that makes invisible forwarder channels: channels that look exactly like an unused slot on the Wii Menu, with no name when you hover over them. Open one and the banner is the same static filling the screen, with quiet white noise. Start it and your homebrew app opens.",
+    "longDescriptionDraft": "A Homebrew Channel app that makes invisible forwarder channel WADs. You can select any homebrew software you have installed, and the app will generate a WAD for you to install with the WAD manager of your choice.\n\nThe installed channel looks exactly like an unused slot on the Wii Menu, and can only be detected when hovered over. The banner recreates the same look as the icon and has gentle white noise as its audio.",
     "icon": true,
     "source": "https://github.com/cmyksoda/empty-slot-creator",
     "download": "https://github.com/cmyksoda/empty-slot-creator/releases/download/v1.0.0/EmptySlotCreator-v1.0.0.zip"
@@ -111,7 +111,7 @@
     "version": "1.0.0-beta",
     "shortDescription": "USB Camera Application",
     "longDescription": "Take photos and record video with a USB camera. It can record sound, too.\n\nIn testing, sound works at every resolution. However, it only stays available at the size the camera first opened with. To record sound at another size, restart WiiCam; the menu tells you when.\n\nAfter a photo, or a video stopped with A, a review page opens: 1 plays the video back, and Minus twice deletes it.\n\nChoose a size from 160 x 120 up to 848 x 480 (depending on the camera), set a 3, 5 or 10 second photo timer, or refresh the camera source from the menu.\n\nPhotos are saved to SD:/DCIM/100WC04 and videos to SD:/wc04-camera/videos. Videos are AVI files limited to 60 seconds or 128 MiB. Photos and videos can be viewed and edited in the Photo Channel.\n\nRequires IOS58 and an SD card to save.\n\nTested with the Ubisoft / Hercules WC04 camera (photos and silent video) and a W2 webcam, USB ID 0c45:6366 (photos, video and sound at every size). Other UVC 1.0 MJPEG cameras may work.",
-    "longDescriptionDraft": "A Wii USB camera app, inspired by ZodiaKGalXy's GBAtemp request.\n\nIt shows a live preview and takes JPEG photos from 160×120 up to 848×480, depending on the camera, instantly or on a 3, 5, or 10 second timer. It also records AVI video, silent or with sound, up to 60 seconds or 128 MiB, but video is currently unreliable, and different cameras give varying results.\n\nIt needs IOS58, and an SD card to save to. It's tested with the Ubisoft / Hercules WC04 camera and a W2 webcam, and other UVC 1.0 MJPEG cameras may work.",
+    "longDescriptionDraft": "A Wii USB camera app, inspired by ZodiaKGalXy's GBAtemp request.\n\nFeatures a live preview, countdown timers, and the ability to record videos both with and without sound (assuming your webcam has a compatible microphone).\n\nIt's in early development, so many USB cameras may not work yet. More features are planned for the future.",
     "icon": true,
     "source": "https://github.com/cmyksoda/WiiCam",
     "download": "https://github.com/cmyksoda/WiiCam/releases/download/v1.0.0-beta/WiiCam.zip"
