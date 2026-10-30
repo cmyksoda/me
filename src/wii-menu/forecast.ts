@@ -3,14 +3,14 @@ import type { Quad, Vec2 } from './lyt/brlyt';
 import { AnimationPlayer, type LayoutInstance, type PaneNode } from './lyt/layout';
 
 const FORECAST_ID = 'HAFE';
-// On a console a module fills these in from WiiLink's forecast data; here it's a sunny afternoon in Kyoto.
-const CITY = 'Kyoto';
+// On a console a module fills these in from WiiLink's forecast data; here it's a sunny afternoon in Redmond.
+const CITY = 'Redmond';
 const CONDITION = 'Sunny';
 // WiiLink's "Sunny" carries mark 101, which is the sun alone at the center.
 const SYMBOL = 'W_sun_00';
-// Kyoto's normal daily highs in °F, January to December.
-const HIGHS = [48, 50, 57, 68, 77, 83, 90, 93, 85, 74, 63, 53];
-const KYOTO_UTC_OFFSET = 9;
+// About the Seattle area's normal daily highs in °F, January to December.
+const HIGHS = [48, 50, 54, 59, 65, 71, 77, 78, 71, 60, 51, 46];
+const TIME_ZONE = 'America/Los_Angeles';
 const UPDATE_HOUR = 15;
 // no_big.tpl is one row of cells: 0-9, °, −, C, F.
 const NUMBER_CELLS = 14;
@@ -39,16 +39,23 @@ export function forecastBanner(channel: ChannelBase, instance: LayoutInstance): 
   return moduleClip(channel.banner, instance, 'banner');
 }
 
-/** The most recent 3 p.m. in Kyoto with that month's normal high, stamped as an English USA console writes it. */
+/** The most recent 3 p.m. in Redmond with that month's normal high, stamped as an English USA console writes it. */
 function latestForecast(now = Date.now()): { fahrenheit: number; stamp: string } {
-  // Moving the clock to Kyoto and back by the update hour leaves that update's date in the UTC fields.
-  const day = new Date(now + (KYOTO_UTC_OFFSET - UPDATE_HOUR) * 3_600_000);
+  let day = redmondClock(now);
+  if (day.hour < UPDATE_HOUR) day = redmondClock(now - 24 * 3_600_000);
   const pad = (n: number) => String(n).padStart(2, '0');
   const time = `${UPDATE_HOUR % 12 || 12}:00 ${UPDATE_HOUR < 12 ? 'a.m.' : 'p.m.'}`;
   return {
-    fahrenheit: HIGHS[day.getUTCMonth()],
-    stamp: `As of ${time}, ${pad(day.getUTCMonth() + 1)}/${pad(day.getUTCDate())}`,
+    fahrenheit: HIGHS[day.month - 1],
+    stamp: `As of ${time}, ${pad(day.month)}/${pad(day.day)}`,
   };
+}
+
+/** The date and hour on Redmond's clock, daylight saving and all. */
+function redmondClock(time: number): { month: number; day: number; hour: number } {
+  const format = new Intl.DateTimeFormat('en-US', { timeZone: TIME_ZONE, month: 'numeric', day: 'numeric', hour: 'numeric', hourCycle: 'h23' });
+  const parts = Object.fromEntries(format.formatToParts(time).map((part) => [part.type, Number(part.value)]));
+  return { month: parts.month, day: parts.day, hour: parts.hour };
 }
 
 /** A module's clip, bound to its Rso0 group as bindRsoAnm binds it, looping only if the file says so. */
