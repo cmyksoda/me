@@ -35,15 +35,33 @@ export const letters: Letter[] = [
     title: 'Notice',
     position: [10, 30],
     body: [
-      'Wii and the Wii Menu, including its graphics, fonts, sounds and text, belong to Nintendo. '
-        + 'They are used here for a fan page that is not affiliated with or endorsed by Nintendo.',
-      'Each channel\'s icon, banner and sound come from my forwarder channels, which are free software '
-        + 'under the GNU GPLv3, with full credits in each repository.',
+      'Wii, the Wii Menu, and Nintendo\'s own channels, including their graphics, fonts, sounds, and text, belong '
+        + 'to Nintendo. They are used here for a fan page that is not affiliated with or endorsed by Nintendo.',
+      'The channels on the main Wii Menu are my forwarder channels. They\'re free software under the GNU GPLv3, '
+        + 'with full credits in each repository.',
       'The code of this page is free software under the GNU Affero General Public License, version 3. '
-        + 'You can read it in full in the next letter, and find the source here:\n'
+        + 'The AGPLv3 letter holds the license in full, and the source is here:\n'
         + 'github.com/cmyksoda/me',
       'Thank you to Tomoeko\'s Wii_Menu_HTML and the wii-ipl decompilation project, whose work made '
         + 'a faithful menu possible.',
+    ].join('\n\n'),
+  },
+  {
+    title: 'Mods',
+    position: [160, -35],
+    body: [
+      'The SD Card Menu holds three channels that aren\'t forwarders. They\'re mods of Nintendo\'s own channels, '
+        + 'made for USA Wii consoles.',
+      'Super Mario Bros. 25th Anniversary, which shows a 25 on its ? blocks, came pre-installed on the anniversary '
+        + 'Wii consoles in Japan, Hong Kong, Taiwan and Australia. North America never got it, so this version of '
+        + 'the Australian channel is rebuilt for US Wiis at 60 Hz, keeping its English banner.',
+      'The Internet Channel runs quatric\'s Wii port of NetSurf, packed entirely inside the channel. It\'s for '
+        + 'the Wii only, not the Wii U\'s vWii, and installing it replaces your Internet Channel.',
+      'The Forecast Channel is the WiiLink version, redrawn with the Japanese weather symbols everywhere, on the '
+        + 'Wii Menu tile too. Installing it replaces your Forecast Channel.',
+      'Only the Super Mario Bros. channel is available to download so far.',
+      'Back up your NAND before you install a channel.',
+      'jaxi',
     ].join('\n\n'),
   },
   {
