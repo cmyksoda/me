@@ -34,6 +34,8 @@ function* channel(): Generator<void, void, void> {
   let current: View = browser;
   let last: View = browser;
   let detail: View | null = null;
+  // Where a long description's text sat when B grabbed it.
+  let grabbedAt: number | null = null;
   let about: View | null = null;
   let app: App | null = null;
   let frame = 0;
@@ -114,11 +116,13 @@ function* channel(): Generator<void, void, void> {
       if (pad.down & UP) scroll += lineHeight;
       if (pad.down & DOWN) scroll -= lineHeight;
 
-      // Held B on a long description pulls it along like a joystick. B anywhere else
-      // backs out, and so does a click outside the dialog.
+      // Held B on a long description grabs it, so the text follows the hand. HBC pulls it along like a
+      // joystick instead, which a mouse makes feel dead. B anywhere else backs out, as does a click outside.
       const dragging = detail.drag && detail.dragWidget === 6;
       const clickedOutside = (pad.down & A) !== 0 && pointing() && widgetAtPointer(detail) === -1;
-      if (dragging) scroll += Math.trunc(-detail.dragY / 32);
+      const text = detail.widgets[6]!;
+      grabbedAt = dragging ? (grabbedAt ?? text.y) : null;
+      if (grabbedAt !== null) scroll += grabbedAt + detail.dragY - text.y;
       let close = !dragging && ((pad.down & B) !== 0 || clickedOutside);
 
       if (!close) {
