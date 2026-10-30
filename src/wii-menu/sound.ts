@@ -126,9 +126,10 @@ export class Sound {
       void cues.then(async (all) => {
         const jingle = all[JINGLE] && (await this.load(`sound/${all[JINGLE].file}`));
         await (all[MUSIC] && this.load(`sound/${all[MUSIC].file}`));
+        // A channel opened while these loaded has already asked for silence.
+        if (!this.musicWanted) return;
         if (jingle && this.enabled) this.track(JINGLE, this.start(jingle, all[JINGLE].gain));
-        // A channel opened while the music loaded has already asked for silence.
-        if (this.musicWanted) this.startMusic();
+        this.startMusic();
       });
     } else {
       this.musicWanted = false;
@@ -272,10 +273,13 @@ export class Sound {
     });
   }
 
+  /** Stops the music, and the start-up jingle with it, so neither plays under a banner. */
   stopMusic(frames = 0): void {
     this.musicWanted = false;
     this.stopVoice(this.music, frames);
     this.music = null;
+    this.stopVoice(this.voices.get(JINGLE) ?? null, frames);
+    this.voices.delete(JINGLE);
   }
 
   /**
