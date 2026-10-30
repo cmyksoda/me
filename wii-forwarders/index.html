@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="cmyksoda's Wii forwarder channels, on a Wii Menu that runs in your browser." />
+    <meta name="theme-color" content="#000000" />
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <title>Wii Menu · cmyksoda's forwarder channels</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+      canvas { display: block; width: 100vw; height: 100vh; cursor: none; touch-action: none; }
+      .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    </style>
+  </head>
+  <body>
+    <canvas id="screen" aria-label="Wii Menu with cmyksoda's forwarder channels"></canvas>
+    <nav class="sr-only" aria-label="forwarder channels" id="channel-links"></nav>
+    <script type="module" src="../src/wii-menu/main.ts"></script>
+  </body>
+</html>
