@@ -1,5 +1,5 @@
 // Prints, as JSON, the Droid Sans metrics that HBC 1.1.3's font.c lays text out with.
-// FreeType's v35 interpreter hints like the FreeType HBC was built with: its advances match the fonts' hdmx tables.
+// FreeType's v40 interpreter: the real HBC's text widths match it, not the fonts' hdmx tables (checked in Dolphin).
 // Usage: font_metrics droid.ttf droidbold.ttf U+0020-007E,U+00A0-017F,...
 
 #include <stdio.h>
@@ -76,7 +76,7 @@ static void print_face(const char *path, const char *name, int em_w, int em_h, i
 }
 
 int main(int argc, char **argv) {
-	FT_UInt v35 = TT_INTERPRETER_VERSION_35;
+	FT_UInt v40 = TT_INTERPRETER_VERSION_40;
 
 	if (argc != 4) {
 		fprintf(stderr, "usage: %s droid.ttf droidbold.ttf unicode-ranges\n", argv[0]);
@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
 
 	parse_ranges(argv[3]);
 	FT_Init_FreeType(&library);
-	FT_Property_Set(library, "truetype", "interpreter-version", &v35);
+	FT_Property_Set(library, "truetype", "interpreter-version", &v40);
 
 	printf("{\"codepoints\":[");
 	for (int i = 0; i < codepoint_count; ++i)
