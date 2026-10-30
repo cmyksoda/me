@@ -175,6 +175,12 @@ export class Renderer {
     gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
     // Lets prepared shaders compile on the driver's threads instead of stalling a frame.
     this.parallel = gl.getExtension('KHR_parallel_shader_compile');
+    // These are first needed mid-animation (the zoom, a banner's text), so they start compiling now.
+    for (const [mapped, intensity] of [[false, false], [false, true], [true, false], [true, true]]) {
+      this.compile(textShader(mapped, intensity));
+    }
+    this.compile(FILL_SHADER);
+    this.compile(CAPTURE_SHADER);
   }
 
   /** Checks one prepared program a frame, once it has compiled, so a first draw never waits on many. */
