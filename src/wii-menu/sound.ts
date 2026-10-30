@@ -46,6 +46,8 @@ interface StartOptions {
   pan?: { cue: Cue; value: number };
   volume?: number;
   delay?: number;
+  /** Seconds into the buffer to begin. */
+  offset?: number;
 }
 
 const MUSIC = 'WIPL_BGM_MENU';
@@ -112,6 +114,8 @@ export class Sound {
   private bannerRequest = 0;
   private readonly bannerSounds = new Map<string, Promise<{ info: BannerInfo; buffer: AudioBuffer } | null>>();
   private readonly settledBanners = new Set<string>();
+  private preloading: Promise<unknown> = Promise.resolve();
+  private urgent: Promise<unknown> = Promise.resolve();
 
   /** Browsers only let audio start inside a click, so every press comes through here first. */
   unlock(): void {
@@ -180,7 +184,7 @@ export class Sound {
     if (pan && buffer.numberOfChannels === 2) setPan = panner(context, pan.cue, source, node, pan.value);
     else source.connect(node);
     node.connect(context.destination);
-    source.start(context.currentTime + (options.delay ?? 0));
+    source.start(context.currentTime + (options.delay ?? 0), options.offset ?? 0);
     return { source, gain: node, baseGain: gain, pan: setPan };
   }
 
@@ -312,15 +316,21 @@ export class Sound {
     return sound;
   }
 
-  /** Gets banner sounds loading one after another, so a preview's sound can start with its picture. */
+  /**
+   * Queues banner sounds to load one after another, so a preview's sound can start with its picture.
+   * Each waits for the banner a visitor just opened, so they never split its download.
+   */
   preloadBanners(folders: string[]): void {
     if (!this.enabled || !this.context) return;
-    void folders.reduce<Promise<unknown>>((before, folder) => before.then(() => this.bannerSound(folder)), Promise.resolve());
+    this.preloading = folders.reduce<Promise<unknown>>(
+      (before, folder) => before.then(() => this.urgent).then(() => this.bannerSound(folder)),
+      this.preloading,
+    );
   }
 
-  /** Starts one banner sound loading now, ahead of the others. */
+  /** Starts one banner sound loading now, ahead of the queue. */
   prepareBanner(folder: string): void {
-    if (this.enabled && this.context) void this.bannerSound(folder);
+    if (this.enabled && this.context) this.urgent = this.bannerSound(folder);
   }
 
   /** True once a banner's sound can start at once, or when there's nothing to wait for. */
@@ -333,14 +343,18 @@ export class Sound {
     if (!this.enabled || !this.context) return;
     this.stopBanner();
     const request = ++this.bannerRequest;
+    const startAt = this.context.currentTime + delayFrames * UPDATE;
     void this.bannerSound(folder).then((sound) => {
       // A newer request (or a stop) while this one loaded wins.
       if (!sound || !this.enabled || request !== this.bannerRequest) return;
       const { info, buffer } = sound;
-      this.banner = this.start(buffer, info.gain ?? 1, {
-        loop: info.loop ? { start: info.loopStart, end: info.loopEnd } : undefined,
-        delay: delayFrames * UPDATE,
-      });
+      const now = this.context!.currentTime;
+      const loop = info.loop ? { start: info.loopStart ?? 0, end: info.loopEnd ?? buffer.duration } : undefined;
+      // A sound that arrives after its banner began joins in where the picture is, so the two stay together.
+      let offset = Math.max(0, now - startAt);
+      if (loop && offset > loop.end && loop.end > loop.start) offset = loop.start + ((offset - loop.start) % (loop.end - loop.start));
+      if (!loop && offset >= buffer.duration) return;
+      this.banner = this.start(buffer, info.gain ?? 1, { loop, delay: Math.max(0, startAt - now), offset });
     });
   }
 

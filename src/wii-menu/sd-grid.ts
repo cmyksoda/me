@@ -233,6 +233,8 @@ export class SdGrid {
       this.slots[index].focus.point();
       this.slots[index].balloon.point();
       this.sound.play('WIPL_SE_CH_TARGETTING');
+      const channel = this.channelAt(this.page * SLOTS_PER_PAGE + index);
+      if (channel) this.sound.prepareBanner(`sd-channels/${channel.id}`);
     }
   }
 

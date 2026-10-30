@@ -316,6 +316,9 @@ export class ChannelGrid {
       this.slotFocus(this.slots[index], 'in');
       this.slots[index].balloon.point();
       this.sound.play('WIPL_SE_CH_TARGETTING');
+      // A pointed channel is likely opened next, so its banner sound gets a head start.
+      const channel = this.channelAt(this.page * SLOTS_PER_PAGE + index);
+      if (channel) this.sound.prepareBanner(`channels/${channel.id}`);
     }
   }
 
