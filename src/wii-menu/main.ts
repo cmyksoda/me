@@ -29,6 +29,9 @@ try {
 const sound = new Sound();
 const assets = await loadAssets(renderer);
 const scenes = new Scenes(assets, renderer, sound);
+// The previews' banners get ready in the background, so opening or switching one never pauses.
+renderer.prepare(assets.menu.chanTtl.layout('my_ChTop_a'), assets.menu.chanTtl.files);
+for (const channel of assets.channels) renderer.prepare(channel.banner.layout('banner'), channel.banner.files);
 
 
 const pointer: MenuPointer = {
@@ -95,6 +98,7 @@ function frame(now: number) {
 
   renderer.beginFrame([screen.width, SCREEN_HEIGHT], screen.viewport);
   scenes.draw(screen, pointer);
+  renderer.settle();
   if (import.meta.env.DEV && debug.capture) {
     debug.png = canvas.toDataURL('image/png');
     debug.capture = false;

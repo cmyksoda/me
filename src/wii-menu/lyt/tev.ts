@@ -116,8 +116,18 @@ export interface ShaderSource {
   fragment: string;
 }
 
-/** Builds the vertex and fragment shaders that reproduce a material's texture generators and TEV. */
+// Every quad of every frame asks for its shaders, so each is written once.
+const materialShaders = new WeakMap<Material, ShaderSource>();
+const textShaders = new Map<string, ShaderSource>();
+
+/** The vertex and fragment shaders that reproduce a material's texture generators and TEV. */
 export function materialShader(material: Material): ShaderSource {
+  let shader = materialShaders.get(material);
+  if (!shader) materialShaders.set(material, (shader = writeMaterialShader(material)));
+  return shader;
+}
+
+function writeMaterialShader(material: Material): ShaderSource {
   const stages: Stage[] = material.tevStages.length ? material.tevStages : defaultStages(material.texMaps.length);
   const swaps = material.swapTables ?? DEFAULT_SWAP_TABLES;
   const gens = material.texCoordGens;
@@ -184,6 +194,13 @@ void main() {
 
 /** Text boxes ignore their material's stages; CharWriter::SetupGX picks one of these instead. */
 export function textShader(mapped: boolean, intensityFont: boolean): ShaderSource {
+  const key = `${mapped} ${intensityFont}`;
+  let shader = textShaders.get(key);
+  if (!shader) textShaders.set(key, (shader = writeTextShader(mapped, intensityFont)));
+  return shader;
+}
+
+function writeTextShader(mapped: boolean, intensityFont: boolean): ShaderSource {
   const color = mapped
     ? 'vec4(mix(uColor[0].rgb, uColor[1].rgb, tex.rgb), mix(uColor[0].a, uColor[1].a, tex.a)) * vRaster'
     : intensityFont ? 'vec4(vRaster.rgb, tex.a * vRaster.a)' : 'tex * vRaster';

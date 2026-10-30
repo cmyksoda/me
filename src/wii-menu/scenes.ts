@@ -50,7 +50,12 @@ export class Scenes {
     this.fader.fadeOut();
     if (next === 'sd') {
       this.sdFiles = 'loading';
-      loadSdAssets(this.assets).then(() => (this.sdFiles = 'ready'), () => (this.sdFiles = 'failed'));
+      loadSdAssets(this.assets).then(() => {
+        this.sdFiles = 'ready';
+        const { sdChanTtl } = this.assets.menu;
+        this.renderer.prepare(sdChanTtl.layout('mn_SdcardMenuBanner_bc'), sdChanTtl.files);
+        for (const channel of this.assets.sdChannels) this.renderer.prepare(channel.banner.layout('banner'), channel.banner.files);
+      }, () => (this.sdFiles = 'failed'));
     }
   }
 

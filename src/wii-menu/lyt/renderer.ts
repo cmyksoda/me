@@ -1,5 +1,5 @@
 import type { RGBA } from './binary';
-import type { Quad, Vec2 } from './brlyt';
+import type { Layout, Quad, Vec2 } from './brlyt';
 import { layoutText, type FontMetrics, type GlyphQuad } from './font';
 import type { LayoutInstance, MaterialState, Mtx34, PaneNode } from './layout';
 import { materialShader, textShader, type ShaderSource } from './tev';
@@ -18,6 +18,8 @@ const SHARED_FONTS: Record<string, string> = {
 interface Program {
   program: WebGLProgram;
   uniform: (name: string) => WebGLUniformLocation | null;
+  /** Checked on first use, so a prepared program can finish compiling in the background. */
+  unchecked: { vertex: WebGLShader; fragment: WebGLShader; source: ShaderSource } | null;
 }
 
 interface TextureEntry {
@@ -137,6 +139,16 @@ export class Renderer {
   private readonly programs = new Map<string, Program>();
   private readonly samplers = new Map<string, WebGLSampler>();
   private readonly textures = new WeakMap<Map<string, Uint8Array>, Map<string, TextureEntry | null>>();
+  private readonly preloaded = new WeakSet<Map<string, Uint8Array>>();
+  private worker: Worker | null = null;
+  private readonly jobs = new Map<number, { cache: Map<string, TextureEntry | null>; name: string }>();
+  private nextJob = 0;
+  private readonly unchecked: Program[] = [];
+  private readonly parallel: { COMPLETION_STATUS_KHR: number } | null;
+  private readonly colorData = new Float32Array(12);
+  private readonly konstData = new Float32Array(16);
+  private readonly rowS = new Float32Array(24);
+  private readonly rowT = new Float32Array(24);
   private readonly layouts = new WeakMap<PaneNode, { text: string; size: string; quads: GlyphQuad[] }>();
   private readonly buffer: WebGLBuffer;
   private vertices = new Float32Array(FLOATS_PER_VERTEX * 4);
@@ -161,6 +173,52 @@ export class Renderer {
       offset += size;
     });
     gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+    // Lets prepared shaders compile on the driver's threads instead of stalling a frame.
+    this.parallel = gl.getExtension('KHR_parallel_shader_compile');
+  }
+
+  /** Checks one prepared program a frame, once it has compiled, so a first draw never waits on many. */
+  settle(): void {
+    while (this.unchecked.length && !this.unchecked[0].unchecked) this.unchecked.shift();
+    const next = this.unchecked[0];
+    if (!next || (this.parallel && !this.gl.getProgramParameter(next.program, this.parallel.COMPLETION_STATUS_KHR))) return;
+    this.check(next);
+  }
+
+  /** Starts a layout's shaders compiling and its archive's textures decoding before its first frame. */
+  prepare(layout: Layout, files: Map<string, Uint8Array>): void {
+    for (const material of layout.materials) {
+      const source = materialShader(material);
+      if (!this.programs.has(source.key)) this.compile(source);
+    }
+    this.preloadTextures(files);
+  }
+
+  private preloadTextures(files: Map<string, Uint8Array>): void {
+    if (this.preloaded.has(files)) return;
+    this.preloaded.add(files);
+    if (!this.worker) {
+      try {
+        this.worker = new Worker(new URL('./tpl-worker.ts', import.meta.url), { type: 'module' });
+      } catch {
+        return;
+      }
+      this.worker.addEventListener('message', (event: MessageEvent<{ id: number; texture: Texture }>) => {
+        const job = this.jobs.get(event.data.id);
+        this.jobs.delete(event.data.id);
+        // A draw that couldn't wait has already decoded it.
+        if (job && !job.cache.has(job.name)) job.cache.set(job.name, this.upload(event.data.texture));
+      });
+    }
+    const cache = this.cacheFor(files);
+    for (const [path, bytes] of files) {
+      const name = path.slice(path.lastIndexOf('/') + 1);
+      if (!name.endsWith('.tpl') || cache.has(name)) continue;
+      const id = this.nextJob++;
+      this.jobs.set(id, { cache, name });
+      const copy = bytes.slice();
+      this.worker.postMessage({ id, bytes: copy }, [copy.buffer]);
+    }
   }
 
   /** Starts a frame: `screen` is the logical TV area (608 or 832 by 456) drawn into `viewport` pixels. */
@@ -489,29 +547,38 @@ export class Renderer {
     const gl = this.gl;
     const material = state.source;
     gl.uniform2f(program.uniform('uScreenHalf'), ...this.screenHalf);
-    gl.uniform4fv(program.uniform('uColor'), state.tevColors.flat().map((c) => c / 255));
-    gl.uniform4fv(program.uniform('uKonst'), state.konstColors.flat().map((c) => c / 255));
+    // Filled in place: this runs for every quad of every frame.
+    const colors = this.colorData;
+    const konst = this.konstData;
+    for (let i = 0; i < 16; i++) {
+      if (i < 12) colors[i] = state.tevColors[i >> 2][i & 3] / 255;
+      konst[i] = state.konstColors[i >> 2][i & 3] / 255;
+    }
+    gl.uniform4fv(program.uniform('uColor'), colors);
+    gl.uniform4fv(program.uniform('uKonst'), konst);
 
-    const rowsS: number[] = [];
-    const rowsT: number[] = [];
-    material.texCoordGens.forEach((gen) => {
-      const srt = gen.matrix >= 30 && gen.matrix < 60 ? state.texSRTs[(gen.matrix - 30) / 3] : undefined;
+    const rowS = this.rowS;
+    const rowT = this.rowT;
+    const gens = material.texCoordGens;
+    for (let i = 0; i < gens.length; i++) {
+      const matrix = gens[i].matrix;
+      const srt = matrix >= 30 && matrix < 60 ? state.texSRTs[(matrix - 30) / 3] : undefined;
       if (!srt) {
-        rowsS.push(1, 0, 0);
-        rowsT.push(0, 1, 0);
-        return;
+        rowS.set([1, 0, 0], i * 3);
+        rowT.set([0, 1, 0], i * 3);
+        continue;
       }
       // lyt CalcTextureMtx: scale and rotate about the texture's center, then translate.
       const cos = Math.cos(srt.rotate * Math.PI / 180);
       const sin = Math.sin(srt.rotate * Math.PI / 180);
       const [a0, a1] = [cos * srt.scale[0], -sin * srt.scale[1]];
       const [b0, b1] = [sin * srt.scale[0], cos * srt.scale[1]];
-      rowsS.push(a0, a1, srt.translate[0] + 0.5 - 0.5 * a0 - 0.5 * a1);
-      rowsT.push(b0, b1, srt.translate[1] + 0.5 - 0.5 * b0 - 0.5 * b1);
-    });
-    if (rowsS.length) {
-      gl.uniform3fv(program.uniform('uTexRowS'), rowsS);
-      gl.uniform3fv(program.uniform('uTexRowT'), rowsT);
+      rowS.set([a0, a1, srt.translate[0] + 0.5 - 0.5 * a0 - 0.5 * a1], i * 3);
+      rowT.set([b0, b1, srt.translate[1] + 0.5 - 0.5 * b0 - 0.5 * b1], i * 3);
+    }
+    if (gens.length) {
+      gl.uniform3fv(program.uniform('uTexRowS'), rowS, 0, gens.length * 3);
+      gl.uniform3fv(program.uniform('uTexRowT'), rowT, 0, gens.length * 3);
     }
 
     const units: number[] = [];
@@ -547,8 +614,7 @@ export class Renderer {
   texture(instance: LayoutInstance, state: MaterialState, unit: number): TextureEntry | null {
     const name = state.textures[unit];
     if (!name) return null;
-    let cache = this.textures.get(instance.files);
-    if (!cache) this.textures.set(instance.files, (cache = new Map()));
+    const cache = this.cacheFor(instance.files);
     if (cache.has(name)) return cache.get(name)!;
     const file = instance.files.get(`arc/timg/${name}`)
       ?? [...instance.files].find(([path]) => path.endsWith(`/${name}`))?.[1];
@@ -559,9 +625,13 @@ export class Renderer {
 
   /** Adds a texture made at run time, which materials of this archive can then name like its own TPLs. */
   addTexture(instance: LayoutInstance, name: string, image: Texture): void {
-    let cache = this.textures.get(instance.files);
-    if (!cache) this.textures.set(instance.files, (cache = new Map()));
-    cache.set(name, this.upload(image));
+    this.cacheFor(instance.files).set(name, this.upload(image));
+  }
+
+  private cacheFor(files: Map<string, Uint8Array>): Map<string, TextureEntry | null> {
+    let cache = this.textures.get(files);
+    if (!cache) this.textures.set(files, (cache = new Map()));
+    return cache;
   }
 
   private upload(image: Texture): TextureEntry {
@@ -589,24 +659,38 @@ export class Renderer {
   }
 
   private program(source: ShaderSource): Program {
-    const cached = this.programs.get(source.key);
-    if (cached) return cached;
+    const entry = this.programs.get(source.key) ?? this.compile(source);
+    if (entry.unchecked) this.check(entry);
+    return entry;
+  }
+
+  /** Asking for a program's status waits for its compile, so it's asked once. */
+  private check(entry: Program): void {
     const gl = this.gl;
-    const compile = (type: number, text: string) => {
-      const shader = gl.createShader(type)!;
-      gl.shaderSource(shader, text);
-      gl.compileShader(shader);
-      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        throw new Error(`${gl.getShaderInfoLog(shader)}\n${text}`);
-      }
-      return shader;
+    const { vertex, fragment, source } = entry.unchecked!;
+    entry.unchecked = null;
+    if (gl.getProgramParameter(entry.program, gl.LINK_STATUS)) return;
+    for (const [shader, text] of [[vertex, source.vertex], [fragment, source.fragment]] as const) {
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) throw new Error(`${gl.getShaderInfoLog(shader)}\n${text}`);
+    }
+    throw new Error(gl.getProgramInfoLog(entry.program) ?? 'link failed');
+  }
+
+  private compile(source: ShaderSource): Program {
+    const gl = this.gl;
+    const shader = (type: number, text: string) => {
+      const created = gl.createShader(type)!;
+      gl.shaderSource(created, text);
+      gl.compileShader(created);
+      return created;
     };
+    const vertex = shader(gl.VERTEX_SHADER, source.vertex);
+    const fragment = shader(gl.FRAGMENT_SHADER, source.fragment);
     const program = gl.createProgram()!;
-    gl.attachShader(program, compile(gl.VERTEX_SHADER, source.vertex));
-    gl.attachShader(program, compile(gl.FRAGMENT_SHADER, source.fragment));
+    gl.attachShader(program, vertex);
+    gl.attachShader(program, fragment);
     ATTRIBUTES.forEach((name, location) => gl.bindAttribLocation(program, location, name));
     gl.linkProgram(program);
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program) ?? 'link failed');
     const locations = new Map<string, WebGLUniformLocation | null>();
     const entry: Program = {
       program,
@@ -614,8 +698,10 @@ export class Renderer {
         if (!locations.has(name)) locations.set(name, gl.getUniformLocation(program, name));
         return locations.get(name)!;
       },
+      unchecked: { vertex, fragment, source },
     };
     this.programs.set(source.key, entry);
+    this.unchecked.push(entry);
     return entry;
   }
 }
