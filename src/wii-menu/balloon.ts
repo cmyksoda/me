@@ -38,13 +38,13 @@ export class Balloon {
     return this.state !== 'hidden' && this.state !== 'waiting';
   }
 
-  /** Sets the label with the menu's truncation: 20 characters, then "..." until it fits. */
-  setText(renderer: Renderer, label: string): void {
+  /** Sets the label with the menu's truncation: 20 characters, then "..." until it fits; `whole` skips it (bNoLimit). */
+  setText(renderer: Renderer, label: string, whole = false): void {
     const pane = this.instance.pane('T_Balloon');
     const content = pane.source.text!;
     const font = renderer.fonts.get(this.instance.layout.fonts[content.font].replace(/\.brfn[ta]$/, ''))!.metrics;
-    let text = label.slice(0, MAX_CHARACTERS);
-    let limit = MAX_WIDTH;
+    let text = whole ? label : label.slice(0, MAX_CHARACTERS);
+    let limit = whole ? Infinity : MAX_WIDTH;
     while (text.length > 0 && measureText(font, content, text) > limit) {
       text = `${text.replace(/\.\.\.$/, '').slice(0, -1)}...`;
       limit = CUT_WIDTH;
@@ -109,8 +109,11 @@ export class Balloon {
     }
   }
 
-  /** Draws with its tail centered at (x, y), keeping `margin` units inside the screen edges. */
-  draw(renderer: Renderer, screen: Screen, x: number, y: number, margin: number): void {
+  /**
+   * Draws with its tail centered at (x, y), keeping `margin` units inside the screen edges. A footer
+   * balloon's clamped x sits under its layout's stretched root, so in 16:9 it lands L times further out.
+   */
+  draw(renderer: Renderer, screen: Screen, x: number, y: number, margin: number, underRoot = false): void {
     if (!this.visible) return;
     const minimum = 160 * (screen.width / 608);
     const base = this.instance.pane('W_Base');
@@ -122,7 +125,7 @@ export class Balloon {
     const edge = screen.width / 2 - margin;
     const shifted = Math.min(edge - half, Math.max(-edge + half, x));
     const view = identity();
-    view[3] = shifted;
+    view[3] = underRoot ? shifted * (screen.width / 608) : shifted;
     view[7] = y;
     this.instance.update(view, screen);
     renderer.drawLayout(this.instance);

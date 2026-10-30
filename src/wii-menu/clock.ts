@@ -4,6 +4,8 @@ import { AnimationPlayer, identity, type LayoutInstance, type PaneNode } from '.
 import type { Renderer } from './lyt/renderer';
 
 const WII_MENU_FOR = 3000;
+// The flag is static on the console: a menu rebuilt later (back from the SD Card Menu) shows the time at once.
+let booted = false;
 
 /**
  * The channel screen's clock (iplClock.cpp), USA style: 12-hour time with no leading zero and
@@ -24,7 +26,9 @@ export class Clock {
     this.change = new AnimationPlayer(archive.animation('my_Clock_a_Change')!, this.instance);
     this.instance.pane('T_WiiMenu').text = messages['16'];
     this.instance.pane('AM_PM').visible = false;
-    this.change.seek(this.change.from);
+    this.showingTime = booted;
+    booted = true;
+    this.change.seek(this.showingTime ? this.change.to : this.change.from);
   }
 
   private digit(pane: string, donor: string): void {

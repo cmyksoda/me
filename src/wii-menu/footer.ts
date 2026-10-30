@@ -107,7 +107,11 @@ export class Footer {
     this.clips.set('sdPoint', sdClip('BtnL_RollOver'));
     this.clips.set('sdLeave', sdClip('BtnL_RollOut'));
     this.clips.set('sdOut', sdClip('BtnL_Out'));
-    this.sd.pane('N_Btn_On').visible = false;
+    // Bound to its group alone: the file also holds the In/Out pose for the whole button.
+    const select = cmnBtn.animation('mn_Sdcard_Btn_BtnL_On')!;
+    this.clips.set('sdSelect', new AnimationPlayer(select, this.sd, { panes: this.sd.layout.groups.get('Btn_L_On') }));
+    // A card is always in the slot (toggle_insert), so the button wears its blue face.
+    this.sd.pane('N_Btn_Off').visible = false;
 
     // The Wii button shows the page's sound instead of the Wii logo, in the logo's own shade.
     const [face] = parseTPL(cmnBtn.files.get('arc/timg/my_TopBtn_a.tpl')!);
@@ -265,6 +269,9 @@ export class Footer {
       this.sound.play('WIPL_SE_DECIDE');
     } else if (target === 'board') {
       this.clips.get('pressBoard')!.play();
+      this.sound.play('WIPL_SE_DECIDE');
+    } else if (target === 'sd') {
+      this.clips.get('sdSelect')!.play();
       this.sound.play('WIPL_SE_DECIDE');
     }
   }

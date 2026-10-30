@@ -66,6 +66,7 @@ export class ChannelGrid {
   onSelect: ((channel: Channel, slot: PaneNode) => void) | null = null;
   onBoard: (() => void) | null = null;
   onOptions: (() => void) | null = null;
+  onSd: (() => void) | null = null;
 
   private readonly top: LayoutInstance;
   private readonly clock: Clock;
@@ -517,6 +518,11 @@ export class ChannelGrid {
     else if (target === 'right') this.startScroll(1);
     else if (target === 'board') this.onBoard?.();
     else if (target === 'options') this.onOptions?.();
+    else if (target === 'sd' && this.onSd) {
+      // START_SD_MENU: the grid takes no more input, hovers and all, while the screen fades out.
+      this.state = 'selected';
+      this.onSd();
+    }
   }
 
   private select(index: number): void {

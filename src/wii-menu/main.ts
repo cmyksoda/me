@@ -1,7 +1,8 @@
 import { loadAssets, root } from './assets';
 import { measureScreen, SCREEN_HEIGHT, toScreen, type Screen } from './display';
 import { Renderer } from './lyt/renderer';
-import { Menu, type MenuPointer } from './menu';
+import type { MenuPointer } from './menu';
+import { Scenes } from './scenes';
 import { Sound } from './sound';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#screen')!;
@@ -27,11 +28,7 @@ try {
 }
 const sound = new Sound();
 const assets = await loadAssets(renderer);
-const menu = new Menu(assets, renderer, sound);
-menu.grid.onOptions = () => {
-  sound.setEnabled(!sound.enabled);
-  menu.grid.footer.setSound(sound.enabled);
-};
+const scenes = new Scenes(assets, renderer, sound);
 
 
 const pointer: MenuPointer = {
@@ -56,7 +53,7 @@ canvas.addEventListener('pointerdown', (event) => {
   if (event.button === 0) {
     pointer.a = true;
     pressed = true;
-    const link = menu.linkAt(pointer.x, pointer.y);
+    const link = scenes.linkAt(pointer.x, pointer.y);
     if (link) window.open(link, '_blank', 'noopener');
   } else if (event.button === 2) {
     pointer.b = true;
@@ -70,12 +67,12 @@ canvas.addEventListener('pointerup', (event) => {
 });
 canvas.addEventListener('wheel', (event) => {
   event.preventDefault();
-  menu.wheel(event.deltaY * (SCREEN_HEIGHT / screen.viewport[3]) * devicePixelRatio);
+  scenes.wheel(event.deltaY * (SCREEN_HEIGHT / screen.viewport[3]) * devicePixelRatio);
 }, { passive: false });
 // Holding the right button is holding B, so the browser's own menu stays out of the way.
 canvas.addEventListener('contextmenu', (event) => event.preventDefault());
 
-const debug = { capture: false, png: '', menu, renderer, pointer, sound };
+const debug = { capture: false, png: '', scenes, get menu() { return scenes.menu; }, renderer, pointer, sound };
 let last = performance.now();
 function frame(now: number) {
   // The menu runs at 60 updates per second whatever the display's refresh rate.
@@ -89,11 +86,11 @@ function frame(now: number) {
   if (pressed) pointer.sincePress = 0;
   else if (pointer.sincePress !== null) pointer.sincePress += frames;
   pressed = false;
-  menu.update(frames, pointer);
+  scenes.update(frames, pointer);
   sound.endUpdate();
 
   renderer.beginFrame([screen.width, SCREEN_HEIGHT], screen.viewport);
-  menu.draw(screen, pointer);
+  scenes.draw(screen, pointer);
   if (import.meta.env.DEV && debug.capture) {
     debug.png = canvas.toDataURL('image/png');
     debug.capture = false;
