@@ -3,12 +3,12 @@
 import { apps, loadApps, type App } from './apps';
 import { browser, browserGenView, browserInit, browserRelayout, browserSelection, browserSetFocus, browserSwitchMode, INFO, VIEW_MODE } from './browser';
 import { A, B, DOWN, DPAD, LEFT, listen, MINUS, PLUS, RIGHT, TWO, UP } from './controls';
-import { DIALOG_MASK_COLOR, dialogAbout, dialogApp, dialogFade, dialogX, pointingAtSourceLink, SOURCE_URL } from './dialogs';
+import { aboutStep, DIALOG_MASK_COLOR, dialogAbout, dialogApp, dialogFade, dialogX, SOURCE_URL } from './dialogs';
 import { lineSpacing } from './font';
 import { screen, setLayout, windowLayout } from './gfx';
 import { loadTheme } from './theme';
 import { enableCursor, focusNext, focusPrevious, plot, pointing, pointingAtScroll, render, showThrobber, tickleThrobber, viewFade, widgetAtPointer, type View } from './view';
-import { scrollMemo, scrollMemoDeco } from './widgets';
+import { scrollMemoDeco } from './widgets';
 
 const FRAME = 1000 / 60;
 // A stand-in for the Wii's wait while it reads the SD card's apps.
@@ -138,18 +138,13 @@ function* channel(): Generator<void, void, void> {
     }
 
     if (current === about) {
-      if (pad.down & A && pointingAtSourceLink(about)) {
-        open(SOURCE_URL, '_blank', 'noopener');
-        continue;
-      }
-      if (pad.down & (A | B)) {
+      const result = aboutStep(about, pad, frame);
+      if (result === 'link') open(SOURCE_URL, '_blank', 'noopener');
+      if (result === 'close') {
         yield* dialogFade(about, false);
         current = browser;
         about = null;
-        continue;
       }
-      pointingAtSourceLink(about);
-      if (frame > 60 * 2 && frame % 3 === 0) scrollMemo(about.widgets[2]!, -1);
     }
   }
 }

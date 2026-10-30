@@ -1,12 +1,12 @@
 // The app details and About dialogs, and their slide up from the bottom (dialogs.c).
 
 import type { App } from './apps';
-import { B, pointer } from './controls';
+import { A, B, pointer, type Pad } from './controls';
 import { ascender, lineSpacing, textWidth, type TextRun } from './font';
 import { screen, VIEW_HEIGHT } from './gfx';
 import { theme } from './theme';
 import { newView, plot, pointing, setFocus, type View } from './view';
-import { button, image, label, memo, memoDeco, type Item, type Widget } from './widgets';
+import { button, image, label, memo, memoDeco, scrollMemo, type Item, type Widget } from './widgets';
 
 export const DIALOG_MASK_COLOR = 0x101010a0;
 const TRANS_STEPS = 15;
@@ -120,7 +120,8 @@ export function dialogApp(app: App, subView: View) {
 export function dialogAbout(subView: View) {
   const background = theme.dialog_background;
   const logo = theme.about;
-  const v = newView(3, subView, dialogX(), 44);
+  const v = newView(3, subView, dialogX(), 44, A | B);
+  hold = null;
   v.widgets[0] = image(0, 0, background);
   v.widgets[1] = image(Math.trunc((background.width - logo.width) / 2), 16, logo);
 
@@ -134,10 +135,50 @@ export function dialogAbout(subView: View) {
     height = whole;
   }
   const credits = memo(32, top, background.width - 64, height, aboutText, 'center');
-  credits.cursor = 'standard';
   v.widgets[2] = credits;
   sourceLink = splitLink(credits, SOURCE_URL);
   return v;
+}
+
+// A press on the credits that ends within this many frames, having moved this many HBC pixels at most, is a click.
+const CLICK_FRAMES = 20;
+const CLICK_TRAVEL = 4;
+
+interface Hold {
+  button: number;
+  frames: number;
+  travel: number;
+  text: number;
+  link: boolean;
+}
+
+let hold: Hold | null = null;
+
+// The credits scroll by themselves. Holding A or B on them stops that and drags the text with the pointer;
+// letting go carries on from there, unless it was a click, which leaves (or follows the source link).
+export function aboutStep(v: View, pad: Pad, frame: number): 'close' | 'link' | null {
+  const credits = v.widgets[2]!;
+  const onLink = pointingAtSourceLink(v);
+
+  if (!hold && pad.down & (A | B)) {
+    if (!(v.drag && v.dragWidget === 2)) return 'close';
+    hold = { button: pad.down & A ? A : B, frames: 0, travel: 0, text: credits.y, link: onLink };
+  }
+  if (hold) {
+    hold.frames++;
+    hold.travel = Math.max(hold.travel, Math.hypot(v.dragX, v.dragY));
+    scrollMemo(credits, hold.text + v.dragY - credits.y);
+    if (pad.up & hold.button) {
+      const click = hold.frames <= CLICK_FRAMES && hold.travel <= CLICK_TRAVEL;
+      const result = click ? (hold.link && hold.button === A ? 'link' : 'close') : null;
+      hold = null;
+      if (result) return result;
+    }
+  } else if (frame > 60 * 2 && frame % 3 === 0) {
+    scrollMemo(credits, -1);
+  }
+  credits.cursor = hold || !onLink ? 'drag' : 'standard';
+  return null;
 }
 
 interface Link {
