@@ -20,7 +20,8 @@ export interface Pad {
 }
 
 // Whole view pixels for the logic, like the IR position; exact ones for drawing the hand.
-export const pointer = { x: 0, y: 0, exactX: 0, exactY: 0, valid: false };
+// Until the mouse moves, the remote points just past the TV's corner: valid, so nothing keeps focus, but not drawn.
+export const pointer = { x: -64, y: -64, exactX: -64, exactY: -64, valid: true };
 
 const keys: Record<string, number> = {
   Enter: A,
