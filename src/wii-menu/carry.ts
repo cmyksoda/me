@@ -6,6 +6,8 @@ import type { Renderer } from './lyt/renderer';
 const GRAB_FRAMES = 10;
 const DWELL_FRAMES = 15;
 const REFUSED_VEIL_FRAMES = 21;
+// MOVE_CHAN_SAVE: the flash stays white while the new order is saved.
+const SAVE_FRAMES = 19;
 
 interface Overlay {
   instance: LayoutInstance;
@@ -38,6 +40,7 @@ export class Carry {
   private target: number | null = null;
   private onLanded: (() => void) | null = null;
   private moved = false;
+  private saving = 0;
   private veilHold = 0;
   private dwelling: { side: 'left' | 'right' | null; frames: number } = { side: null, frames: 0 };
   private wide: boolean | null = null;
@@ -128,9 +131,14 @@ export class Carry {
     if (this.target !== null && !this.moved && !this.flash.appear.playing) {
       this.moved = true;
       this.onLanded?.();
-      this.flash.lost.play();
+      // A channel dropped back on its own slot isn't saved, so its flash lifts at once.
+      this.saving = this.target === this.source ? 0 : SAVE_FRAMES;
+      if (this.saving === 0) this.flash.lost.play();
+    } else if (this.saving > 0) {
+      this.saving -= frames;
+      if (this.saving <= 0) this.flash.lost.play();
     }
-    if (this.target !== null && this.moved && !this.flash.lost.playing) this.target = null;
+    if (this.target !== null && this.moved && this.saving <= 0 && !this.flash.lost.playing) this.target = null;
   }
 
   /** Drag overlays for one slot, drawn with its thumbnail so the tile frames still sit on top. */
@@ -146,7 +154,7 @@ export class Carry {
       renderer.drawLayout(this.empty);
     }
     if (absolute === this.target) {
-      (this.moved ? this.flash.lost : this.flash.appear).apply();
+      (this.flash.lost.playing ? this.flash.lost : this.flash.appear).apply();
       this.flash.instance.update(translation(x, y), screen);
       renderer.drawLayout(this.flash.instance);
     }
