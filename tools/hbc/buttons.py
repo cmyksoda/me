@@ -5,7 +5,7 @@ Usage: tools/hbc/buttons.py   (writes src/hbc/assets/{info,view_grid,view_list}{
 
 Needs Pillow. The arrow is painted out of apps_previous.png and its hover twin,
 and a new glyph is drawn in the arrow's colors, then the result is scaled to 32 x 32
-to sit beside the USB Gecko and network icons.
+to sit where the USB Gecko and network icons were.
 """
 
 from pathlib import Path
@@ -39,13 +39,14 @@ def glyph_mask(kind):
     if kind == "info":
         draw.ellipse([v * SCALE for v in (28, 15, 36, 23)], fill=255)
         box(28, 27, 36, 48)
-    for row in range(3):
-        y = 19 + row * 10
-        if kind == "view_list":
+    if kind == "view_list":
+        for row in range(3):
+            y = 19 + row * 10
             box(18, y, 46, y + 7)
-        elif kind == "view_grid":
-            box(18, y, 30, y + 7)
-            box(34, y, 46, y + 7)
+    elif kind == "view_grid":
+        for y in (18.5, 34.5):
+            box(18, y, 30, y + 12)
+            box(34, y, 46, y + 12)
     return mask
 
 
