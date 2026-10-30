@@ -29,8 +29,14 @@ CHANNELS = [
         "wad": WADS / "Super Mario Bros. 25th Anniversary (NTSC 60Hz) - FFXP [cmyksoda].wad",
         "download": "https://archive.org/details/super-mario-bros.-25th-anniversary-en-banner-ntsc-60-hz",
     },
-    {"wad": WADS / "Internet Channel (NetSurf) - HADE [cmyksoda].wad", "download": None},
-    {"wad": WADS / "Forecast Channel (Japanese Symbols) - HAFE [cmyksoda].wad", "download": None},
+    {
+        "wad": WADS / "Internet Channel (NetSurf) - HADE [cmyksoda].wad",
+        "download": "https://archive.org/details/internet-channel-netsurf",
+    },
+    {
+        "wad": WADS / "Forecast Channel (Japanese Symbols) - HAFE [cmyksoda].wad",
+        "download": "https://archive.org/details/forecast-channel-japanese-symbols-wiilink",
+    },
 ]
 
 
