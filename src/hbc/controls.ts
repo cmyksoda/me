@@ -1,6 +1,6 @@
 // A Wii Remote made of a mouse and keyboard (controls.c): left button A, right button B.
 
-import { screen, toView, VIEW_HEIGHT } from './gfx';
+import { cssToView, screen, toView, VIEW_HEIGHT } from './gfx';
 
 export const A = 1;
 export const B = 2;
@@ -78,36 +78,68 @@ export function scanPad(): Pad {
   return { down: down | scroll, held: held | down, up };
 }
 
-function track(event: PointerEvent) {
-  const { x, y } = toView(event.clientX, event.clientY);
+function setPointer(x: number, y: number) {
   pointer.exactX = x;
   pointer.exactY = y;
   pointer.x = Math.floor(x);
   pointer.y = Math.floor(y);
   // WPAD_SetVRes gives the pointer 64 pixels beyond each edge.
   pointer.valid = x >= -64 && y >= -64 && x < screen.width + 64 && y < VIEW_HEIGHT + 64;
+}
 
+function trackButtons(event: PointerEvent) {
   const buttons = event.buttons & 3;
   const changed = buttons ^ mouseButtons;
   if (changed & 1) (buttons & 1 ? press : release)(A);
   if (changed & 2) (buttons & 2 ? press : release)(B);
+  if (changed & ~buttons & 2) unlockPointer();
   mouseButtons = buttons;
+}
+
+function track(event: PointerEvent) {
+  const { x, y } = toView(event.clientX, event.clientY);
+  setPointer(x, y);
+  trackButtons(event);
+}
+
+// Vivaldi's mouse gestures take over a right-button drag unless the pointer is locked to the page.
+// A locked pointer reports only its movement, which moves the hand by the same amount.
+function lockPointer(canvas: HTMLCanvasElement) {
+  try {
+    canvas.requestPointerLock()?.catch(() => {});
+  } catch {}
+}
+
+function unlockPointer() {
+  if (document.pointerLockElement) document.exitPointerLock();
 }
 
 function releaseAll() {
   for (const button of [A, B, UP, DOWN, LEFT, RIGHT, PLUS, MINUS, TWO]) release(button);
   mouseButtons = 0;
+  unlockPointer();
 }
 
-export function listen(canvas: HTMLCanvasElement) {
+// `scrolls` says whether B would now drag something: the hand is open over text that scrolls.
+export function listen(canvas: HTMLCanvasElement, scrolls: () => boolean) {
   canvas.addEventListener('pointerdown', (event) => {
     canvas.setPointerCapture(event.pointerId);
+    if (event.button === 2 && event.pointerType === 'mouse' && scrolls()) lockPointer(canvas);
     track(event);
   });
   canvas.addEventListener('pointermove', (event) => {
+    if (document.pointerLockElement === canvas) {
+      setPointer(pointer.exactX + cssToView(event.movementX), pointer.exactY + cssToView(event.movementY));
+      trackButtons(event);
+      return;
+    }
     track(event);
     // Out past the TV's edges, the system pointer comes back so it can't get lost in the black bars.
     canvas.style.cursor = pointer.valid ? 'none' : 'auto';
+  });
+  // A lock that arrives after the button is up would otherwise hold the pointer until Escape.
+  document.addEventListener('pointerlockchange', () => {
+    if (document.pointerLockElement === canvas && !(mouseButtons & 2)) unlockPointer();
   });
   canvas.addEventListener('pointerup', (event) => {
     track(event);

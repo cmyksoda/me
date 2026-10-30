@@ -62,6 +62,8 @@ export function toView(clientX: number, clientY: number) {
   return { x: (clientX * ratio - left) / scale, y: (clientY * ratio - top) / scale };
 }
 
+export const cssToView = (length: number) => (length * (devicePixelRatio || 1)) / scale;
+
 export function beginFrame() {
   fit();
   ctx.setTransform(1, 0, 0, 1, 0, 0);

@@ -7,7 +7,7 @@ import { DIALOG_MASK_COLOR, dialogAbout, dialogApp, dialogFade, dialogX, pointin
 import { lineSpacing } from './font';
 import { screen, setLayout, windowLayout } from './gfx';
 import { loadTheme } from './theme';
-import { enableCursor, focusNext, focusPrevious, plot, pointing, render, showThrobber, tickleThrobber, viewFade, widgetAtPointer, type View } from './view';
+import { enableCursor, focusNext, focusPrevious, plot, pointing, pointingAtScroll, render, showThrobber, tickleThrobber, viewFade, widgetAtPointer, type View } from './view';
 import { scrollMemo, scrollMemoDeco } from './widgets';
 
 const FRAME = 1000 / 60;
@@ -160,7 +160,7 @@ async function start() {
   loadApps();
   setLayout(windowLayout());
   browserInit();
-  listen(canvas);
+  listen(canvas, pointingAtScroll);
   canvas.setAttribute('aria-label', `The Homebrew Channel, listing ${apps.map((entry) => entry.name).join(', ')}`);
 
   const steps = channel();

@@ -42,6 +42,8 @@ export function enableCursor(on: boolean) {
 
 export const pointing = () => cursorEnabled && pointer.valid;
 
+export const pointingAtScroll = () => shown?.cursor === 'drag';
+
 export function showThrobber(on: boolean) {
   throbber = on ? 0 : null;
 }
