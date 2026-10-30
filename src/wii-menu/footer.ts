@@ -18,13 +18,15 @@ const BUTTONS: Partial<Record<FooterTarget, string>> = {
 };
 const TARGETS: Record<Mode, FooterTarget[]> = {
   grid: ['sd', 'options', 'board', 'left', 'right'],
-  board: ['calendar', 'create', 'menu'],
+  board: ['calendar', 'create', 'menu', 'left', 'right'],
   reader: ['back', 'trash'],
 };
 
 const SPEAKER = { on: 'web_speaker_on.tpl', off: 'web_speaker_off.tpl' };
 const BALLOON_DELAY = 16;
 const NEW_MAIL_EVERY = 3000;
+// The date arrows come in once the board is active: the grid's 20-update slide on entry, the mask's lift after a letter.
+const DATE_ARROWS_AFTER = 20;
 
 function isUnder(pane: PaneNode, names: string[]): boolean {
   for (let p: PaneNode | null = pane; p; p = p.parent) if (names.includes(p.name)) return true;
@@ -44,6 +46,7 @@ export class Footer {
   private mode: Mode = 'grid';
   private queue: AnimationPlayer[] = [];
   private readonly arrowShown = { left: false, right: false };
+  private dateArrowsIn = 0;
   private mailCount = 0;
   private newMailSince: number | null = null;
 
@@ -149,18 +152,22 @@ export class Footer {
     this.play('toBoard');
     this.play('sdOut');
     this.setArrows(false, false);
+    this.dateArrowsIn = DATE_ARROWS_AFTER;
   }
 
   openLetter(): void {
     this.releaseAll();
     this.mode = 'reader';
     this.sequence('lettersOut', 'readerIn');
+    this.dateArrowsIn = 0;
+    this.setArrows(false, false);
   }
 
   closeLetter(): void {
     this.releaseAll();
     this.mode = 'board';
     this.sequence('backPress', 'readerOut', 'lettersIn');
+    this.dateArrowsIn = DATE_ARROWS_AFTER;
   }
 
   leaveBoard(): void {
@@ -168,6 +175,8 @@ export class Footer {
     this.mode = 'grid';
     this.play('toGrid');
     this.play('sdOut', true);
+    this.dateArrowsIn = 0;
+    this.setArrows(false, false);
   }
 
   setSound(on: boolean): void {
@@ -279,6 +288,10 @@ export class Footer {
 
   update(frames: number): void {
     for (const clip of this.clips.values()) clip.step(frames);
+    if (this.dateArrowsIn > 0) {
+      this.dateArrowsIn -= frames;
+      if (this.dateArrowsIn <= 0 && this.mode === 'board') this.setArrows(true, true);
+    }
     if (this.queue.length && !this.queue[0].playing) {
       this.queue.shift();
       this.queue[0]?.play();
