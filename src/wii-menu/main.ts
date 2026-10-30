@@ -44,7 +44,9 @@ let pressedB = false;
 
 function track(event: PointerEvent) {
   [pointer.x, pointer.y] = toScreen(screen, canvas, event.clientX, event.clientY);
-  pointer.inside = true;
+  // Past the TV's edges the hand is gone, as when a Wii Remote points away, so the system cursor returns.
+  pointer.inside = Math.abs(pointer.x) <= screen.width / 2 && Math.abs(pointer.y) <= SCREEN_HEIGHT / 2;
+  canvas.style.cursor = pointer.inside ? 'none' : 'auto';
 }
 canvas.addEventListener('pointermove', track);
 canvas.addEventListener('pointerleave', () => (pointer.inside = false));
