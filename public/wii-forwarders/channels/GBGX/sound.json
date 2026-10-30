@@ -1,0 +1,16 @@
+{
+  "source": "BNS DSP ADPCM",
+  "sampleRate": 32000,
+  "channels": 1,
+  "frames": 480001,
+  "duration": 15.00003125,
+  "gain": 0.9,
+  "loop": true,
+  "loopStart": 0.0,
+  "loopEnd": 15.00003125,
+  "loopStartFrame": 0,
+  "loopEndFrame": 480001,
+  "notes": [
+    "channel 0: the context starts at predictor/scale 0x00 but the first frame header says 0x2a; the DSP starts mid-frame, so it uses the context"
+  ]
+}

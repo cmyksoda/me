@@ -1,0 +1,19 @@
+{
+  "source": "BNS DSP ADPCM",
+  "sampleRate": 32000,
+  "channels": 2,
+  "frames": 673653,
+  "duration": 21.05165625,
+  "gain": 0.9,
+  "loop": true,
+  "loopStart": 12.63125,
+  "loopEnd": 21.05165625,
+  "loopStartFrame": 404200,
+  "loopEndFrame": 673653,
+  "notes": [
+    "the DATA block says it is 0x70c80 bytes, the file header's table says 0x70c88; the Wii Menu never compares the two, and only trusts the block",
+    "channel 0: the context starts at predictor/scale 0x00 but the first frame header says 0x46; the DSP starts mid-frame, so it uses the context",
+    "channel 1: the context starts at predictor/scale 0x00 but the first frame header says 0x76; the DSP starts mid-frame, so it uses the context",
+    "each loop restart decodes from the loop context instead of the running history (up to 1507 off for a few milliseconds), so the loop section is stored twice: once in the first pass, once as the repeating pass"
+  ]
+}

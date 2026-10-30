@@ -1,0 +1,16 @@
+{
+  "source": "BNS DSP ADPCM",
+  "sampleRate": 32000,
+  "channels": 2,
+  "frames": 708936,
+  "duration": 22.15425,
+  "gain": 0.9,
+  "loop": true,
+  "loopStart": 14.769625,
+  "loopEnd": 22.15425,
+  "loopStartFrame": 472628,
+  "loopEndFrame": 708936,
+  "notes": [
+    "each loop restart decodes from the loop context instead of the running history (up to 542 off for a few milliseconds), so the loop section is stored twice: once in the first pass, once as the repeating pass"
+  ]
+}

@@ -56,7 +56,6 @@ export interface Channel {
   repo: string;
   icon: Archive;
   banner: Archive;
-  sound: Uint8Array;
 }
 
 export interface Assets {
@@ -74,14 +73,13 @@ export async function loadAssets(renderer: Renderer): Promise<Assets> {
   const messages = await (await fetch(new URL('menu/messages.json', root))).json();
   const list: { id: string; name: string; repo: string }[] = await (await fetch(new URL('channels.json', root))).json();
   const channels = await Promise.all(list.map(async (entry) => {
-    const [icon, banner, sound] = await Promise.all(
-      ['icon.bin', 'banner.bin', 'sound.bin'].map((file) => fetchBytes(`channels/${entry.id}/${file}`)),
+    const [icon, banner] = await Promise.all(
+      ['icon.bin', 'banner.bin'].map((file) => fetchBytes(`channels/${entry.id}/${file}`)),
     );
     return {
       ...entry,
       icon: new Archive(parseU8(unwrapChannelFile(icon))),
       banner: new Archive(parseU8(unwrapChannelFile(banner))),
-      sound,
     };
   }));
   return { menu: Object.fromEntries(menuEntries) as Record<MenuArchive, Archive>, messages, channels };

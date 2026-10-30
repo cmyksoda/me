@@ -5,9 +5,10 @@ decrypts its banner content (opening.bnr) and writes, per channel:
 
     public/wii-forwarders/channels/<TITLE ID>/icon.bin     the Wii Menu tile
     public/wii-forwarders/channels/<TITLE ID>/banner.bin   the preview banner
-    public/wii-forwarders/channels/<TITLE ID>/sound.bin    the banner sound
+    public/wii-forwarders/channels/<TITLE ID>/sound.flac   the banner sound, with sound.json
 
-all exactly as stored in the channel (IMD5-wrapped, usually LZ77-compressed), which keeps them small.
+the first two exactly as stored in the channel (IMD5-wrapped, usually LZ77-compressed), which keeps
+them small. The sound is decoded by convert_channel_sound.py; its sound.bin stays in project-data.
 
 plus public/wii-forwarders/channels.json, in Wii Menu slot order.
 
@@ -23,6 +24,9 @@ import sys
 import urllib.request
 import zipfile
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+from convert_channel_sound import convert
 
 try:
     from Cryptodome.Cipher import AES
@@ -169,7 +173,10 @@ def main():
         for name in ("icon.bin", "banner.bin"):
             unwrap(archive[f"meta/{name}"])
             (folder / name).write_bytes(archive[f"meta/{name}"])
-        (folder / "sound.bin").write_bytes(archive["meta/sound.bin"])
+        sound = CACHE / "sounds" / title_id / "sound.bin"
+        sound.parent.mkdir(parents=True, exist_ok=True)
+        sound.write_bytes(archive["meta/sound.bin"])
+        convert(sound, out_dir=folder)
         channels.append({
             "id": title_id,
             "name": names[ENGLISH],

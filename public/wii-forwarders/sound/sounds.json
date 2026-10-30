@@ -1,0 +1,681 @@
+{
+  "schema": 1,
+  "archive": {
+    "file": "IplSound.brsar",
+    "sha256": "78c62ce1df5198bd4bb87284c6a8943ff5bb6fca7de7805080271d534d52bd78"
+  },
+  "executable": {
+    "file": "00000098.app",
+    "sha256": "47b9c1bb0ba1890256fb368b1b3272e33ea2467feadf39d20ce469d6de6e6c43",
+    "usedFor": "audio lookup tables"
+  },
+  "renderer": {
+    "sequencing": "nw4r SeqPlayer tick clock, MML parser, envelope and channel math, as in the 4.3 decompilation",
+    "voices": "AX voice: 16.16 sample-rate conversion, 96-sample volume ramps, integer mixing",
+    "effect": "AXFX ReverbHi on auxiliary A (fused mode 0, 2.5 s, coloration 0.5, as System::initFx sets it), returned two frames after the send",
+    "stereoWaves": "each channel of a stereo wave plays on its own side at unity (CalcAXPBMIX), not centered",
+    "converter": "4-tap filter banks from a DSP coefficient ROM dump",
+    "approximations": [
+      "reverb arithmetic is double precision where the console uses single precision",
+      "randomized pitch bend is rendered at its middle value",
+      "surround pan is ignored; the page is stereo"
+    ],
+    "dspCoefSha256": "d7741279c2e8ec5c5fb318f8fbdd6de6bf583520d288e836a5383233a4238179"
+  },
+  "players": {
+    "PLAYER_FOCUS": {
+      "maxSounds": 3
+    },
+    "PLAYER_DEFAULT": {
+      "maxSounds": 4
+    },
+    "PLAYER_FADE_SE": {
+      "maxSounds": 2
+    },
+    "PLAYER_NORMAL": {
+      "maxSounds": 1
+    },
+    "PLAYER_SYSTEM": {
+      "maxSounds": 1
+    },
+    "PLAYER_SYSTEM_2": {
+      "maxSounds": 1
+    },
+    "PLAYER_SYSTEM_DECIDE": {
+      "maxSounds": 1
+    },
+    "PLAYER_SYSTEM_FOCUS": {
+      "maxSounds": 1
+    },
+    "PLAYER_BGM": {
+      "maxSounds": 1
+    },
+    "PLAYER_WII_START": {
+      "maxSounds": 1
+    },
+    "PLAYER_MSG_DISP": {
+      "maxSounds": 10
+    },
+    "PLAYER_SCROLL": {
+      "maxSounds": 1
+    },
+    "PLAYER_SWITCH": {
+      "maxSounds": 1
+    },
+    "PLAYER_SELECT": {
+      "maxSounds": 1
+    },
+    "PLAYER_WINDOW": {
+      "maxSounds": 1
+    },
+    "PLAYER_MAIL_CLOSE": {
+      "maxSounds": 1
+    },
+    "PLAYER_SDCARD": {
+      "maxSounds": 1
+    }
+  },
+  "sounds": {
+    "WSD_SELECT": {
+      "id": 22,
+      "kind": "wave",
+      "file": "WSD_SELECT.flac",
+      "sha256": "a37235ff5a44a9baee324143b7c1d12aeddc4180e5912d5fc7c8e0e3f106df9e",
+      "sampleRate": 32000,
+      "channels": 2,
+      "frames": 10656,
+      "duration": 0.333,
+      "loop": false,
+      "volume": 96,
+      "gain": 1.0,
+      "priority": 80,
+      "player": "PLAYER_SELECT",
+      "playerMaxSounds": 1,
+      "rendering": "ax-model",
+      "pan": 0.0,
+      "uses": [
+        "grid page arrows and edge drag-scroll",
+        "previous/next channel arrows in a preview",
+        "previous/next day on the Message Board",
+        "keyboard page change"
+      ],
+      "notes": [
+        "the wave is 44100 Hz; this is the console's 32 kHz conversion of it"
+      ]
+    },
+    "WIPL_SE_BOARD_SELECT": {
+      "id": 24,
+      "kind": "wave",
+      "file": "WIPL_SE_BOARD_SELECT.flac",
+      "sha256": "f96413ef2da819a4f1fe5977ab8a67e8d3539460b31285c3298bcfb6a8d346c3",
+      "sampleRate": 32000,
+      "channels": 1,
+      "frames": 17589,
+      "duration": 0.54965625,
+      "loop": false,
+      "volume": 90,
+      "gain": 0.5010992884635925,
+      "priority": 80,
+      "player": "PLAYER_NORMAL",
+      "playerMaxSounds": 1,
+      "rendering": "wave",
+      "pan": 0.0,
+      "uses": [
+        "a letter is opened"
+      ],
+      "notes": [
+        "mono wave: gain includes the console's center pan law"
+      ]
+    },
+    "WIPL_SE_WII_START": {
+      "id": 26,
+      "kind": "wave",
+      "file": "WIPL_SE_WII_START.flac",
+      "sha256": "88c13b00dfcd66666b10a49ae159f773e8e3ffc738c56d26ea92ad96e27d69e3",
+      "sampleRate": 32000,
+      "channels": 2,
+      "frames": 90952,
+      "duration": 2.84225,
+      "loop": false,
+      "volume": 96,
+      "gain": 0.7559055089950562,
+      "priority": 120,
+      "player": "PLAYER_WII_START",
+      "playerMaxSounds": 1,
+      "rendering": "wave",
+      "pan": 0.0,
+      "uses": [
+        "start-up phrase, played with the music when the grid first appears (scene/channelSelect)"
+      ]
+    },
+    "WIPL_SE_CH_SELECT": {
+      "id": 32,
+      "kind": "sequence",
+      "file": "WIPL_SE_CH_SELECT.flac",
+      "sha256": "6d6ceeee2ff3972d3a39ef2ff597c1354699bb8abd3accb492525559547a3a17",
+      "sampleRate": 32000,
+      "channels": 2,
+      "frames": 15055,
+      "duration": 0.47046875,
+      "loop": false,
+      "volume": 120,
+      "gain": 1.0,
+      "priority": 80,
+      "player": "PLAYER_SYSTEM",
+      "playerMaxSounds": 1,
+      "rendering": "ax-model",
+      "label": "ChannelZoomIn",
+      "bank": "BANK_SYSTEM_SE",
+      "noteWaves": {
+        "mono": 0,
+        "stereo": 1
+      },
+      "uses": [
+        "channel preview zoom-in begins, 0.07 to 0.2 s after the click once the banner has loaded; the banner sound starts 0.48 s later"
+      ]
+    },
+    "WIPL_SE_CH_UNSELECT": {
+      "id": 33,
+      "kind": "sequence",
+      "file": "WIPL_SE_CH_UNSELECT.flac",
+      "sha256": "1fcfae1c89303a0f226a2f94e60ebd4b2bae1a9398604f658d0d821335f7e9e6",
+      "sampleRate": 32000,
+      "channels": 2,
+      "frames": 10190,
+      "duration": 0.3184375,
+      "loop": false,
+      "volume": 120,
+      "gain": 1.0,
+      "priority": 80,
+      "player": "PLAYER_SYSTEM",
+      "playerMaxSounds": 1,
+      "rendering": "ax-model",
+      "label": "ChannelZoomOut",
+      "bank": "BANK_SYSTEM_SE",
+      "noteWaves": {
+        "mono": 0,
+        "stereo": 1
+      },
+      "uses": [
+        "channel preview zoom-out begins (Wii Menu button), with WIPL_SE_BT_PUSH"
+      ]
+    },
+    "WIPL_SE_BT_TARGETTING": {
+      "id": 34,
+      "kind": "sequence",
+      "file": "WIPL_SE_BT_TARGETTING.flac",
+      "sha256": "bf64509d2cec6f8a0a6c2b79d6a12c3fb12b6e625a629e6cbc60b8e6d1733a82",
+      "sampleRate": 32000,
+      "channels": 2,
+      "frames": 35945,
+      "duration": 1.12328125,
+      "loop": false,
+      "volume": 45,
+      "gain": 1.0,
+      "priority": 80,
+      "player": "PLAYER_SYSTEM_FOCUS",
+      "playerMaxSounds": 1,
+      "rendering": "ax-model",
+      "label": "focus",
+      "bank": "BANK_HOMEBUTTON",
+      "sameAs": "HOMESE_FOCUS",
+      "noteWaves": {
+        "mono": 2,
+        "stereo": 0
+      },
+      "uses": [
+        "pointer enters any button: footer buttons, page arrows, preview and board buttons, dialog buttons, links"
+      ]
+    },
+    "WIPL_SE_CH_TARGETTING": {
+      "id": 35,
+      "kind": "sequence",
+      "file": "WIPL_SE_CH_TARGETTING.flac",
+      "sha256": "bf64509d2cec6f8a0a6c2b79d6a12c3fb12b6e625a629e6cbc60b8e6d1733a82",
+      "sampleRate": 32000,
+      "channels": 2,
+      "frames": 35945,
+      "duration": 1.12328125,
+      "loop": false,
+      "volume": 45,
+      "gain": 1.0,
+      "priority": 80,
+      "player": "PLAYER_SYSTEM_FOCUS",
+      "playerMaxSounds": 1,
+      "rendering": "ax-model",
+      "label": "focus",
+      "bank": "BANK_HOMEBUTTON",
+      "sameAs": "HOMESE_FOCUS",
+      "noteWaves": {
+        "mono": 2,
+        "stereo": 0
+      },
+      "uses": [
+        "pointer enters a channel tile, or an empty slot while a channel is held"
+      ]
+    },
+    "WIPL_SE_DECIDE": {
+      "id": 36,
+      "kind": "sequence",
+      "file": "WIPL_SE_DECIDE.flac",
+      "sha256": "722f7d06770160877256b428469d6d59d318dce33b77c79294db216aab5cabd0",
+      "sampleRate": 32000,
+      "channels": 2,
+      "frames": 107206,
+      "duration": 3.3501875,
+      "loop": false,
+      "volume": 104,
+      "gain": 1.0,
+      "priority": 80,
+      "player": "PLAYER_SYSTEM_DECIDE",
+      "playerMaxSounds": 1,
+      "rendering": "ax-model",
+      "label": "select",
+      "bank": "BANK_HOMEBUTTON",
+      "sameAs": "HOMESE_SELECT",
+      "noteWaves": {
+        "mono": 1,
+        "stereo": 0
+      },
+      "uses": [
+        "Message Board and Wii Settings footer buttons",
+        "Start in a channel preview",
+        "confirm buttons in dialogs"
+      ]
+    },
+    "WIPL_SE_BOARD_FOCUS": {
+      "id": 38,
+      "kind": "sequence",
+      "file": "WIPL_SE_BOARD_FOCUS.flac",
+      "sha256": "bf64509d2cec6f8a0a6c2b79d6a12c3fb12b6e625a629e6cbc60b8e6d1733a82",
+      "sampleRate": 32000,
+      "channels": 2,
+      "frames": 35945,
+      "duration": 1.12328125,
+      "loop": false,
+      "volume": 45,
+      "gain": 1.0,
+      "priority": 80,
+      "player": "PLAYER_SYSTEM_FOCUS",
+      "playerMaxSounds": 1,
+      "rendering": "ax-model",
+      "label": "focus",
+      "bank": "BANK_HOMEBUTTON",
+      "sameAs": "HOMESE_FOCUS",
+      "noteWaves": {
+        "mono": 2,
+        "stereo": 0
+      },
+      "uses": [
+        "pointer enters a letter"
+      ]
+    },
+    "WIPL_SE_MESSAGE_SCROLL": {
+      "id": 39,
+      "kind": "sequence",
+      "file": "WIPL_SE_MESSAGE_SCROLL.flac",
+      "sha256": "fb79e90d2df10653ef6bf696a359ee307380b419dfd2f9acf846441544f466da",
+      "sampleRate": 32000,
+      "channels": 2,
+      "frames": 39936,
+      "duration": 1.248,
+      "loop": true,
+      "volume": 80,
+      "gain": 1.0,
+      "priority": 80,
+      "player": "PLAYER_SCROLL",
+      "playerMaxSounds": 1,
+      "rendering": "ax-model",
+      "label": "MessageScroll",
+      "bank": "BANK_SYSTEM_SE",
+      "loopStart": 0.0,
+      "loopEnd": 1.248,
+      "loopStartFrame": 0,
+      "loopEndFrame": 39936,
+      "noteWaves": {
+        "mono": 81,
+        "stereo": 0
+      },
+      "uses": [
+        "held while text scrolls by more than a pixel (utility/iplUtility, keyboard)"
+      ],
+      "notes": [
+        "never ends in the menu; the loop is one exact repeat of the rendered audio"
+      ]
+    },
+    "WIPL_SE_BALLOON": {
+      "id": 42,
+      "kind": "sequence",
+      "file": "WIPL_SE_BALLOON.flac",
+      "sha256": "5d7cd81a63b09f10dc683d4b98899cf02216de8bb6a8037b748b4b3eeb2f34d3",
+      "sampleRate": 32000,
+      "channels": 2,
+      "frames": 88438,
+      "duration": 2.7636875,
+      "loop": false,
+      "volume": 40,
+      "gain": 1.0,
+      "priority": 80,
+      "player": "PLAYER_SYSTEM",
+      "playerMaxSounds": 1,
+      "rendering": "ax-model",
+      "label": "Balloon",
+      "bank": "BANK_SYSTEM_SE",
+      "noteWaves": {
+        "mono": 1,
+        "stereo": 0
+      },
+      "uses": [
+        "a text balloon pops up about 0.3 s after the pointer lands on a channel tile or a button that has one (Wii, SD card, Message Board; Calendar, Create and Wii Menu on the board); none on the page arrows or in a preview"
+      ]
+    },
+    "WIPL_SE_BOARD_UNSELECT": {
+      "id": 43,
+      "kind": "sequence",
+      "file": "WIPL_SE_BOARD_UNSELECT.flac",
+      "sha256": "b66c6c2bd2afda639f20d562e1dfe3615bef73f7588283aab4ee64785ef8a421",
+      "sampleRate": 32000,
+      "channels": 2,
+      "frames": 18892,
+      "duration": 0.590375,
+      "loop": false,
+      "volume": 120,
+      "gain": 1.0,
+      "priority": 80,
+      "player": "PLAYER_MAIL_CLOSE",
+      "playerMaxSounds": 1,
+      "rendering": "ax-model",
+      "label": "MailClose",
+      "bank": "BANK_SYSTEM_SE",
+      "noteWaves": {
+        "mono": 1,
+        "stereo": 1
+      },
+      "uses": [
+        "a letter is closed with its Back button"
+      ]
+    },
+    "WIPL_SE_BT_PUSH": {
+      "id": 46,
+      "kind": "sequence",
+      "file": "WIPL_SE_BT_PUSH.flac",
+      "sha256": "6dd1da83dcff51fed9e2e94389e6cd6b6dcbbba803c9273642a37260861d60ed",
+      "sampleRate": 32000,
+      "channels": 2,
+      "frames": 4070,
+      "duration": 0.1271875,
+      "loop": false,
+      "volume": 96,
+      "gain": 1.0,
+      "priority": 80,
+      "player": "PLAYER_SYSTEM_DECIDE",
+      "playerMaxSounds": 1,
+      "rendering": "ax-model",
+      "label": "Decide",
+      "bank": "BANK_SYSTEM_SE",
+      "noteWaves": {
+        "mono": 0,
+        "stereo": 1
+      },
+      "uses": [
+        "click on a channel tile (the music fades out as the zoom starts)",
+        "the Wii Menu button in a channel preview, in the same frame as WIPL_SE_CH_UNSELECT",
+        "A on the Health and Safety screen",
+        "trash button in a letter"
+      ]
+    },
+    "WIPL_SE_ERROR": {
+      "id": 53,
+      "kind": "sequence",
+      "file": "WIPL_SE_ERROR.flac",
+      "sha256": "27f56d5babd1c39e98cc03316911e15ca53379dc3b81715b9d1518eb361db71f",
+      "sampleRate": 32000,
+      "channels": 2,
+      "frames": 3168,
+      "duration": 0.099,
+      "loop": false,
+      "volume": 127,
+      "gain": 1.0,
+      "priority": 100,
+      "player": "PLAYER_SYSTEM",
+      "playerMaxSounds": 1,
+      "rendering": "ax-model",
+      "label": "ErrBeep",
+      "bank": "BANK_SYSTEM_SE",
+      "noteWaves": {
+        "mono": 2,
+        "stereo": 0
+      },
+      "uses": [
+        "error beep; never restarted while it plays (System::startSE)"
+      ]
+    },
+    "WIPL_SE_GRAY_BUTTON": {
+      "id": 57,
+      "kind": "sequence",
+      "file": "WIPL_SE_GRAY_BUTTON.flac",
+      "sha256": "7d68e91b2a9ff25aaf465631850c7e3a75bfe8b6a1b6c9e2f997e471844784dc",
+      "sampleRate": 32000,
+      "channels": 2,
+      "frames": 3168,
+      "duration": 0.099,
+      "loop": false,
+      "volume": 72,
+      "gain": 1.0,
+      "priority": 80,
+      "player": "PLAYER_SYSTEM_DECIDE",
+      "playerMaxSounds": 1,
+      "rendering": "ax-model",
+      "label": "ErrBeep",
+      "bank": "BANK_SYSTEM_SE",
+      "noteWaves": {
+        "mono": 2,
+        "stereo": 0
+      },
+      "uses": [
+        "press on a disabled button (Start when a channel cannot run, Message Board in safe mode)"
+      ]
+    },
+    "WIPL_BGM_MENU": {
+      "id": 58,
+      "kind": "sequence",
+      "file": "WIPL_BGM_MENU.flac",
+      "sha256": "6641844d82c9b4133c1a11e5955975a949123ca95b6c2c54a4a6c2ec59c4d73e",
+      "sampleRate": 32000,
+      "channels": 2,
+      "frames": 4438848,
+      "duration": 138.714,
+      "loop": true,
+      "volume": 32,
+      "gain": 1.0,
+      "priority": 64,
+      "player": "PLAYER_BGM",
+      "playerMaxSounds": 1,
+      "rendering": "ax-model",
+      "label": "SMF_Menu_echo2_Start",
+      "bank": "BANK_BGM",
+      "loopStart": 71.454,
+      "loopEnd": 138.714,
+      "loopStartFrame": 2286528,
+      "loopEndFrame": 4438848,
+      "loopTicks": [
+        383,
+        6527
+      ],
+      "noteWaves": {
+        "mono": 2320,
+        "stereo": 0
+      },
+      "uses": [
+        "channel grid music: starts with the start-up phrase, stops when a channel is clicked (five steps of 1/60 s: gain 0.8, 0.6, 0.4, 0.2, 0) and starts again from the top about 0.5 s after the Wii Menu button is pressed in the preview (scene/channelSelect; confirmed in a Dolphin capture)"
+      ],
+      "notes": [
+        "intro to tick 383, then the loop (ticks 383 to 6527) rendered twice; the second pass is the steady state and is the part that repeats",
+        "the two passes differ by a frame or two in where ticks fall, because 22420.2 frames do not divide evenly"
+      ]
+    },
+    "WIPL_SE_CH_HOLD": {
+      "id": 62,
+      "kind": "sequence",
+      "file": "WIPL_SE_CH_HOLD.flac",
+      "sha256": "44787beb8a1f2cf60851276bc2149d8081b645d7208187fe3271821ef375a097",
+      "sampleRate": 32000,
+      "channels": 2,
+      "frames": 1982,
+      "duration": 0.0619375,
+      "loop": false,
+      "volume": 120,
+      "gain": 1.0,
+      "priority": 80,
+      "player": "PLAYER_SYSTEM_DECIDE",
+      "playerMaxSounds": 1,
+      "rendering": "ax-model",
+      "label": "ChHold",
+      "bank": "BANK_SYSTEM_SE",
+      "noteWaves": {
+        "mono": 0,
+        "stereo": 1
+      },
+      "uses": [
+        "B grabs a channel; its pan comes from the raw -1 to 1 pointer position, so it stays near center"
+      ]
+    },
+    "WIPL_SE_CH_DRAG": {
+      "id": 63,
+      "kind": "sequence",
+      "file": "WIPL_SE_CH_DRAG.flac",
+      "sha256": "765b89f7068dd79a97159386a29496c1189d1e11d59a681f21b3ebdff7966307",
+      "sampleRate": 32000,
+      "channels": 2,
+      "frames": 66132,
+      "duration": 2.066625,
+      "loop": true,
+      "volume": 96,
+      "gain": 1.0,
+      "priority": 80,
+      "player": "PLAYER_SYSTEM",
+      "playerMaxSounds": 1,
+      "rendering": "ax-model",
+      "label": "ChDrag",
+      "bank": "BANK_SYSTEM_SE",
+      "loopStart": 1.0333125,
+      "loopEnd": 2.066625,
+      "loopStartFrame": 33066,
+      "loopEndFrame": 66132,
+      "noteWaves": {
+        "mono": 1,
+        "stereo": 0
+      },
+      "uses": [
+        "held while a grabbed channel moves: volume = min(1, 2 * distance / 304), pitch = distance / 30 above 30 px per frame, pan = x / 304"
+      ],
+      "notes": [
+        "never ends in the menu; the loop is one exact repeat of the rendered audio"
+      ]
+    },
+    "WIPL_SE_CH_SET": {
+      "id": 64,
+      "kind": "sequence",
+      "file": "WIPL_SE_CH_SET.flac",
+      "sha256": "755d1bfa6fa3bcc7273a7c0a153264ce778b74720dd6d06535d0fa41ae76d3b5",
+      "sampleRate": 32000,
+      "channels": 2,
+      "frames": 3965,
+      "duration": 0.12390625,
+      "loop": false,
+      "volume": 120,
+      "gain": 1.0,
+      "priority": 80,
+      "player": "PLAYER_SYSTEM_DECIDE",
+      "playerMaxSounds": 1,
+      "rendering": "ax-model",
+      "label": "ChSet",
+      "bank": "BANK_SYSTEM_SE",
+      "noteWaves": {
+        "mono": 1,
+        "stereo": 1
+      },
+      "uses": [
+        "a grabbed channel is dropped into a free slot; pan = pointer x / projection half-width (-0.21 and +0.20 in the Dolphin capture)"
+      ]
+    },
+    "WIPL_SE_CH_NOT_MOVE": {
+      "id": 65,
+      "kind": "sequence",
+      "file": "WIPL_SE_CH_NOT_MOVE.flac",
+      "sha256": "7d68e91b2a9ff25aaf465631850c7e3a75bfe8b6a1b6c9e2f997e471844784dc",
+      "sampleRate": 32000,
+      "channels": 2,
+      "frames": 3168,
+      "duration": 0.099,
+      "loop": false,
+      "volume": 72,
+      "gain": 1.0,
+      "priority": 80,
+      "player": "PLAYER_SYSTEM_DECIDE",
+      "playerMaxSounds": 1,
+      "rendering": "ax-model",
+      "label": "ChNotMove",
+      "bank": "BANK_SYSTEM_SE",
+      "noteWaves": {
+        "mono": 2,
+        "stereo": 0
+      },
+      "uses": [
+        "a grabbed channel is dropped where it cannot go; pan = pointer x / projection half-width"
+      ]
+    },
+    "WIPL_SE_NEW_ARRIVAL": {
+      "id": 66,
+      "kind": "sequence",
+      "file": "WIPL_SE_NEW_ARRIVAL.flac",
+      "sha256": "223b483c156b6f813931f7f5f5b4956dc5674b53bfb5e3d1147d377db717801d",
+      "sampleRate": 32000,
+      "channels": 2,
+      "frames": 88234,
+      "duration": 2.7573125,
+      "loop": false,
+      "volume": 32,
+      "gain": 1.0,
+      "priority": 80,
+      "player": "PLAYER_WII_START",
+      "playerMaxSounds": 1,
+      "rendering": "ax-model",
+      "label": "NewArrival",
+      "bank": "BANK_SYSTEM_SE",
+      "noteWaves": {
+        "mono": 1,
+        "stereo": 0
+      },
+      "uses": [
+        "new-mail jingle on the Message Board button, every 3 seconds while unread"
+      ]
+    },
+    "WIPL_SE_B_SCROLL": {
+      "id": 67,
+      "kind": "sequence",
+      "file": "WIPL_SE_B_SCROLL.flac",
+      "sha256": "17cbc2bc032ab6ca972e4b092be557beb264a44b8a1045ccdb54b1b0302097a7",
+      "sampleRate": 32000,
+      "channels": 2,
+      "frames": 2166,
+      "duration": 0.0676875,
+      "loop": false,
+      "volume": 80,
+      "gain": 1.0,
+      "priority": 80,
+      "player": "PLAYER_SCROLL",
+      "playerMaxSounds": 1,
+      "rendering": "ax-model",
+      "label": "Scroll",
+      "bank": "BANK_SYSTEM_SE",
+      "noteWaves": {
+        "mono": 2,
+        "stereo": 0
+      },
+      "uses": [
+        "a tick for every 128 units scrolled while the B button auto-scrolls text (BScroller)"
+      ]
+    }
+  }
+}

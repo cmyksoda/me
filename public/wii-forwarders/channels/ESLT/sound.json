@@ -1,0 +1,13 @@
+{
+  "source": "BNS DSP ADPCM",
+  "sampleRate": 32000,
+  "channels": 1,
+  "frames": 127989,
+  "duration": 3.99965625,
+  "gain": 0.9,
+  "loop": true,
+  "loopStart": 0.0,
+  "loopEnd": 3.99965625,
+  "loopStartFrame": 0,
+  "loopEndFrame": 127989
+}
