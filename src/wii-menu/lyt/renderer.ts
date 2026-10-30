@@ -431,10 +431,14 @@ export class Renderer {
     const out = this.vertices;
     let v = 0;
     for (const q of quads) {
+      const run = pane.textRuns?.find((r) => q.index >= r.from && q.index < r.to);
+      const [high, low] = run ? [run.color, run.color] : [top, bottom];
+      const lift = run?.lift ?? 0;
+      const [y0, y1] = [q.top - lift, q.bottom - lift];
       // Two triangles per glyph: TL, TR, BL and TR, BR, BL; top vertices take the top color.
       for (const [lx, ly, u, w, color] of [
-        [q.left, q.top, q.u0, q.v0, top], [q.right, q.top, q.u1, q.v0, top], [q.left, q.bottom, q.u0, q.v1, bottom],
-        [q.right, q.top, q.u1, q.v0, top], [q.right, q.bottom, q.u1, q.v1, bottom], [q.left, q.bottom, q.u0, q.v1, bottom],
+        [q.left, y0, q.u0, q.v0, high], [q.right, y0, q.u1, q.v0, high], [q.left, y1, q.u0, q.v1, low],
+        [q.right, y0, q.u1, q.v0, high], [q.right, y1, q.u1, q.v1, low], [q.left, y1, q.u0, q.v1, low],
       ] as [number, number, number, number, RGBA][]) {
         const o = v++ * FLOATS_PER_VERTEX;
         this.project(pane.world, lx, ly, out, o);

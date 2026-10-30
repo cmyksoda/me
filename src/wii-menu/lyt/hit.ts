@@ -19,3 +19,13 @@ export function contains(pane: PaneNode, x: number, y: number): boolean {
 export function center(pane: PaneNode): [number, number] {
   return [pane.world[3], pane.world[7]];
 }
+
+/** A screen point in a pane's own space, y pointing down as its text and quads are laid out. */
+export function toLocal(pane: PaneNode, x: number, y: number): [number, number] | null {
+  const m = pane.world;
+  const det = m[0] * m[5] - m[1] * m[4];
+  if (Math.abs(det) < 1e-9) return null;
+  const dx = x - m[3];
+  const dy = y - m[7];
+  return [(m[5] * dx - m[1] * dy) / det, -(m[0] * dy - m[4] * dx) / det];
+}

@@ -30,7 +30,7 @@ export const letters: Letter[] = [
       'Click a channel to see its banner, then Download to visit its repository on GitHub. '
         + 'Hold the right mouse button on a channel to carry it to another slot, like holding A and B '
         + 'on a Wii Remote.',
-      'All of my forwarder channels are listed here:\nhttps://github.com/cmyksoda/Wii-Forwarders',
+      'All of my forwarder channels are listed here:\ngithub.com/cmyksoda/Wii-Forwarders',
       'Have fun!\njaxi',
     ].join('\n\n'),
   },
@@ -44,7 +44,7 @@ export const letters: Letter[] = [
         + 'under the GNU GPLv3, with full credits in each repository.',
       'The code of this page is free software under the GNU Affero General Public License, version 3. '
         + 'You can read it in full in the next letter, and find the source here:\n'
-        + 'https://github.com/cmyksoda/me',
+        + 'github.com/cmyksoda/me',
       'Thank you to Tomoeko\'s Wii_Menu_HTML and the wii-ipl decompilation project, whose work made '
         + 'a faithful menu possible.',
     ].join('\n\n'),

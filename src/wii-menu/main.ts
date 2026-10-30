@@ -7,7 +7,7 @@ import { Sound } from './sound';
 const canvas = document.querySelector<HTMLCanvasElement>('#screen')!;
 const links = document.querySelector<HTMLElement>('#channel-links')!;
 // The channels as plain links: for screen readers, and the whole page if WebGL is missing.
-void fetch(new URL('channels.json', root)).then((r) => r.json()).then((list: { name: string; repo: string }[]) => {
+void fetch(new URL('channels.json', root)).then((r) => (r.ok ? r.json() : [])).catch(() => []).then((list: { name: string; repo: string }[]) => {
   for (const channel of list) {
     const link = document.createElement('a');
     link.href = channel.repo;

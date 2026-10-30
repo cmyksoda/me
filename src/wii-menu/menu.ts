@@ -97,6 +97,7 @@ export class Menu {
 
   /** The Download button must open its link inside the click itself, or browsers block the new tab. */
   linkAt(x: number, y: number): string | null {
+    if (this.state === 'board') return this.board.linkAt(x, y);
     if (this.state !== 'preview' || !this.preview || this.preview.busy) return null;
     return this.preview.hit(x, y) === 'download' ? this.preview.channel.repo : null;
   }

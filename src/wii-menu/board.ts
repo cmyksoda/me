@@ -1,11 +1,12 @@
 import type { Assets } from './assets';
 import type { Screen } from './display';
-import { measureText, type FontMetrics } from './lyt/font';
-import { center, contains } from './lyt/hit';
+import { layoutText, measureText, type FontMetrics } from './lyt/font';
+import { center, contains, toLocal } from './lyt/hit';
 import { AnimationPlayer, identity, type LayoutInstance, type PaneNode } from './lyt/layout';
 import type { Renderer } from './lyt/renderer';
 import type { Letter } from './letters';
 import type { Sound } from './sound';
+import type { RGBA } from './lyt/binary';
 import { translation } from './grid';
 
 const WEEKDAYS = [116, 110, 111, 112, 113, 114, 115];
@@ -17,6 +18,17 @@ const ARROW_STEP = 300;
 const ARROW_FRAMES = 20;
 const DECIDE_AFTER = 5;
 const FONT = 'RevoIpl_UtrilloProGrecoStd_M_32_I4';
+// UrlProcessor::parse: links are Wii blue, orange and raised while pointed at, yellow when chosen.
+const LINK: RGBA = [0x34, 0xbe, 0xed, 255];
+const LINK_POINTED: RGBA = [0xf0, 0x6e, 0x28, 255];
+const LINK_CHOSEN: RGBA = [0xff, 0xe6, 0x64, 255];
+
+interface Link {
+  from: number;
+  to: number;
+  href: string;
+  box: [number, number, number, number];
+}
 
 interface Card {
   letter: Letter;
@@ -73,6 +85,9 @@ export class Board {
   private bSpeed = 0;
   private scrolled = 0;
   private arrowsShown = { up: false, down: false };
+  private links: Link[] = [];
+  private pointedLink: Link | null = null;
+  private chosenLink: Link | null = null;
   private hoveredArrow: 'up' | 'down' | null = null;
 
   constructor(private readonly assets: Assets, private readonly renderer: Renderer, private readonly sound: Sound,
@@ -194,12 +209,55 @@ export class Board {
     const font = this.renderer.fonts.get(FONT)!.metrics;
     body.text = wrap(font, content, card.letter.body);
     this.reader.pane('T_Header').text = card.letter.title;
+    // Links found in the text get hit boxes from where their glyphs land.
+    const quads = layoutText(font, content, body.text, body.source.origin, body.size);
+    // Links are written without https:// so they fit the paper's width.
+    this.links = [...body.text.matchAll(/(?:https?:\/\/)?github\.com\/\S+/g)].map((match) => {
+      const from = match.index;
+      const to = from + match[0].length;
+      const glyphs = quads.filter((q) => q.index >= from && q.index < to);
+      const box: Link['box'] = [
+        Math.min(...glyphs.map((q) => q.left)), Math.min(...glyphs.map((q) => q.top)),
+        Math.max(...glyphs.map((q) => q.right)), Math.max(...glyphs.map((q) => q.bottom)),
+      ];
+      return { from, to, href: match[0].startsWith('http') ? match[0] : `https://${match[0]}`, box };
+    });
+    this.pointedLink = null;
+    this.chosenLink = null;
+    this.colorLinks();
     const lines = body.text.split('\n').length;
     this.sections = Math.max(1, Math.ceil((lines * LINE) / SECTION));
     this.scrollMax = Math.max(0, 160 + this.sections * SECTION + 144 + 64 - 456);
     this.scroll = 0;
     this.target = null;
     this.readerClips.upLoop.play();
+  }
+
+  private colorLinks(): void {
+    this.reader.pane('T_Letter').textRuns = this.links.map((link) => ({
+      from: link.from,
+      to: link.to,
+      color: link === this.chosenLink ? LINK_CHOSEN : link === this.pointedLink ? LINK_POINTED : LINK,
+      lift: link === this.pointedLink ? 2 : 0,
+    }));
+  }
+
+  private linkUnder(x: number, y: number): Link | null {
+    const local = toLocal(this.reader.pane('T_Letter'), x, y);
+    if (!local) return null;
+    const [lx, ly] = local;
+    return this.links.find(({ box }) => lx >= box[0] && lx <= box[2] && ly >= box[1] && ly <= box[3]) ?? null;
+  }
+
+  /** The link a click lands on, opened inside the click itself so browsers allow the new tab. */
+  linkAt(x: number, y: number): string | null {
+    if (this.state !== 'reading' || this.bOrigin) return null;
+    const link = this.linkUnder(x, y);
+    if (!link) return null;
+    this.chosenLink = link;
+    this.colorLinks();
+    this.sound.play('WIPL_SE_DECIDE');
+    return link.href;
   }
 
   /** Footer's Back: the letter flies back to its card while the dimmer lifts. */
@@ -305,6 +363,12 @@ export class Board {
     this.setArrow('down', this.scroll < this.scrollMax);
 
     if (!active || this.bOrigin) return;
+    const pointed = this.linkUnder(pointer.x, pointer.y);
+    if (pointed !== this.pointedLink) {
+      this.pointedLink = pointed;
+      if (pointed) this.sound.play('WIPL_SE_BT_TARGETTING');
+      this.colorLinks();
+    }
     const arrows = { up: this.reader.pane('B_ArwR'), down: this.reader.pane('B_ArwL') };
     let hovered: 'up' | 'down' | null = null;
     for (const arrow of ['up', 'down'] as const) {

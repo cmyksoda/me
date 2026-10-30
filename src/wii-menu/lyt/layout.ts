@@ -65,6 +65,8 @@ export interface PaneNode {
   globalAlpha: number;
   /** Replaces a text box's string, as the menu does for names, dates and labels. */
   text?: string;
+  /** Recolors stretches of the text, as a tag processor's SetTextColor does (`lift` raises them). */
+  textRuns?: { from: number; to: number; color: RGBA; lift: number }[];
   /** Lets a scene draw something of its own (a channel icon, say) in this pane's place. */
   onDraw?: (pane: PaneNode) => void;
 }

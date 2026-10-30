@@ -16,6 +16,8 @@ export interface FontMetrics {
 }
 
 export interface GlyphQuad {
+  /** The character's position in the string, for per-character colors. */
+  index: number;
   /** Pane-local corners, y pointing down as NW4R's CharWriter draws. */
   left: number;
   top: number;
@@ -108,6 +110,7 @@ export function layoutText(font: FontMetrics, content: TextContent, text: string
         const [gx, gy, bearing, glyphWidth] = glyph;
         const glyphLeft = x + bearing * scaleH;
         quads.push({
+          index: i,
           left: glyphLeft,
           top: glyphTop,
           right: glyphLeft + glyphWidth * scaleH,
