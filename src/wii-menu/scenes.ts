@@ -1,4 +1,4 @@
-import type { Assets } from './assets';
+import { loadSdAssets, type Assets } from './assets';
 import type { Screen } from './display';
 import { Fader } from './fader';
 import type { Renderer } from './lyt/renderer';
@@ -21,6 +21,7 @@ export class Scenes {
   private readonly fader = new Fader();
   private next: Next | null = null;
   private hold = 0;
+  private sdFiles: 'loading' | 'ready' | 'failed' = 'loading';
 
   constructor(private readonly assets: Assets, private readonly renderer: Renderer, private readonly sound: Sound) {
     this.menu = this.buildMenu();
@@ -47,6 +48,10 @@ export class Scenes {
   private leave(next: Next): void {
     this.next = next;
     this.fader.fadeOut();
+    if (next === 'sd') {
+      this.sdFiles = 'loading';
+      loadSdAssets(this.assets).then(() => (this.sdFiles = 'ready'), () => (this.sdFiles = 'failed'));
+    }
   }
 
   /** The Download button opens its link inside the click itself, or browsers block the new tab. */
@@ -71,6 +76,11 @@ export class Scenes {
     }
     this.hold -= frames;
     if (this.hold > 0) return;
+    // A slow connection only lengthens the black; files that won't come send it back to the Wii Menu.
+    if (this.next === 'sd' && this.sdFiles !== 'ready') {
+      if (this.sdFiles === 'loading') return;
+      this.next = 'menu';
+    }
     if (this.next === 'sd') {
       this.sd = this.buildSd();
       this.fader.fadeIn();

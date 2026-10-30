@@ -8,12 +8,12 @@ import { parseU8 } from './lyt/u8';
 /** The page's folder, so assets resolve the same at /wii-forwarders and /wii-forwarders/. */
 export const root = new URL(location.pathname.endsWith('/') || location.pathname.endsWith('.html') ? '.' : `${location.pathname}/`, location.href);
 
-const MENU_ARCHIVES = [
-  'chanSel', 'chanTtl', 'cmnBtn', 'cursor', 'balloon', 'board', 'letter', 'dlgWdw', 'sdButton', 'sdChanSel', 'sdChanTtl',
-] as const;
+const MENU_ARCHIVES = ['chanSel', 'chanTtl', 'cmnBtn', 'cursor', 'balloon', 'board', 'letter', 'dlgWdw'] as const;
+// Read only when the SD Card Menu opens, in the black between the menus, as the console reads them.
+const SD_ARCHIVES = ['sdButton', 'sdChanSel', 'sdChanTtl'] as const;
 const FONTS = ['RevoIpl_RodinNTLGPro_DB_32_I4', 'RevoIpl_UtrilloProGrecoStd_M_32_I4', 'RevoIpl_RodinNTLGPro_DB_48_IA4'];
 
-export type MenuArchive = (typeof MENU_ARCHIVES)[number];
+export type MenuArchive = (typeof MENU_ARCHIVES)[number] | (typeof SD_ARCHIVES)[number];
 
 /** A U8 archive of layouts, animations and textures, as the menu and channels ship them. */
 export class Archive {
@@ -91,13 +91,30 @@ async function loadChannels<T extends ChannelBase>(folder: string): Promise<T[]>
   }));
 }
 
+async function loadArchive(name: MenuArchive): Promise<readonly [MenuArchive, Archive]> {
+  return [name, new Archive(parseU8(decompressASH(await fetchBytes(`menu/${name}.ash`))))];
+}
+
+let sdLoading: Promise<void> | null = null;
+
+/** Adds the SD Card Menu's archives and channels to `assets`, fetching them the first time it's asked. */
+export function loadSdAssets(assets: Assets): Promise<void> {
+  sdLoading ??= Promise.all([Promise.all(SD_ARCHIVES.map(loadArchive)), loadChannels<SdChannel>('sd-channels')])
+    .then(([archives, sdChannels]) => {
+      for (const [name, archive] of archives) assets.menu[name] = archive;
+      assets.sdChannels = sdChannels;
+    })
+    .catch((error) => {
+      sdLoading = null;
+      throw error;
+    });
+  return sdLoading;
+}
+
 export async function loadAssets(renderer: Renderer): Promise<Assets> {
-  const menuEntries = await Promise.all(MENU_ARCHIVES.map(async (name) => {
-    const files = parseU8(decompressASH(await fetchBytes(`menu/${name}.ash`)));
-    return [name, new Archive(files)] as const;
-  }));
+  const menuEntries = await Promise.all(MENU_ARCHIVES.map(loadArchive));
   await Promise.all(FONTS.map((font) => renderer.loadFont(font, new URL(`menu/fonts/${font}`, root).href)));
   const messages = await (await fetch(new URL('menu/messages.json', root))).json();
-  const [channels, sdChannels] = await Promise.all([loadChannels<Channel>('channels'), loadChannels<SdChannel>('sd-channels')]);
-  return { menu: Object.fromEntries(menuEntries) as Record<MenuArchive, Archive>, messages, channels, sdChannels };
+  const channels = await loadChannels<Channel>('channels');
+  return { menu: Object.fromEntries(menuEntries) as Record<MenuArchive, Archive>, messages, channels, sdChannels: [] };
 }
