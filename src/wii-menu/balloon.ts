@@ -120,7 +120,9 @@ export class Balloon {
     }
     const half = base.size[0] / 2;
     const edge = screen.width / 2 - margin;
-    const shifted = Math.min(edge - half, Math.max(-edge + half, x));
+    // Footer balloons (TextBalloon) clamp in 4:3 units, then the root's 16:9 stretch carries them out.
+    const stretch = this.reverses ? screen.width / 608 : 1;
+    const shifted = stretch * Math.min(edge - half, Math.max(-edge + half, x / stretch));
     const view = identity();
     view[3] = shifted;
     view[7] = y;
