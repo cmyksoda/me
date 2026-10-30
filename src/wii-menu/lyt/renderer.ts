@@ -366,7 +366,7 @@ export class Renderer {
         x, y, width, height,
         material: source.picture.material,
         vertexColors: pane.vertexColors!,
-        texCoords: source.picture.texCoords,
+        texCoords: pane.texCoords ?? source.picture.texCoords,
       });
     } else if (source.window) {
       for (const quad of this.windowQuads(instance, pane, x, y)) this.drawQuad(instance, pane, quad);

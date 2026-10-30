@@ -3,6 +3,7 @@ import { Balloon } from './balloon';
 import { CardPanel } from './card-panel';
 import type { Screen } from './display';
 import { FocusFrame } from './focus';
+import { forecastIcon } from './forecast';
 import { translation, type Pointer } from './grid';
 import { center, contains } from './lyt/hit';
 import { AnimationPlayer, identity, type LayoutInstance, type PaneNode } from './lyt/layout';
@@ -92,7 +93,7 @@ export class SdGrid {
           if (node) node.visible = false;
         }
       }
-      this.icons.set(channel.id, { instance, clip });
+      this.icons.set(channel.id, { instance, clip: clip ?? forecastIcon(channel, instance) });
     }
 
     let saved = 0;

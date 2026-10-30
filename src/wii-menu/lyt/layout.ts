@@ -67,6 +67,8 @@ export interface PaneNode {
   text?: string;
   /** Recolors stretches of the text, as a tag processor's SetTextColor does (`lift` raises them). */
   textRuns?: { from: number; to: number; color: RGBA; lift: number }[];
+  /** Replaces a picture's texture coordinates, as Picture::SetTexCoord does. */
+  texCoords?: Quad<Vec2>[];
   /** Lets a scene draw something of its own (a channel icon, say) in this pane's place. */
   onDraw?: (pane: PaneNode) => void;
 }
