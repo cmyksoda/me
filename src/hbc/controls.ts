@@ -124,8 +124,8 @@ function releaseAll() {
 export function listen(canvas: HTMLCanvasElement, scrolls: () => boolean) {
   canvas.addEventListener('pointerdown', (event) => {
     canvas.setPointerCapture(event.pointerId);
-    if (event.button === 2 && event.pointerType === 'mouse' && scrolls()) lockPointer(canvas);
     track(event);
+    if (event.button === 2 && event.pointerType === 'mouse' && scrolls()) lockPointer(canvas);
   });
   canvas.addEventListener('pointermove', (event) => {
     if (document.pointerLockElement === canvas) {
