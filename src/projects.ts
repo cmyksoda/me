@@ -84,10 +84,10 @@ export const projects: Project[] = [
     url: 'https://github.com/cmyksoda/AC-Desktop-Clock-Plasmoid',
   },
   {
-    title: 'WiiRadio Stream Bridge',
-    description: 'Brings modern internet radio to WiiRadio, a long-abandoned Nintendo Wii homebrew app. A simple web interface converts streams into Wii-compatible audio and generates .pls playlists for easy playback.',
-    color: 'cyan', art: 'disc',
-    image: 'projects/wiiradio-stream-bridge.webp', imageAlt: 'WiiRadio Stream Bridge logo', imageScale: 1.02, imageOffset: [2, 0.6], imageWidth: 200,
-    url: 'https://github.com/cmyksoda/wiiradio-stream-bridge',
+    title: 'RiiTube at Home',
+    description: 'A LAN companion for WiiMC-SS. Search YouTube, prepare a video on your server, and watch a complete, seekable copy on the Wii.',
+    color: 'cyan', art: 'window',
+    image: 'projects/riitube-at-home.webp', imageAlt: 'RiiTube logo', imageWidth: 180,
+    url: 'https://github.com/cmyksoda/RiiTube-at-Home',
   },
 ];
