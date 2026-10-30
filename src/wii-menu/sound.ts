@@ -143,7 +143,7 @@ export class Sound {
       const buffer = info && (await this.load(`channels/${channel.id}/sound.flac`));
       // A newer request (or a stop) while this one loaded wins.
       if (!buffer || !this.enabled || request !== this.bannerRequest) return;
-      this.banner = this.start(buffer, 1, info.loop ? { start: info.loopStart, end: info.loopEnd } : undefined);
+      this.banner = this.start(buffer, info.gain ?? 1, info.loop ? { start: info.loopStart, end: info.loopEnd } : undefined);
     })();
   }
 

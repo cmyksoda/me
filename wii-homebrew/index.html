@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="cmyksoda's Wii homebrew apps, in a replica of the Homebrew Channel." />
+    <meta name="theme-color" content="#000000" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>The Homebrew Channel · cmyksoda</title>
+    <style>
+      html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color: #fff; font: 16px/1.5 sans-serif; }
+      #tv { position: fixed; inset: 0; width: 100%; height: 100%; cursor: none; touch-action: none; user-select: none; -webkit-user-select: none; }
+      noscript p { margin: 2rem; }
+      noscript a { color: inherit; }
+    </style>
+  </head>
+  <body>
+    <canvas id="tv" role="img" aria-label="The Homebrew Channel"></canvas>
+    <noscript><p>This replica of the Homebrew Channel needs JavaScript. cmyksoda's homebrew apps are also on <a href="https://github.com/cmyksoda">GitHub</a>.</p></noscript>
+    <script type="module" src="../src/hbc/main.ts"></script>
+  </body>
+</html>

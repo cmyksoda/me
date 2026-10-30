@@ -6,3 +6,4 @@ dist/
 .qa/
 project-notes/
 project-data/
+__pycache__/
