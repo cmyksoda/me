@@ -11,6 +11,8 @@ import { translation } from './grid';
 
 const WEEKDAYS = [116, 110, 111, 112, 113, 114, 115];
 const FLY_FRAMES = 17;
+// stt_wait_btn: the letter waits out Back's press flash before it flies home.
+const BACK_FLASH_FRAMES = 20;
 const SECTION = 168;
 const LINE = 42;
 const TEXT_WIDTH = 413;
@@ -28,6 +30,14 @@ interface Link {
   to: number;
   href: string;
   box: [number, number, number, number];
+}
+
+/** A letter wrapped for the reader, with its links' hit boxes. */
+interface Reading {
+  text: string;
+  links: Link[];
+  sections: number;
+  scrollMax: number;
 }
 
 interface Card {
@@ -74,9 +84,11 @@ export class Board {
   private masked = false;
   private readonly reader: LayoutInstance;
   private readonly readerClips: Record<string, AnimationPlayer>;
+  private readonly readings = new Map<Letter, Reading>();
   private readonly bScroll: LayoutInstance;
   private open: Card | null = null;
   private fly = 0;
+  private leaveIn = 0;
   private scroll = 0;
   private wheelTo: number | null = null;
   private scrollMax = 0;
@@ -147,10 +159,37 @@ export class Board {
       downOff: readerClip('FocusOff', 'G_ArwL_Focus'),
       upPress: readerClip('Select', 'G_ArwR_Ac'),
       downPress: readerClip('Select', 'G_ArwL_Ac'),
+      // The paper grows out of its card and fades in, and shrinks back into it on the way out.
+      open: new AnimationPlayer(board.animation('my_LetterL_SelectLetter')!, this.reader, { keyedOnly: true }),
+      exit: new AnimationPlayer(board.animation('my_LetterL_ExitLetter')!, this.reader, { keyedOnly: true }),
     };
     this.readerClips.upHide.seek(10);
     this.readerClips.downHide.seek(10);
     this.bScroll = cursor.instance('my_BScroll_a');
+    for (const card of this.cards) this.readings.set(card.letter, this.read(card.letter));
+  }
+
+  /** Wraps a letter and finds its links ahead of time, since the license letter takes a while. */
+  private read(letter: Letter): Reading {
+    const body = this.reader.pane('T_Letter');
+    const content = body.source.text!;
+    const font = this.renderer.fonts.get(FONT)!.metrics;
+    const text = wrap(font, content, letter.body);
+    // Links found in the text get hit boxes from where their glyphs land.
+    const quads = layoutText(font, content, text, body.source.origin, body.size);
+    // Links are written without https:// so they fit the paper's width.
+    const links = [...text.matchAll(/(?:https?:\/\/)?github\.com\/\S+/g)].map((match) => {
+      const from = match.index;
+      const to = from + match[0].length;
+      const glyphs = quads.filter((q) => q.index >= from && q.index < to);
+      const box: Link['box'] = [
+        Math.min(...glyphs.map((q) => q.left)), Math.min(...glyphs.map((q) => q.top)),
+        Math.max(...glyphs.map((q) => q.right)), Math.max(...glyphs.map((q) => q.bottom)),
+      ];
+      return { from, to, href: match[0].startsWith('http') ? match[0] : `https://${match[0]}`, box };
+    });
+    const sections = Math.max(1, Math.ceil((text.split('\n').length * LINE) / SECTION));
+    return { text, links, sections, scrollMax: Math.max(0, 160 + sections * SECTION + 144 + 64 - 456) };
   }
 
   /** "Fri 10/30": yesterday, today and tomorrow sit side by side for the midnight slide. */
@@ -200,35 +239,21 @@ export class Board {
     this.fly = 0;
     this.leaveCard(card);
     card.clips.select.play();
+    this.readerClips.open.play();
     this.maskIn.play();
     this.masked = true;
     this.sound.play('WIPL_SE_BOARD_SELECT');
     this.onOpened?.();
 
-    const body = this.reader.pane('T_Letter');
-    const content = body.source.text!;
-    const font = this.renderer.fonts.get(FONT)!.metrics;
-    body.text = wrap(font, content, card.letter.body);
+    const reading = this.readings.get(card.letter)!;
+    this.reader.pane('T_Letter').text = reading.text;
     this.reader.pane('T_Header').text = card.letter.title;
-    // Links found in the text get hit boxes from where their glyphs land.
-    const quads = layoutText(font, content, body.text, body.source.origin, body.size);
-    // Links are written without https:// so they fit the paper's width.
-    this.links = [...body.text.matchAll(/(?:https?:\/\/)?github\.com\/\S+/g)].map((match) => {
-      const from = match.index;
-      const to = from + match[0].length;
-      const glyphs = quads.filter((q) => q.index >= from && q.index < to);
-      const box: Link['box'] = [
-        Math.min(...glyphs.map((q) => q.left)), Math.min(...glyphs.map((q) => q.top)),
-        Math.max(...glyphs.map((q) => q.right)), Math.max(...glyphs.map((q) => q.bottom)),
-      ];
-      return { from, to, href: match[0].startsWith('http') ? match[0] : `https://${match[0]}`, box };
-    });
+    this.links = reading.links;
     this.pointedLink = null;
     this.chosenLink = null;
     this.colorLinks();
-    const lines = body.text.split('\n').length;
-    this.sections = Math.max(1, Math.ceil((lines * LINE) / SECTION));
-    this.scrollMax = Math.max(0, 160 + this.sections * SECTION + 144 + 64 - 456);
+    this.sections = reading.sections;
+    this.scrollMax = reading.scrollMax;
     this.scroll = 0;
     this.wheelTo = null;
     this.target = null;
@@ -279,8 +304,8 @@ export class Board {
   closeLetter(): void {
     if (this.state !== 'reading' || !this.open) return;
     this.state = 'closing';
-    this.open.clips.exit.play();
-    this.maskOut.play();
+    this.fly = 0;
+    this.leaveIn = BACK_FLASH_FRAMES;
     this.setArrow('up', false);
     this.setArrow('down', false);
     this.sound.play('WIPL_SE_BOARD_UNSELECT');
@@ -323,15 +348,24 @@ export class Board {
     if (this.masked && this.state === 'normal' && !this.maskOut.playing) this.masked = false;
     for (const clip of Object.values(this.readerClips)) clip.step(frames);
 
-    if (this.state === 'opening' || this.state === 'closing') {
+    if (this.state === 'closing' && this.leaveIn > 0) {
+      this.leaveIn -= frames;
+      if (this.leaveIn <= 0) {
+        // init_fadeout: the letter shrinks back into its card as it flies home.
+        this.open!.clips.exit.play();
+        this.readerClips.exit.play();
+      }
+    } else if (this.state === 'opening' || this.state === 'closing') {
       this.fly = Math.min(FLY_FRAMES, this.fly + frames);
       if (this.fly >= FLY_FRAMES) {
         if (this.state === 'opening') {
           this.state = 'reading';
           this.setArrow('down', this.scrollMax > 0);
         } else {
+          // The dimmer lifts only once the letter is home.
           this.state = 'normal';
           this.open = null;
+          this.maskOut.play();
           this.onClosed?.();
         }
       }
