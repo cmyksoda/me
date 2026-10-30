@@ -12,8 +12,7 @@ their own licenses.
 `bubble2.png`, `bubble3.png`, `button_tiny.png`, `button_tiny_focus.png`,
 `content_arrow_down.png`, `content_arrow_up.png`, `cursor_drag.png`,
 `cursor_drag_shade.png`, `cursor_pic.png`, `cursor_shade.png`,
-`dialog_background.png`, `icon_network.png`, `icon_network_active.png`,
-`icon_usbgecko.png`, `icon_usbgecko_active.png`, `logo.png` and `throbber.png`
+`dialog_background.png`, `logo.png` and `throbber.png`
 are unchanged copies of `channel/channelapp/data/` from The Homebrew Channel 1.1.3
 (https://github.com/fail0verflow/hbc), Copyright (C) 2007-2012 Team Twiizers.
 The theme is "Dark Water" by drmr.

@@ -5,12 +5,11 @@ import { DOWN, LEFT, RIGHT, UP } from './controls';
 import { screen } from './gfx';
 import { theme } from './theme';
 import { focusNext, focusPrevious, moveFocus, newView, plot, setFocus } from './view';
-import { appEntry, ENABLED, gridAppEntry, image, setFlag, VISIBLE } from './widgets';
+import { appEntry, gridAppEntry, image, setFlag, VISIBLE } from './widgets';
 
-export const LAN = 3;
-export const INFO = 4;
-export const VIEW_MODE = 5;
-const FIRST_ENTRY = 6;
+export const INFO = 2;
+export const VIEW_MODE = 3;
+const FIRST_ENTRY = 4;
 const TRANS_STEPS = 20;
 const MAX_COLUMNS = 4;
 const ROWS = 5;
@@ -31,10 +30,11 @@ const gridColumns = () => (screen.wide ? 4 : 3);
 const rowStart = (columns: number) =>
   Math.trunc((screen.width - (columns === 1 ? theme.apps_list.width : theme.apps_grid.width * columns)) / 2);
 
-// The page's own buttons: info, and the list/grid switch that 2 is on the Wii.
+// The page's own buttons sit where the USB Gecko and network icons were: info, and the list/grid
+// switch that 2 is on the Wii.
 function viewModeButton() {
   const [normal, hover] = columnsNew === 1 ? [theme.view_grid, theme.view_grid_hover] : [theme.view_list, theme.view_list_hover];
-  return image(screen.width - 144, 412, normal, undefined, hover);
+  return image(screen.width - 64, 412, normal, undefined, hover);
 }
 
 // HBC keeps the list or grid choice in its settings.xml; this keeps it in the browser.
@@ -49,12 +49,8 @@ function browserLayout() {
   const w = browser.widgets;
   w[0] = image(24, 192, theme.apps_previous, undefined, theme.apps_previous_hover);
   w[1] = image(screen.width - 24 - theme.apps_next.width, 192, theme.apps_next, undefined, theme.apps_next_hover);
-  w[2] = image(screen.width - 96, 412, theme.icon_usbgecko_active, theme.icon_usbgecko);
-  w[LAN] = image(screen.width - 64, 412, theme.icon_network_active, theme.icon_network);
-  w[INFO] = image(screen.width - 176, 412, theme.info, undefined, theme.info_hover);
+  w[INFO] = image(screen.width - 96, 412, theme.info, undefined, theme.info_hover);
   w[VIEW_MODE] = viewModeButton();
-  setFlag(w[2]!, ENABLED, false);
-  setFlag(w[LAN]!, ENABLED, false);
   setFlag(w[0]!, VISIBLE, false);
   setFlag(w[1]!, VISIBLE, false);
 }

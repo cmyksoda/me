@@ -1,28 +1,18 @@
 // The Homebrew Channel 1.1.3, its main loop ported from main.c with one generator step per frame.
 
 import { apps, loadApps, type App } from './apps';
-import { browser, browserGenView, browserInit, browserRelayout, browserSelection, browserSetFocus, browserSwitchMode, INFO, LAN, VIEW_MODE } from './browser';
+import { browser, browserGenView, browserInit, browserRelayout, browserSelection, browserSetFocus, browserSwitchMode, INFO, VIEW_MODE } from './browser';
 import { A, B, DOWN, DPAD, LEFT, listen, MINUS, PLUS, RIGHT, TWO, UP } from './controls';
 import { DIALOG_MASK_COLOR, dialogAbout, dialogApp, dialogFade } from './dialogs';
 import { lineSpacing } from './font';
 import { prefersWide, screen, setWidescreen } from './gfx';
 import { loadTheme } from './theme';
 import { enableCursor, focusNext, focusPrevious, plot, pointing, render, showThrobber, tickleThrobber, viewFade, widgetAtPointer, type View } from './view';
-import { ENABLED, scrollMemo, scrollMemoDeco, setFlag } from './widgets';
+import { scrollMemo, scrollMemoDeco } from './widgets';
 
 const FRAME = 1000 / 60;
-// Stand-ins for the Wii's own waits: reading the SD card's apps, and bringing up the network.
+// A stand-in for the Wii's wait while it reads the SD card's apps.
 const SD_LOAD_FRAMES = 30;
-const NET_INIT_MS = 3000;
-
-// The network icon blinks while wiiload's network comes up, then stays lit if the browser is online.
-let netStart = performance.now();
-const tcpInitializing = () => performance.now() - netStart < NET_INIT_MS;
-const tcpInitialized = () => !tcpInitializing() && navigator.onLine;
-
-function tcpInit() {
-  if (!tcpInitializing() && !tcpInitialized()) netStart = performance.now();
-}
 
 function openSource(app: App) {
   open(app.source, '_blank', 'noopener');
@@ -80,10 +70,6 @@ function* channel(): Generator<void, void, void> {
     }
 
     if (current === browser) {
-      const lan = browser.widgets[LAN]!;
-      if (!tcpInitializing()) setFlag(lan, ENABLED, tcpInitialized());
-      if (tcpInitializing() && frame % 20 === 0) setFlag(lan, ENABLED, !(lan.flags & ENABLED));
-
       if (pad.down & TWO) {
         yield* browserSwitchMode();
         continue;
@@ -96,7 +82,6 @@ function* channel(): Generator<void, void, void> {
         const clicked = widgetAtPointer(browser);
         if (clicked === 0) yield* browserGenView('previous');
         else if (clicked === 1) yield* browserGenView('next');
-        else if (clicked === LAN) tcpInit();
         else if (clicked === VIEW_MODE) yield* browserSwitchMode();
         else if (clicked === INFO) {
           about = dialogAbout(browser);
