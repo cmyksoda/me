@@ -114,7 +114,7 @@ export class ChannelGrid {
       const instance = channel.icon.instance('icon');
       const animation = channel.icon.animation('icon');
       // Forwarder icons have no module, so the clip's own loop flag decides (createWadThumbnail).
-      const clip = animation ? new AnimationPlayer(animation, instance, { loop: animation.loop }).play() : null;
+      const clip = animation ? new AnimationPlayer(animation, instance, { loop: animation.loop, wholeFrames: true }).play() : null;
       // Every icon starts somewhere random in its clip.
       if (clip) clip.frame = clip.from + Math.floor(Math.random() * (clip.to - clip.from));
       for (const language of OTHER_LANGUAGES) {
@@ -318,6 +318,9 @@ export class ChannelGrid {
       this.slotFocus(this.slots[index], 'in');
       this.slots[index].balloon.point();
       this.sound.play('WIPL_SE_CH_TARGETTING');
+      // A pointed channel is likely opened next, so its banner sound gets a head start.
+      const channel = this.channelAt(this.page * SLOTS_PER_PAGE + index);
+      if (channel) this.sound.prepareBanner(`channels/${channel.id}`);
     }
   }
 

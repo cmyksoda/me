@@ -676,6 +676,91 @@
       "uses": [
         "a tick for every 128 units scrolled while the B button auto-scrolls text (BScroller)"
       ]
+    },
+    "WIPL_SE_BOARD_HOLD": {
+      "id": 55,
+      "kind": "sequence",
+      "file": "WIPL_SE_BOARD_HOLD.flac",
+      "sha256": "44787beb8a1f2cf60851276bc2149d8081b645d7208187fe3271821ef375a097",
+      "sampleRate": 32000,
+      "channels": 2,
+      "frames": 1982,
+      "duration": 0.0619375,
+      "loop": false,
+      "volume": 120,
+      "gain": 1.0,
+      "priority": 80,
+      "player": "PLAYER_SYSTEM_DECIDE",
+      "playerMaxSounds": 1,
+      "rendering": "ax-model",
+      "label": "Hold",
+      "bank": "BANK_SYSTEM_SE",
+      "noteWaves": {
+        "mono": 0,
+        "stereo": 1
+      },
+      "uses": [
+        "B grabs a letter; pan = letter x / projection half-width"
+      ]
+    },
+    "WIPL_SE_BOARD_DRAG": {
+      "id": 40,
+      "kind": "sequence",
+      "file": "WIPL_SE_BOARD_DRAG.flac",
+      "sha256": "765b89f7068dd79a97159386a29496c1189d1e11d59a681f21b3ebdff7966307",
+      "sampleRate": 32000,
+      "channels": 2,
+      "frames": 66132,
+      "duration": 2.066625,
+      "loop": true,
+      "volume": 96,
+      "gain": 1.0,
+      "priority": 80,
+      "player": "PLAYER_SYSTEM",
+      "playerMaxSounds": 1,
+      "rendering": "ax-model",
+      "label": "Drag",
+      "bank": "BANK_SYSTEM_SE",
+      "loopStart": 1.0333125,
+      "loopEnd": 2.066625,
+      "loopStartFrame": 33066,
+      "loopEndFrame": 66132,
+      "noteWaves": {
+        "mono": 1,
+        "stereo": 0
+      },
+      "uses": [
+        "held while a grabbed letter moves, like WIPL_SE_CH_DRAG"
+      ],
+      "notes": [
+        "never ends in the menu; the loop is one exact repeat of the rendered audio"
+      ]
+    },
+    "WIPL_SE_BOARD_RELEASE": {
+      "id": 56,
+      "kind": "sequence",
+      "file": "WIPL_SE_BOARD_RELEASE.flac",
+      "sha256": "0579176910d2f85a4bb1424e26b0a75089188d6439097622bed74105300eeb40",
+      "sampleRate": 32000,
+      "channels": 2,
+      "frames": 1087,
+      "duration": 0.03396875,
+      "loop": false,
+      "volume": 120,
+      "gain": 1.0,
+      "priority": 80,
+      "player": "PLAYER_SYSTEM_DECIDE",
+      "playerMaxSounds": 1,
+      "rendering": "ax-model",
+      "label": "Release",
+      "bank": "BANK_SYSTEM_SE",
+      "noteWaves": {
+        "mono": 0,
+        "stereo": 1
+      },
+      "uses": [
+        "a grabbed letter is released; pan = letter x / projection half-width"
+      ]
     }
   }
 }

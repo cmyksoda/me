@@ -28,7 +28,7 @@ export const letters: Letter[] = [
       'Welcome to my Wii Menu! Every channel here is a forwarder I made: a little Wii Menu channel '
         + 'that opens a homebrew app from your SD card, with its own icon, banner and sound.',
       'All of my forwarder channels are listed here:\ngithub.com/cmyksoda/Wii-Forwarders',
-      'Have fun!\nJaxi / cmyksoda',
+      'Have fun!\ncmyksoda / Jaxi',
     ].join('\n\n'),
   },
   {
@@ -59,9 +59,7 @@ export const letters: Letter[] = [
         + 'the Wii only, not the Wii U\'s vWii, and installing it replaces your Internet Channel.',
       'The Forecast Channel is the WiiLink version, redrawn with the Japanese weather symbols everywhere, on the '
         + 'Wii Menu tile too. Installing it replaces your Forecast Channel.',
-      'Only the Super Mario Bros. channel is available to download so far.',
-      'Back up your NAND before you install a channel.',
-      'Jaxi / cmyksoda',
+      'Back up your NAND before you install a channel.\ncmyksoda / Jaxi',
     ].join('\n\n'),
   },
   {

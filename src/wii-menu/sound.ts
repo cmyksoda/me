@@ -33,11 +33,21 @@ interface Hold {
   controls: HoldControls;
 }
 
+/** A banner sound's sound.json. */
+interface BannerInfo {
+  gain?: number;
+  loop?: boolean;
+  loopStart?: number;
+  loopEnd?: number;
+}
+
 interface StartOptions {
   loop?: { start?: number; end?: number };
   pan?: { cue: Cue; value: number };
   volume?: number;
   delay?: number;
+  /** Seconds into the buffer to begin. */
+  offset?: number;
 }
 
 const MUSIC = 'WIPL_BGM_MENU';
@@ -102,6 +112,10 @@ export class Sound {
   private booted = false;
   private banner: Voice | null = null;
   private bannerRequest = 0;
+  private readonly bannerSounds = new Map<string, Promise<{ info: BannerInfo; buffer: AudioBuffer } | null>>();
+  private readonly settledBanners = new Set<string>();
+  private preloading: Promise<unknown> = Promise.resolve();
+  private urgent: Promise<unknown> = Promise.resolve();
 
   /** Browsers only let audio start inside a click, so every press comes through here first. */
   unlock(): void {
@@ -121,10 +135,13 @@ export class Sound {
       }
       // The first time sound comes on is the menu's first boot: its jingle and the music start together.
       this.booted = true;
+      this.musicWanted = true;
       const cues = this.cues;
       void cues.then(async (all) => {
         const jingle = all[JINGLE] && (await this.load(`sound/${all[JINGLE].file}`));
         await (all[MUSIC] && this.load(`sound/${all[MUSIC].file}`));
+        // A channel opened while these loaded has already asked for silence.
+        if (!this.musicWanted) return;
         if (jingle && this.enabled) this.track(JINGLE, this.start(jingle, all[JINGLE].gain));
         this.startMusic();
       });
@@ -167,7 +184,7 @@ export class Sound {
     if (pan && buffer.numberOfChannels === 2) setPan = panner(context, pan.cue, source, node, pan.value);
     else source.connect(node);
     node.connect(context.destination);
-    source.start(context.currentTime + (options.delay ?? 0));
+    source.start(context.currentTime + (options.delay ?? 0), options.offset ?? 0);
     return { source, gain: node, baseGain: gain, pan: setPan };
   }
 
@@ -270,32 +287,75 @@ export class Sound {
     });
   }
 
+  /** Stops the music, and the start-up jingle with it, so neither plays under a banner. */
   stopMusic(frames = 0): void {
     this.musicWanted = false;
     this.stopVoice(this.music, frames);
     this.music = null;
+    this.stopVoice(this.voices.get(JINGLE) ?? null, frames);
+    this.voices.delete(JINGLE);
   }
 
   /**
    * A channel's banner sound, `sound.flac` and `sound.json` in its folder (written by
-   * tools/wii/convert_channel_sound.py), starting `delayFrames` updates from now.
+   * tools/wii/convert_channel_sound.py), fetched and decoded once.
    */
+  private bannerSound(folder: string) {
+    let sound = this.bannerSounds.get(folder);
+    if (!sound) {
+      sound = fetch(new URL(`${folder}/sound.json`, root))
+        .then((r) => (r.ok ? (r.json() as Promise<BannerInfo>) : null))
+        .catch(() => null)
+        .then(async (info) => {
+          const buffer = info && (await this.load(`${folder}/sound.flac`));
+          return info && buffer ? { info, buffer } : null;
+        })
+        .finally(() => this.settledBanners.add(folder));
+      this.bannerSounds.set(folder, sound);
+    }
+    return sound;
+  }
+
+  /**
+   * Queues banner sounds to load one after another, so a preview's sound can start with its picture.
+   * Each waits for the banner a visitor just opened, so they never split its download.
+   */
+  preloadBanners(folders: string[]): void {
+    if (!this.enabled || !this.context) return;
+    this.preloading = folders.reduce<Promise<unknown>>(
+      (before, folder) => before.then(() => this.urgent).then(() => this.bannerSound(folder)),
+      this.preloading,
+    );
+  }
+
+  /** Starts one banner sound loading now, ahead of the queue. */
+  prepareBanner(folder: string): void {
+    if (this.enabled && this.context) this.urgent = this.bannerSound(folder);
+  }
+
+  /** True once a banner's sound can start at once, or when there's nothing to wait for. */
+  bannerReady(folder: string): boolean {
+    return !this.enabled || !this.context || this.settledBanners.has(folder);
+  }
+
+  /** Starts a channel's banner sound `delayFrames` updates from now. */
   playBanner(folder: string, delayFrames = 0): void {
     if (!this.enabled || !this.context) return;
     this.stopBanner();
     const request = ++this.bannerRequest;
-    void (async () => {
-      const info = await fetch(new URL(`${folder}/sound.json`, root))
-        .then((r) => (r.ok ? r.json() : null))
-        .catch(() => null);
-      const buffer = info && (await this.load(`${folder}/sound.flac`));
+    const startAt = this.context.currentTime + delayFrames * UPDATE;
+    void this.bannerSound(folder).then((sound) => {
       // A newer request (or a stop) while this one loaded wins.
-      if (!buffer || !this.enabled || request !== this.bannerRequest) return;
-      this.banner = this.start(buffer, info.gain ?? 1, {
-        loop: info.loop ? { start: info.loopStart, end: info.loopEnd } : undefined,
-        delay: delayFrames * UPDATE,
-      });
-    })();
+      if (!sound || !this.enabled || request !== this.bannerRequest) return;
+      const { info, buffer } = sound;
+      const now = this.context!.currentTime;
+      const loop = info.loop ? { start: info.loopStart ?? 0, end: info.loopEnd ?? buffer.duration } : undefined;
+      // A sound that arrives after its banner began joins in where the picture is, so the two stay together.
+      let offset = Math.max(0, now - startAt);
+      if (loop && offset > loop.end && loop.end > loop.start) offset = loop.start + ((offset - loop.start) % (loop.end - loop.start));
+      if (!loop && offset >= buffer.duration) return;
+      this.banner = this.start(buffer, info.gain ?? 1, { loop, delay: Math.max(0, startAt - now), offset });
+    });
   }
 
   /** Stops the banner sound, at once or over `frames` updates. */

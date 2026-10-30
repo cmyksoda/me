@@ -21,7 +21,6 @@ export type Project = {
 /** A whole subpage of the site, shown by a capture of the page itself. */
 export type Room = {
   title: string;
-  description: string;
   color: Project['color'];
   /** Path relative to public/, a 16:9 capture of the room. */
   image: string;
@@ -33,7 +32,6 @@ export type Room = {
 export const rooms: Room[] = [
   {
     title: 'Wii Forwarder Channels',
-    description: 'Every forwarder channel I\'ve released, on a Wii Menu.',
     color: 'cyan',
     image: 'projects/wii-forwarders.webp',
     imageAlt: 'The Wii Menu, with cmyksoda\'s forwarder channels in its slots',
@@ -41,7 +39,6 @@ export const rooms: Room[] = [
   },
   {
     title: 'Wii Homebrew Apps',
-    description: 'My homebrew apps for the Wii, in the Homebrew Channel.',
     color: 'pink',
     image: 'projects/wii-homebrew.webp',
     imageAlt: 'The Homebrew Channel, listing cmyksoda\'s Wii homebrew apps',
@@ -87,7 +84,7 @@ export const projects: Project[] = [
   },
   {
     title: 'RiiTube at Home',
-    description: 'Inspired by the official RiiTube service, this is a LAN version for WiiMC-SS. It isn\'t a replacement for RiiTube. Search YouTube, prepare a video on your server, and watch a complete, seekable copy on the Wii.',
+    description: 'Inspired by the official RiiTube service, this is a LAN version for WiiMC-SS. Search YouTube, prepare a video on your server, and watch a complete, seekable copy on the Wii. Videos are saved on your home server/computer and are able to be rewatched or deleted at any time.',
     color: 'cyan', art: 'window',
     image: 'projects/riitube-at-home.svg', imageDark: 'projects/riitube-at-home-dark.svg', imageAlt: 'RiiTube logo', imageWidth: 180,
     url: 'https://github.com/cmyksoda/RiiTube-at-Home',

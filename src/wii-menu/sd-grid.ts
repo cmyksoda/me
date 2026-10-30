@@ -3,6 +3,7 @@ import { Balloon } from './balloon';
 import { CardPanel } from './card-panel';
 import { perMode, type Screen } from './display';
 import { FocusFrame } from './focus';
+import { forecastIcon } from './forecast';
 import { translation, type Pointer } from './grid';
 import { center, contains } from './lyt/hit';
 import { AnimationPlayer, identity, type LayoutInstance, type PaneNode } from './lyt/layout';
@@ -86,7 +87,7 @@ export class SdGrid {
     for (const channel of assets.sdChannels) {
       const instance = channel.icon.instance('icon');
       const animation = channel.icon.animation('icon') ?? channel.icon.animation('icon_Whole');
-      const clip = animation ? new AnimationPlayer(animation, instance, { loop: animation.loop }).play() : null;
+      const clip = animation ? new AnimationPlayer(animation, instance, { loop: animation.loop, wholeFrames: true }).play() : null;
       if (clip) clip.frame = clip.from + Math.floor(Math.random() * (clip.to - clip.from));
       for (const language of OTHER_LANGUAGES) {
         for (const pane of channel.icon.layout('icon').groups.get(language) ?? []) {
@@ -94,7 +95,7 @@ export class SdGrid {
           if (node) node.visible = false;
         }
       }
-      this.icons.set(channel.id, { instance, clip });
+      this.icons.set(channel.id, { instance, clip: clip ?? forecastIcon(channel, instance) });
     }
 
     let saved = 0;
@@ -236,6 +237,8 @@ export class SdGrid {
       this.slots[index].focus.point();
       this.slots[index].balloon.point();
       this.sound.play('WIPL_SE_CH_TARGETTING');
+      const channel = this.channelAt(this.page * SLOTS_PER_PAGE + index);
+      if (channel) this.sound.prepareBanner(`sd-channels/${channel.id}`);
     }
   }
 

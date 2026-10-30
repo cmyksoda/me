@@ -67,6 +67,8 @@ export interface PaneNode {
   text?: string;
   /** Recolors stretches of the text, as a tag processor's SetTextColor does (`lift` raises them). */
   textRuns?: { from: number; to: number; color: RGBA; lift: number }[];
+  /** Replaces a picture's texture coordinates, as Picture::SetTexCoord does. */
+  texCoords?: Quad<Vec2>[];
   /** Lets a scene draw something of its own (a channel icon, say) in this pane's place. */
   onDraw?: (pane: PaneNode) => void;
 }
@@ -193,6 +195,8 @@ export interface PlaybackOptions {
   loop?: boolean;
   /** Only bind targets with a key inside from–to, as binding the clip's own group would. */
   keyedOnly?: boolean;
+  /** Sample whole frames only, as the console's updates do; banner tools draw jumps as one-frame slides. */
+  wholeFrames?: boolean;
 }
 
 /**
@@ -207,17 +211,20 @@ export class AnimationPlayer {
   readonly from: number;
   readonly to: number;
   readonly loop: boolean;
+  private readonly wholeFrames: boolean;
   private readonly bindings: { track: Track; pane?: PaneNode; material?: MaterialState }[] = [];
 
   constructor(readonly animation: Animation, readonly instance: LayoutInstance, options: PlaybackOptions = {}) {
     this.loop = options.loop ?? false;
+    this.wholeFrames = options.wholeFrames ?? false;
     this.from = options.from ?? 0;
     this.to = options.to ?? (this.loop ? animation.frameSize : animation.frameSize - 1);
     this.frame = this.from;
     const scope = options.panes ? this.scope(options.panes, options.recursive ?? false) : null;
     const keyed = (tracks: Track[]) => tracks.some((t) => t.keys.some((k) => k.frame >= this.from && k.frame <= this.to));
     for (const target of animation.targets) {
-      const pane = target.isMaterial ? undefined : instance.panes.get(target.name);
+      // EqualsPaneName compares 16 characters, all a layout keeps, so longer clip targets still bind.
+      const pane = target.isMaterial ? undefined : instance.panes.get(target.name.slice(0, 16));
       const material = target.isMaterial ? instance.material(target.name) : undefined;
       if (scope && !(pane ? scope.panes.has(pane) : material && scope.materials.has(material))) continue;
       if (options.keyedOnly && !keyed(target.tracks)) continue;
@@ -261,8 +268,9 @@ export class AnimationPlayer {
   }
 
   apply(): void {
+    const frame = this.wholeFrames ? Math.floor(this.frame) : this.frame;
     for (const { track, pane, material } of this.bindings) {
-      const value = sampleTrack(track, this.frame);
+      const value = sampleTrack(track, frame);
       if (pane) applyPaneTrack(pane, track, value);
       else if (material) applyMaterialTrack(material, track, value, this.animation.textures);
     }

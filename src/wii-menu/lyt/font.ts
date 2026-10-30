@@ -73,11 +73,26 @@ function splitLines(font: FontMetrics, text: string, scaleH: number, charSpace: 
   return { lines, breaks };
 }
 
+// A long letter is laid out by the board for its links and again by the renderer, so a few are kept.
+const laidOut = new WeakMap<TextContent, Map<string, GlyphQuad[]>>();
+
 /**
  * Lays out a text box's string into glyph quads, following lyt::TextBox::DrawSelf and
  * ut::TextWriterBase: text position anchors the block and aligns each line inside it.
  */
 export function layoutText(font: FontMetrics, content: TextContent, text: string, origin: number, size: Vec2): GlyphQuad[] {
+  const key = `${origin} ${size[0]} ${size[1]} ${text}`;
+  let memo = laidOut.get(content);
+  if (!memo) laidOut.set(content, (memo = new Map()));
+  let quads = memo.get(key);
+  if (!quads) {
+    memo.set(key, (quads = layOut(font, content, text, origin, size)));
+    if (memo.size > 8) memo.delete(memo.keys().next().value!);
+  }
+  return quads;
+}
+
+function layOut(font: FontMetrics, content: TextContent, text: string, origin: number, size: Vec2): GlyphQuad[] {
   const scaleH = content.fontSize[0] / font.width;
   const scaleV = content.fontSize[1] / font.height;
   const lineHeight = content.lineSpace + font.lineFeed * scaleV;

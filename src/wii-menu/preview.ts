@@ -1,5 +1,6 @@
 import type { Archive, Assets, Channel, ChannelBase } from './assets';
 import { SCREEN_HEIGHT, type Screen } from './display';
+import { forecastBanner } from './forecast';
 import { contains } from './lyt/hit';
 import { AnimationPlayer, identity, type LayoutInstance } from './lyt/layout';
 import type { Renderer } from './lyt/renderer';
@@ -10,6 +11,8 @@ export type PreviewButton = 'back' | 'download';
 
 const OTHER_LANGUAGES = ['JPN', 'GER', 'FRA', 'SPA', 'ITA', 'NED', 'CHN', 'KOR'];
 const CHANGE_FRAMES = 10;
+// A banner waits for its sound so the two start together, but never longer than a second.
+const SOUND_WAIT_FRAMES = 60;
 // In 16:9 the frame pieces take the wide mask textures (ChannelTitle's scWidePanes).
 const WIDE_FRAME_TEXTURES: [string, string[]][] = [
   ['Picture_04', ['Fre_a', 'Fre_d', 'Fre_i', 'Fre_l']],
@@ -42,6 +45,7 @@ export class Preview<C extends ChannelBase = Channel> {
   private next: C | null = null;
   private downloadOn = true;
   private changing = 0;
+  private starting: { delay: number; waited: number } | null = null;
   private wide = false;
 
   constructor(
@@ -71,6 +75,11 @@ export class Preview<C extends ChannelBase = Channel> {
       lightDownload: clip('OnBtn', 'G_OnOffBtnB'),
     };
     this.banner = this.load(channel);
+    this.sound.prepareBanner(this.folder(channel));
+  }
+
+  private folder(channel: C): string {
+    return `${this.style.sounds}/${channel.id}`;
   }
 
   get channel(): C {
@@ -97,9 +106,9 @@ export class Preview<C extends ChannelBase = Channel> {
     }
     const animation = (name: string, loop: boolean) => {
       const data = channel.banner.animation(name);
-      return data ? new AnimationPlayer(data, instance, { loop }) : null;
+      return data ? new AnimationPlayer(data, instance, { loop, wholeFrames: true }) : null;
     };
-    const start = animation('banner_Start', false);
+    const start = animation('banner_Start', false) ?? forecastBanner(channel, instance);
     const loop = animation('banner_Loop', true) ?? animation('banner', true);
     // The zoom shows the banner's first frame; it only starts moving once the zoom has finished.
     (start ?? loop)?.seek(0);
@@ -108,14 +117,31 @@ export class Preview<C extends ChannelBase = Channel> {
 
   /** Zoom finished (calcFadein): the banner's Start clip, or its loop, begins with its sound. */
   begin(soundDelay = 0): void {
+    this.starting = { delay: soundDelay, waited: 0 };
+    this.tryStart(0);
+  }
+
+  /** Leaving the preview: a banner still waiting for its sound doesn't start on the way out. */
+  halt(): void {
+    this.starting = null;
+  }
+
+  private tryStart(frames: number): void {
+    const starting = this.starting!;
+    starting.waited += frames;
+    const folder = this.folder(this.banner.channel);
+    if (!this.sound.bannerReady(folder) && starting.waited < SOUND_WAIT_FRAMES) return;
+    this.starting = null;
     if (this.banner.start) this.banner.start.play();
     else this.banner.loop?.play();
-    this.sound.playBanner(`${this.style.sounds}/${this.banner.channel.id}`, soundDelay);
+    this.sound.playBanner(folder, starting.delay);
   }
 
   /** Previous/next: the old banner plays on for 10 updates, then the new one holds for 10 before it starts. */
   change(channel: C): void {
     if (this.changing) return;
+    this.starting = null;
+    this.sound.prepareBanner(this.folder(channel));
     this.next = channel;
     this.changing = CHANGE_FRAMES * 2;
     this.release();
@@ -156,6 +182,7 @@ export class Preview<C extends ChannelBase = Channel> {
     // Both focus clips sit on one pane; the "on" clip, bound later, wins while it plays.
     const order = ['dimDownload', 'lightDownload', 'offBack', 'offDownload', 'onBack', 'onDownload', 'pressBack', 'pressDownload'];
     for (const name of order) this.clips[name].step(frames);
+    if (this.starting) this.tryStart(frames);
     const banner = this.banner;
     banner.start?.step(frames);
     if (banner.start && !banner.start.playing && banner.loop && !banner.loop.playing && banner.start.frame > 0) {

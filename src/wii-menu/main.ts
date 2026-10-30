@@ -29,6 +29,9 @@ try {
 const sound = new Sound();
 const assets = await loadAssets(renderer);
 const scenes = new Scenes(assets, renderer, sound);
+// The previews' banners get ready in the background, so opening or switching one never pauses.
+renderer.prepare(assets.menu.chanTtl.layout('my_ChTop_a'), assets.menu.chanTtl.files);
+for (const channel of assets.channels) renderer.prepare(channel.banner.layout('banner'), channel.banner.files);
 
 
 const pointer: MenuPointer = {
@@ -65,6 +68,10 @@ canvas.addEventListener('pointerup', (event) => {
   if (event.button === 0) pointer.a = false;
   else if (event.button === 2) pointer.b = false;
 });
+// A button released while the page can't see it (another window took focus) must not stay held.
+const releaseAll = () => (pointer.a = pointer.b = false);
+canvas.addEventListener('lostpointercapture', releaseAll);
+window.addEventListener('blur', releaseAll);
 canvas.addEventListener('wheel', (event) => {
   event.preventDefault();
   scenes.wheel(event.deltaY * (SCREEN_HEIGHT / screen.viewport[3]) * devicePixelRatio);
@@ -91,6 +98,7 @@ function frame(now: number) {
 
   renderer.beginFrame([screen.width, SCREEN_HEIGHT], screen.viewport);
   scenes.draw(screen, pointer);
+  renderer.settle();
   if (import.meta.env.DEV && debug.capture) {
     debug.png = canvas.toDataURL('image/png');
     debug.capture = false;

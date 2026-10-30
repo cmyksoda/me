@@ -7,11 +7,11 @@
   {
     "id": "HADE",
     "name": "Internet Channel",
-    "download": null
+    "download": "https://archive.org/details/internet-channel-netsurf"
   },
   {
     "id": "HAFE",
     "name": "Forecast Channel",
-    "download": null
+    "download": "https://archive.org/details/forecast-channel-japanese-symbols-wiilink"
   }
 ]
