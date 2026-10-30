@@ -20,6 +20,7 @@ from pathlib import Path
 
 OWNER = "cmyksoda"
 APPS = [
+    "AM2R-GX",
     "ASCII-Odyssey",
     "Bird-and-Beans-GX",
     "empty-slot-creator",
