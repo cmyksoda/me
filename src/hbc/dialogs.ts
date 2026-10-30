@@ -70,6 +70,8 @@ const aboutText = `${notice}\n\n${creditsPre}\n\nTheme: Dark Water by drmr\n\n${
 
 const roundf = (value: number) => Math.sign(value) * Math.round(Math.abs(value));
 
+export const dialogX = () => Math.trunc((screen.width - theme.dialog_background.width) / 2);
+
 // The mask color is stepped as one 32-bit number, so fading out also carries into its blue byte.
 // The slide stops a step short of sin(pi/2), which leaves dialogs resting at y 47, not 44.
 export function* dialogFade(v: View, fadeIn: boolean) {
@@ -89,7 +91,7 @@ export function* dialogFade(v: View, fadeIn: boolean) {
 export function dialogApp(app: App, subView: View) {
   const background = theme.dialog_background;
   const tiny = theme.button_tiny;
-  const v = newView(11, subView, Math.trunc((screen.width - background.width) / 2), 44, B);
+  const v = newView(11, subView, dialogX(), 44, B);
   const w = v.widgets;
   const textX = 48 + 128;
   const textWidth = background.width - 72 - 128;
@@ -118,7 +120,7 @@ export function dialogApp(app: App, subView: View) {
 export function dialogAbout(subView: View) {
   const background = theme.dialog_background;
   const logo = theme.about;
-  const v = newView(3, subView, Math.trunc((screen.width - background.width) / 2), 44);
+  const v = newView(3, subView, dialogX(), 44);
   v.widgets[0] = image(0, 0, background);
   v.widgets[1] = image(Math.trunc((background.width - logo.width) / 2), 16, logo);
 

@@ -3,9 +3,9 @@
 import { apps, loadApps, type App } from './apps';
 import { browser, browserGenView, browserInit, browserRelayout, browserSelection, browserSetFocus, browserSwitchMode, INFO, VIEW_MODE } from './browser';
 import { A, B, DOWN, DPAD, LEFT, listen, MINUS, PLUS, RIGHT, TWO, UP } from './controls';
-import { DIALOG_MASK_COLOR, dialogAbout, dialogApp, dialogFade, pointingAtSourceLink, SOURCE_URL } from './dialogs';
+import { DIALOG_MASK_COLOR, dialogAbout, dialogApp, dialogFade, dialogX, pointingAtSourceLink, SOURCE_URL } from './dialogs';
 import { lineSpacing } from './font';
-import { prefersWide, screen, setWidescreen } from './gfx';
+import { screen, setLayout, windowLayout } from './gfx';
 import { loadTheme } from './theme';
 import { enableCursor, focusNext, focusPrevious, plot, pointing, render, showThrobber, tickleThrobber, viewFade, widgetAtPointer, type View } from './view';
 import { scrollMemo, scrollMemoDeco } from './widgets';
@@ -57,9 +57,12 @@ function* channel(): Generator<void, void, void> {
     }
     if (frame % 30 === 0 && loadFrames === -1) loadFrames = SD_LOAD_FRAMES;
 
-    if (current === browser && prefersWide() !== screen.wide) {
-      setWidescreen(!screen.wide);
+    // A dialog keeps its text as laid out until it closes, so only the width follows while one is open.
+    const layout = windowLayout();
+    if (layout.width !== screen.width || (layout.wide !== screen.wide && current === browser)) {
+      setLayout({ wide: current === browser ? layout.wide : screen.wide, width: layout.width });
       browserRelayout();
+      for (const dialog of [detail, about]) if (dialog) dialog.x = dialogX();
     }
 
     const pad = yield* plot(current, DIALOG_MASK_COLOR);
@@ -155,7 +158,7 @@ async function start() {
   const canvas = document.querySelector<HTMLCanvasElement>('#tv')!;
   await loadTheme();
   loadApps();
-  setWidescreen(prefersWide());
+  setLayout(windowLayout());
   browserInit();
   listen(canvas);
   canvas.setAttribute('aria-label', `The Homebrew Channel, listing ${apps.map((entry) => entry.name).join(', ')}`);

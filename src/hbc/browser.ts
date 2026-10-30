@@ -11,22 +11,25 @@ export const INFO = 2;
 export const VIEW_MODE = 3;
 const FIRST_ENTRY = 4;
 const TRANS_STEPS = 20;
-const MAX_COLUMNS = 4;
 const ROWS = 5;
-const SET = MAX_COLUMNS * ROWS;
+const ARROW_INSET = 24;
+// A grid keeps this much clear of each page arrow.
+const ARROW_CLEARANCE = 16;
 const SAVED_MODE = 'hbc-browse-mode';
 
 type BrowserAction = 'add' | 'refresh' | 'next' | 'previous';
 
-export const browser = newView(FIRST_ENTRY + SET * 2, null, 0, 0);
+export const browser = newView(FIRST_ENTRY, null, 0, 0);
 
 // The entries swap between two sets of widget slots, so the old page can slide out as the new one slides in.
 let firstSet = true;
+let setSize = ROWS;
 let topOffset = 0;
 let columnsCurrent = 1;
 let columnsNew = 1;
 
-const gridColumns = () => (screen.wide ? 4 : 3);
+// As many columns as fit between the page arrows: 3 in 4:3, 4 in 16:9, and more in wider windows.
+const gridColumns = () => Math.trunc((screen.width - 2 * (ARROW_INSET + theme.apps_previous.width + ARROW_CLEARANCE)) / theme.apps_grid.width);
 const rowStart = (columns: number) =>
   Math.trunc((screen.width - (columns === 1 ? theme.apps_list.width : theme.apps_grid.width * columns)) / 2);
 
@@ -46,9 +49,10 @@ export function browserInit() {
 }
 
 function browserLayout() {
-  const w = browser.widgets;
-  w[0] = image(24, 192, theme.apps_previous, undefined, theme.apps_previous_hover);
-  w[1] = image(screen.width - 24 - theme.apps_next.width, 192, theme.apps_next, undefined, theme.apps_next_hover);
+  setSize = gridColumns() * ROWS;
+  const w = (browser.widgets = Array(FIRST_ENTRY + setSize * 2).fill(null));
+  w[0] = image(ARROW_INSET, 192, theme.apps_previous, undefined, theme.apps_previous_hover);
+  w[1] = image(screen.width - ARROW_INSET - theme.apps_next.width, 192, theme.apps_next, undefined, theme.apps_next_hover);
   w[INFO] = image(screen.width - 96, 412, theme.info, undefined, theme.info_hover);
   w[VIEW_MODE] = viewModeButton();
   setFlag(w[0]!, VISIBLE, false);
@@ -99,7 +103,8 @@ export function* browserGenView(action: BrowserAction, app: App | null = null) {
 
   const less = topOffset > 0;
   const more = apps.length > topOffset + columnsNew * ROWS;
-  const [oldSet, newSet] = firstSet ? [FIRST_ENTRY, FIRST_ENTRY + SET] : [FIRST_ENTRY + SET, FIRST_ENTRY];
+  const slots = setSize;
+  const [oldSet, newSet] = firstSet ? [FIRST_ENTRY, FIRST_ENTRY + slots] : [FIRST_ENTRY + slots, FIRST_ENTRY];
   firstSet = !firstSet;
 
   const w = browser.widgets;
@@ -110,12 +115,12 @@ export function* browserGenView(action: BrowserAction, app: App | null = null) {
   const xm = action === 'previous' ? half : -half;
   const x2 = rowStart(columnsNew) + (action === 'previous' ? -screen.width : screen.width);
 
-  w.fill(null, newSet, newSet + SET);
+  w.fill(null, newSet, newSet + slots);
   const focus = placeEntries(newSet, x2, app);
 
   // Each row starts its half-cosine slide one frame after the row above it.
-  const val1 = Array<number>(SET).fill(0);
-  const val2 = Array<number>(SET).fill(0);
+  const val1 = Array<number>(slots).fill(0);
+  const val2 = Array<number>(slots).fill(0);
   let angle = 0;
   for (let i = 0; i < TRANS_STEPS; i++) {
     angle += (2 * Math.PI) / TRANS_STEPS;
@@ -123,7 +128,7 @@ export function* browserGenView(action: BrowserAction, app: App | null = null) {
     w[0]!.x = arrowLeft + s;
     w[1]!.x = arrowRight - s;
 
-    for (let j = 0; j < SET; j++) {
+    for (let j = 0; j < slots; j++) {
       const row1 = Math.trunc(j / columnsCurrent);
       const row2 = Math.trunc(j / columnsNew);
       if (i > row1 && i < TRANS_STEPS - (ROWS - row1)) val1[j] += Math.PI / (TRANS_STEPS - 6);
@@ -143,7 +148,7 @@ export function* browserGenView(action: BrowserAction, app: App | null = null) {
     }
   }
 
-  w.fill(null, oldSet, oldSet + SET);
+  w.fill(null, oldSet, oldSet + slots);
   columnsCurrent = columnsNew;
 }
 
@@ -160,7 +165,7 @@ export function browserRelayout() {
   browser.cursor = -1;
   setTopOffset(app);
   browser.widgets.fill(null, FIRST_ENTRY);
-  const focus = placeEntries(firstSet ? FIRST_ENTRY : FIRST_ENTRY + SET, rowStart(columnsNew), app);
+  const focus = placeEntries(firstSet ? FIRST_ENTRY : FIRST_ENTRY + setSize, rowStart(columnsNew), app);
   setFlag(browser.widgets[0]!, VISIBLE, topOffset > 0);
   setFlag(browser.widgets[1]!, VISIBLE, apps.length > topOffset + columnsNew * ROWS);
   setFocus(browser, focus);
@@ -180,7 +185,7 @@ export function browserSetFocus(down: number) {
 
 export function browserSelection(): App | null {
   if (!apps.length || browser.focus < FIRST_ENTRY) return null;
-  const set = firstSet ? FIRST_ENTRY : FIRST_ENTRY + SET;
+  const set = firstSet ? FIRST_ENTRY : FIRST_ENTRY + setSize;
   return apps[topOffset + browser.focus - set] ?? null;
 }
 
