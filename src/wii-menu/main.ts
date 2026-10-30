@@ -1,19 +1,20 @@
 import { loadAssets } from './assets';
-import { Cursor } from './cursor';
 import { measureScreen, SCREEN_HEIGHT, toScreen, type Screen } from './display';
-import { ChannelGrid, type Pointer } from './grid';
+import type { Pointer } from './grid';
 import { Renderer } from './lyt/renderer';
+import { Menu } from './menu';
 import { Sound } from './sound';
-
-const FADE_FRAMES = 20;
 
 const canvas = document.querySelector<HTMLCanvasElement>('#screen')!;
 const renderer = new Renderer(canvas);
 const sound = new Sound();
 const assets = await loadAssets(renderer);
-const grid = new ChannelGrid(assets, renderer, sound);
-const cursor = new Cursor(assets.menu.cursor);
-grid.footer.setSoundLabel(sound.enabled);
+const menu = new Menu(assets, renderer, sound);
+menu.grid.footer.setSoundLabel(sound.enabled);
+menu.grid.onOptions = () => {
+  sound.enabled = !sound.enabled;
+  menu.grid.footer.setSoundLabel(sound.enabled);
+};
 
 const links = document.querySelector('#channel-links')!;
 for (const channel of assets.channels) {
@@ -27,7 +28,7 @@ const pointer: Pointer & { inside: boolean } = {
   x: 0, y: 0, a: false, b: false, aPressed: false, sincePress: null, inside: false,
 };
 let screen: Screen = measureScreen(canvas);
-let pressedThisFrame = false;
+let pressed = false;
 
 function track(event: PointerEvent) {
   [pointer.x, pointer.y] = toScreen(screen, canvas, event.clientX, event.clientY);
@@ -40,7 +41,9 @@ canvas.addEventListener('pointerdown', (event) => {
   canvas.setPointerCapture(event.pointerId);
   if (event.button === 0) {
     pointer.a = true;
-    pressedThisFrame = true;
+    pressed = true;
+    const link = menu.linkAt(pointer.x, pointer.y);
+    if (link) window.open(link, '_blank', 'noopener');
   } else if (event.button === 2) {
     pointer.b = true;
     pointer.sincePress = null;
@@ -53,12 +56,7 @@ canvas.addEventListener('pointerup', (event) => {
 // Holding the right button is holding B, so the browser's own menu stays out of the way.
 canvas.addEventListener('contextmenu', (event) => event.preventDefault());
 
-grid.onOptions = () => {
-  sound.enabled = !sound.enabled;
-  grid.footer.setSoundLabel(sound.enabled);
-};
-
-let fade = 0;
+const debug = { capture: false, png: '', menu, renderer, pointer };
 let last = performance.now();
 function frame(now: number) {
   // The menu runs at 60 updates per second whatever the display's refresh rate.
@@ -66,28 +64,19 @@ function frame(now: number) {
   last = now;
   screen = measureScreen(canvas);
 
-  pointer.aPressed = pressedThisFrame;
-  if (pressedThisFrame) pointer.sincePress = 0;
+  pointer.aPressed = pressed;
+  if (pressed) pointer.sincePress = 0;
   else if (pointer.sincePress !== null) pointer.sincePress += frames;
-  pressedThisFrame = false;
-  grid.update(frames, pointer, fade >= FADE_FRAMES && pointer.inside);
+  pressed = false;
+  menu.update(frames, pointer);
 
   renderer.beginFrame([screen.width, SCREEN_HEIGHT], screen.viewport);
-  grid.draw(screen);
-  if (pointer.inside) cursor.draw(renderer, screen, pointer.x, pointer.y, false);
-  // EGG::ColorFader: black fades out over 20 updates once the menu is ready.
-  if (fade < FADE_FRAMES) {
-    fade = Math.min(FADE_FRAMES, fade + frames);
-    const alpha = 255 - Math.floor((fade * 255) / FADE_FRAMES);
-    renderer.fill([-screen.width / 2, SCREEN_HEIGHT / 2, screen.width / 2, -SCREEN_HEIGHT / 2], [0, 0, 0, alpha]);
-  }
-
+  menu.draw(screen, pointer);
   if (import.meta.env.DEV && debug.capture) {
     debug.png = canvas.toDataURL('image/png');
     debug.capture = false;
   }
   requestAnimationFrame(frame);
 }
-const debug = { capture: false, png: '', grid, renderer, pointer };
 if (import.meta.env.DEV) (window as unknown as { __menu: typeof debug }).__menu = debug;
 requestAnimationFrame(frame);

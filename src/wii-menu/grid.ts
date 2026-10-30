@@ -73,6 +73,8 @@ export class ChannelGrid {
   private readonly statics: { instance: LayoutInstance; clip: AnimationPlayer }[] = [];
   private readonly slots: Slot[] = [];
   private readonly scroll: Record<'left' | 'right', AnimationPlayer>;
+  private readonly mask: AnimationPlayer;
+  private masking = false;
   private scrolling: -1 | 0 | 1 = 0;
   private hoveredSlot = -1;
   private screen: Screen | null = null;
@@ -85,6 +87,7 @@ export class ChannelGrid {
       left: new AnimationPlayer(topClip, this.top, { from: 0, to: 20 }),
       right: new AnimationPlayer(topClip, this.top, { from: 40, to: 60 }),
     };
+    this.mask = new AnimationPlayer(topClip, this.top, { from: 200, to: 228, panes: ['ChMask'] });
     this.top.pane('ChMask').visible = false;
 
     this.board = board.instance('my_IplTop_c');
@@ -161,6 +164,40 @@ export class ChannelGrid {
     try {
       localStorage.setItem(ORDER_KEY, JSON.stringify(this.order));
     } catch {}
+  }
+
+  /** Darkens the grid behind a zooming preview (my_IplTop_a 200–228), or lifts the darkening. */
+  zoomMask(darken: boolean): void {
+    this.masking = true;
+    this.mask.play(!darken);
+  }
+
+  /** Where a channel sits: its page and its slot pane on the current page. */
+  locate(channel: Channel): { page: number; index: number } {
+    const absolute = this.order.indexOf(channel.id);
+    return { page: Math.floor(absolute / SLOTS_PER_PAGE), index: absolute % SLOTS_PER_PAGE };
+  }
+
+  slotPane(index: number): PaneNode {
+    return this.slots[index].pane;
+  }
+
+  /** Jumps to a page without sliding, as prepareRestarting does when the preview moved pages. */
+  showPage(page: number): void {
+    if (page === this.page) return;
+    this.page = page;
+    this.labelSlots();
+    this.footer.placeArrows(this.page, PAGES);
+  }
+
+  /** The next channel in slot order, wrapping around and skipping empty slots (searchChannel). */
+  neighbor(channel: Channel, direction: -1 | 1): Channel {
+    const start = this.order.indexOf(channel.id);
+    for (let step = 1; step <= this.order.length; step++) {
+      const next = this.channelAt((start + direction * step + this.order.length * 2) % this.order.length);
+      if (next) return next;
+    }
+    return channel;
   }
 
   channelAt(absolute: number): Channel | null {
@@ -307,6 +344,10 @@ export class ChannelGrid {
     }
     this.clock.update(frames);
     this.footer.update(frames);
+    if (this.masking) {
+      this.mask.step(frames);
+      if (!this.mask.playing && this.mask.backward) this.masking = false;
+    }
 
     if (this.state === 'scroll') {
       const clip = this.scroll[this.scrolling < 0 ? 'left' : 'right'];
@@ -355,6 +396,7 @@ export class ChannelGrid {
   /** Back from the preview or the board: the grid takes input again. */
   resume(): void {
     this.state = 'normal';
+    this.footer.updateArrows(this.page, PAGES);
   }
 
   draw(screen: Screen): void {
@@ -387,8 +429,12 @@ export class ChannelGrid {
       const [x, y] = center(slot.pane);
       slot.balloon.draw(this.renderer, screen, x, y - 70, 60);
     }
-
-    // Arrow scene: page arrows and footer balloons over everything else.
-    this.footer.drawArrows(screen);
+    if (this.masking) {
+      const mask = this.top.pane('ChMask');
+      mask.visible = true;
+      this.top.update(view, screen);
+      this.renderer.drawLayout(this.top, (pane) => pane === mask);
+      mask.visible = false;
+    }
   }
 }

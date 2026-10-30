@@ -23,6 +23,15 @@ interface TextureEntry {
   magFilter: number;
 }
 
+export interface Camera {
+  x: number;
+  y: number;
+  scaleX: number;
+  scaleY: number;
+}
+
+export type Rect = [left: number, top: number, right: number, bottom: number];
+
 export interface LoadedFont {
   metrics: FontMetrics;
   texture: WebGLTexture;
@@ -67,6 +76,31 @@ void main() {
 }`,
 };
 
+const CAPTURE_SHADER: ShaderSource = {
+  key: 'capture',
+  vertex: `#version 300 es
+in vec2 aPosition;
+in vec4 aRaster;
+in vec2 aTexCoord0;
+uniform vec2 uScreenHalf;
+out vec4 vRaster;
+out vec2 vTexCoord0;
+void main() {
+  gl_Position = vec4(aPosition / uScreenHalf, 0.0, 1.0);
+  vRaster = aRaster;
+  vTexCoord0 = aTexCoord0;
+}`,
+  fragment: `#version 300 es
+precision highp float;
+uniform sampler2D uTexture;
+in vec4 vRaster;
+in vec2 vTexCoord0;
+out vec4 fragColor;
+void main() {
+  fragColor = vec4(texture(uTexture, vTexCoord0).rgb, vRaster.a);
+}`,
+};
+
 /** Window frame corners (lyt_window.cpp): one corner's texels stay anchored, the rest stretch. */
 const FRAME_FLIPS: [Quad<Vec2>, Vec2][] = [
   [[[0, 0], [1, 0], [0, 1], [1, 1]], [0, 1]],
@@ -101,8 +135,11 @@ export class Renderer {
   private readonly buffer: WebGLBuffer;
   private vertices = new Float32Array(FLOATS_PER_VERTEX * 4);
   private screenHalf: Vec2 = [304, 228];
-  private clip: [number, number, number, number] | null = null;
-  private viewport = [0, 0, 1, 1];
+  private viewport: [number, number, number, number] = [0, 0, 1, 1];
+  private target: { framebuffer: WebGLFramebuffer; texture: WebGLTexture; width: number; height: number } | null = null;
+  private outerViewport: [number, number, number, number] | null = null;
+  /** The zoom camera (setOrthoTransAndScale): screen = (world − center) × scale; null is the default camera. */
+  camera: Camera | null = null;
 
   constructor(readonly canvas: HTMLCanvasElement) {
     const gl = canvas.getContext('webgl2', { alpha: false, antialias: true, premultipliedAlpha: false });
@@ -132,16 +169,15 @@ export class Renderer {
   }
 
   /** Limits drawing to a logical-screen rectangle [left, top, right, bottom] (y up), or lifts the limit. */
-  setClip(rect: [number, number, number, number] | null): void {
+  setClip(rect: Rect | null): void {
     const gl = this.gl;
-    this.clip = rect;
     if (!rect) {
       gl.disable(gl.SCISSOR_TEST);
       return;
     }
     const [vx, vy, vw, vh] = this.viewport;
-    const toX = (x: number) => vx + ((x / this.screenHalf[0] + 1) / 2) * vw;
-    const toY = (y: number) => vy + ((y / this.screenHalf[1] + 1) / 2) * vh;
+    const toX = (x: number) => vx + ((this.cameraX(x) / this.screenHalf[0] + 1) / 2) * vw;
+    const toY = (y: number) => vy + ((this.cameraY(y) / this.screenHalf[1] + 1) / 2) * vh;
     const x0 = Math.round(toX(rect[0]));
     const y0 = Math.round(toY(rect[3]));
     gl.enable(gl.SCISSOR_TEST);
@@ -149,23 +185,77 @@ export class Renderer {
   }
 
   /** Fills a logical-screen rectangle (y up) with a flat color, for faders and the zoom surround. */
-  fill(rect: [number, number, number, number], color: RGBA): void {
+  fill(rect: Rect, color: RGBA): void {
+    this.drawRect(FILL_SHADER, rect, color, null);
+  }
+
+  /** Renders `draw` into an offscreen copy of the screen, as the preview's zoom capture does. */
+  capture(draw: () => void): void {
     const gl = this.gl;
-    const program = this.program(FILL_SHADER);
+    const [, , width, height] = this.viewport;
+    if (!this.target || this.target.width !== width || this.target.height !== height) {
+      const texture = gl.createTexture()!;
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      const framebuffer = gl.createFramebuffer()!;
+      gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+      this.target = { framebuffer, texture, width, height };
+    }
+    const outer = this.viewport;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.target.framebuffer);
+    this.viewport = [0, 0, width, height];
+    gl.viewport(0, 0, width, height);
+    gl.disable(gl.SCISSOR_TEST);
+    gl.clearColor(0, 0, 0, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    const camera = this.camera;
+    this.camera = null;
+    draw();
+    this.camera = camera;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    this.viewport = outer;
+    gl.viewport(...outer);
+  }
+
+  /** Draws the last capture into a rectangle (through the camera) at the given opacity. */
+  drawCapture(rect: Rect, alpha: number): void {
+    if (this.target) this.drawRect(CAPTURE_SHADER, rect, [255, 255, 255, alpha * 255], this.target.texture);
+  }
+
+  private drawRect(shader: ShaderSource, rect: Rect, color: RGBA, texture: WebGLTexture | null): void {
+    const gl = this.gl;
+    const program = this.program(shader);
     gl.useProgram(program.program);
     const [left, top, right, bottom] = rect;
     const out = this.vertices;
-    [[left, top], [right, top], [left, bottom], [right, bottom]].forEach(([x, y], v) => {
-      const o = v * FLOATS_PER_VERTEX;
-      out[o] = x;
-      out[o + 1] = y;
+    [[left, top, 0, 1], [right, top, 1, 1], [left, bottom, 0, 0], [right, bottom, 1, 0]].forEach(([x, y, u, v], i) => {
+      const o = i * FLOATS_PER_VERTEX;
+      out[o] = this.cameraX(x);
+      out[o + 1] = this.cameraY(y);
       out.set(color.map((c) => c / 255), o + 2);
+      out[o + 6] = u;
+      out[o + 7] = v;
     });
     gl.uniform2f(program.uniform('uScreenHalf'), ...this.screenHalf);
+    if (texture) {
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.bindSampler(0, this.sampler(0, 0, 1, 1));
+      gl.uniform1i(program.uniform('uTexture'), 0);
+    }
     this.setBlend(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
     gl.bufferData(gl.ARRAY_BUFFER, out.subarray(0, FLOATS_PER_VERTEX * 4), gl.STREAM_DRAW);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }
+
+  private cameraX(x: number): number {
+    return this.camera ? (x - this.camera.x) * this.camera.scaleX : x;
+  }
+
+  private cameraY(y: number): number {
+    return this.camera ? (y - this.camera.y) * this.camera.scaleY : y;
   }
 
   async loadFont(name: string, url: string): Promise<void> {
@@ -364,8 +454,8 @@ export class Renderer {
   /** Pane-local (y down, as DrawQuad sees it) to logical screen space; LoadMtx flips y for y-up layouts. */
   private project(world: Mtx34, x: number, yDown: number, out: Float32Array, offset: number): void {
     const y = -yDown;
-    out[offset] = world[0] * x + world[1] * y + world[3];
-    out[offset + 1] = world[4] * x + world[5] * y + world[7];
+    out[offset] = this.cameraX(world[0] * x + world[1] * y + world[3]);
+    out[offset + 1] = this.cameraY(world[4] * x + world[5] * y + world[7]);
   }
 
   private setMaterialUniforms(program: Program, instance: LayoutInstance, state: MaterialState): void {

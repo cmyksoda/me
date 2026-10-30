@@ -89,15 +89,20 @@ export class Footer {
     this.clips.get('hideR')!.seek(this.arrowShown.right ? 10160 : 10110);
   }
 
-  /** After a scroll lands, arrows that change state play their Appear or Disappear clip. */
-  updateArrows(page: number, pages: number): void {
-    for (const [side, shown] of [['L', page > 0], ['R', page < pages - 1]] as const) {
+  /** Arrows that change state play their Appear or Disappear clip. */
+  setArrows(left: boolean, right: boolean): void {
+    for (const [side, shown] of [['L', left], ['R', right]] as const) {
       const key = side === 'L' ? 'left' : 'right';
       if (this.arrowShown[key] === shown) continue;
       this.arrowShown[key] = shown;
       this.clips.get(`${shown ? 'show' : 'hide'}${side}`)!.play();
       if (!shown && this.hovered === key) this.leave(key);
     }
+  }
+
+  /** After a scroll lands, the arrows follow the page: none left of the first, none right of the last. */
+  updateArrows(page: number, pages: number): void {
+    this.setArrows(page > 0, page < pages - 1);
   }
 
   /** The Message Board count: letters dated today. New letters ring the button until it is opened. */
@@ -190,7 +195,12 @@ export class Footer {
 
   /** Arrow scene: the page arrows over the grid, then the footer balloons. */
   drawArrows(screen: Screen): void {
+    // The Arrow scene always draws with the default camera, zoom or not.
+    const camera = this.renderer.camera;
+    this.renderer.camera = null;
+    this.layout.update(identity(), screen);
     this.renderer.drawLayout(this.layout, (pane) => isUnder(pane, ['N_ArwL', 'N_ArwR']));
+    this.renderer.camera = camera;
     const margin = screen.wide ? 120 : 30;
     for (const [target, pane] of [['options', 'B_Set'], ['board', 'B_Bbs']] as const) {
       const [x, y] = center(this.layout.pane(pane));
