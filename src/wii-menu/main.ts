@@ -11,7 +11,7 @@ const assets = await loadAssets(renderer);
 const menu = new Menu(assets, renderer, sound);
 menu.grid.footer.setSoundLabel(sound.enabled);
 menu.grid.onOptions = () => {
-  sound.enabled = !sound.enabled;
+  sound.setEnabled(!sound.enabled);
   menu.grid.footer.setSoundLabel(sound.enabled);
 };
 
@@ -37,6 +37,7 @@ function track(event: PointerEvent) {
 canvas.addEventListener('pointermove', track);
 canvas.addEventListener('pointerleave', () => (pointer.inside = false));
 canvas.addEventListener('pointerdown', (event) => {
+  sound.unlock();
   track(event);
   canvas.setPointerCapture(event.pointerId);
   if (event.button === 0) {
