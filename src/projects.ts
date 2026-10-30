@@ -7,6 +7,8 @@ export type Project = {
   /** Path relative to public/. Empty uses the emoji or illustrated fallback. */
   image: string;
   imageAlt: string;
+  /** Shown instead of `image` in dark mode, for art that would vanish on a dark card. */
+  imageDark?: string;
   roundedImage?: boolean;
   /** Display zoom for icons with transparent padding. */
   imageScale?: number;
@@ -85,9 +87,9 @@ export const projects: Project[] = [
   },
   {
     title: 'RiiTube at Home',
-    description: 'A LAN companion for WiiMC-SS. Search YouTube, prepare a video on your server, and watch a complete, seekable copy on the Wii.',
+    description: 'Inspired by the official RiiTube service, this is a LAN version for WiiMC-SS. It isn\'t a replacement for RiiTube. Search YouTube, prepare a video on your server, and watch a complete, seekable copy on the Wii.',
     color: 'cyan', art: 'window',
-    image: 'projects/riitube-at-home.webp', imageAlt: 'RiiTube logo', imageWidth: 180,
+    image: 'projects/riitube-at-home.svg', imageDark: 'projects/riitube-at-home-dark.svg', imageAlt: 'RiiTube logo', imageWidth: 180,
     url: 'https://github.com/cmyksoda/RiiTube-at-Home',
   },
 ];

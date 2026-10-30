@@ -52,23 +52,33 @@ function createProjectCard(project: Project) {
   };
   if (project.image) {
     if (project.imageWidth) cover.style.setProperty('--image-width', `${project.imageWidth}px`);
-    const img = document.createElement('img');
-    img.src = `${import.meta.env.BASE_URL}${project.image.replace(/^\//, '')}`;
-    img.alt = project.imageAlt;
-    if (project.roundedImage) img.classList.add('rounded-image');
-    if (project.imageScale) img.style.setProperty('--image-scale', String(project.imageScale));
-    if (project.imageOffset) {
-      img.style.setProperty('--image-offset-x', `${project.imageOffset[0]}px`);
-      img.style.setProperty('--image-offset-y', `${project.imageOffset[1]}px`);
-    }
-    img.loading = 'lazy';
-    img.decoding = 'async';
-    img.addEventListener('load', () => {
-      if (img.naturalWidth / img.naturalHeight >= 2) img.classList.add('wide-image');
-    }, { once: true });
-    img.addEventListener('error', illustration, { once: true });
+    const coverImage = (path: string) => {
+      const img = document.createElement('img');
+      img.src = `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`;
+      img.alt = project.imageAlt;
+      if (project.roundedImage) img.classList.add('rounded-image');
+      if (project.imageScale) img.style.setProperty('--image-scale', String(project.imageScale));
+      if (project.imageOffset) {
+        img.style.setProperty('--image-offset-x', `${project.imageOffset[0]}px`);
+        img.style.setProperty('--image-offset-y', `${project.imageOffset[1]}px`);
+      }
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.addEventListener('load', () => {
+        if (img.naturalWidth / img.naturalHeight >= 2) img.classList.add('wide-image');
+      }, { once: true });
+      img.addEventListener('error', illustration, { once: true });
+      return img;
+    };
     cover.classList.add('has-image');
+    const img = coverImage(project.image);
     cover.append(img);
+    if (project.imageDark) {
+      img.classList.add('light-only');
+      const dark = coverImage(project.imageDark);
+      dark.classList.add('dark-only');
+      cover.append(dark);
+    }
   } else if (project.emoji) {
     cover.classList.add('has-emoji');
     cover.textContent = project.emoji;
