@@ -4,7 +4,9 @@ import type { Screen } from './display';
 import { contains, center } from './lyt/hit';
 import { AnimationPlayer, identity, type LayoutInstance, type PaneNode } from './lyt/layout';
 import type { Renderer } from './lyt/renderer';
+import { parseTPL } from './lyt/tpl';
 import type { Sound } from './sound';
+import { speakerButton } from './speaker';
 
 export type FooterTarget = 'options' | 'board' | 'left' | 'right' | 'sd' | 'calendar' | 'create' | 'menu' | 'back' | 'trash';
 
@@ -20,6 +22,7 @@ const TARGETS: Record<Mode, FooterTarget[]> = {
   reader: ['back', 'trash'],
 };
 
+const SPEAKER = { on: 'web_speaker_on.tpl', off: 'web_speaker_off.tpl' };
 const BALLOON_DELAY = 16;
 const NEW_MAIL_EVERY = 3000;
 
@@ -106,6 +109,13 @@ export class Footer {
     this.clips.set('sdOut', sdClip('BtnL_Out'));
     this.sd.pane('N_Btn_On').visible = false;
 
+    // The Wii button shows the page's sound instead of the Wii logo, in the logo's own shade.
+    const [face] = parseTPL(cmnBtn.files.get('arc/timg/my_TopBtn_a.tpl')!);
+    const [art] = parseTPL(cmnBtn.files.get('arc/timg/my_TopBtn_c.tpl')!);
+    renderer.addTexture(this.layout, SPEAKER.on, speakerButton(face, art, true));
+    renderer.addTexture(this.layout, SPEAKER.off, speakerButton(face, art, false));
+    this.setSound(false);
+
     const labels: [FooterTarget, string][] = [['board', '15'], ['sd', '161'], ['calendar', '17'], ['create', '18'], ['menu', '16']];
     // The Wii button turns the page's sound on and off instead of opening Wii Options.
     this.balloons = { options: new Balloon(balloon, sound, BALLOON_DELAY, true) };
@@ -157,6 +167,12 @@ export class Footer {
     this.mode = 'grid';
     this.play('toGrid');
     this.play('sdOut', true);
+  }
+
+  setSound(on: boolean): void {
+    for (const pane of ['BtnL_a1_Set', 'BtnL_a0_Set_00', 'BtnL_a0_Set', 'BtnL_a0_Set_Ac']) {
+      this.layout.materials[this.layout.pane(pane).source.picture!.material].textures[0] = on ? SPEAKER.on : SPEAKER.off;
+    }
   }
 
   /** Shows or hides each page arrow at once, as initArrowAppearance does at startup. */

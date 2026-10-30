@@ -3,7 +3,7 @@ import type { Quad, Vec2 } from './brlyt';
 import { layoutText, type FontMetrics, type GlyphQuad } from './font';
 import type { LayoutInstance, MaterialState, Mtx34, PaneNode } from './layout';
 import { materialShader, textShader, type ShaderSource } from './tev';
-import { parseTPL } from './tpl';
+import { parseTPL, type Texture } from './tpl';
 
 const FLOATS_PER_VERTEX = 22;
 const ATTRIBUTES = ['aPosition', 'aRaster', ...Array.from({ length: 8 }, (_, i) => `aTexCoord${i}`)];
@@ -547,17 +547,24 @@ export class Renderer {
     if (cache.has(name)) return cache.get(name)!;
     const file = instance.files.get(`arc/timg/${name}`)
       ?? [...instance.files].find(([path]) => path.endsWith(`/${name}`))?.[1];
-    let entry: TextureEntry | null = null;
-    if (file) {
-      const [image] = parseTPL(file);
-      const gl = this.gl;
-      const texture = gl.createTexture()!;
-      gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, image.width, image.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, image.rgba);
-      entry = { texture, width: image.width, height: image.height, minFilter: image.minFilter, magFilter: image.magFilter };
-    }
+    const entry = file ? this.upload(parseTPL(file)[0]) : null;
     cache.set(name, entry);
     return entry;
+  }
+
+  /** Adds a texture made at run time, which materials of this archive can then name like its own TPLs. */
+  addTexture(instance: LayoutInstance, name: string, image: Texture): void {
+    let cache = this.textures.get(instance.files);
+    if (!cache) this.textures.set(instance.files, (cache = new Map()));
+    cache.set(name, this.upload(image));
+  }
+
+  private upload(image: Texture): TextureEntry {
+    const gl = this.gl;
+    const texture = gl.createTexture()!;
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, image.width, image.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, image.rgba);
+    return { texture, width: image.width, height: image.height, minFilter: image.minFilter, magFilter: image.magFilter };
   }
 
   private sampler(wrapS: number, wrapT: number, minFilter: number, magFilter: number): WebGLSampler {
