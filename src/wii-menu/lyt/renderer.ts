@@ -1,6 +1,6 @@
 import type { RGBA } from './binary';
 import type { Quad, Vec2 } from './brlyt';
-import { layoutText, type FontMetrics } from './font';
+import { layoutText, type FontMetrics, type GlyphQuad } from './font';
 import type { LayoutInstance, MaterialState, Mtx34, PaneNode } from './layout';
 import { materialShader, textShader, type ShaderSource } from './tev';
 import { parseTPL } from './tpl';
@@ -132,6 +132,7 @@ export class Renderer {
   private readonly programs = new Map<string, Program>();
   private readonly samplers = new Map<string, WebGLSampler>();
   private readonly textures = new WeakMap<Map<string, Uint8Array>, Map<string, TextureEntry | null>>();
+  private readonly layouts = new WeakMap<PaneNode, { text: string; size: string; quads: GlyphQuad[] }>();
   private readonly buffer: WebGLBuffer;
   private vertices = new Float32Array(FLOATS_PER_VERTEX * 4);
   private screenHalf: Vec2 = [304, 228];
@@ -414,7 +415,14 @@ export class Renderer {
     const gl = this.gl;
     gl.useProgram(program.program);
 
-    const quads = layoutText(font.metrics, content, text, pane.source.origin, pane.size);
+    // Text only changes when a scene sets it, so its layout is kept until then.
+    const size = pane.size.join();
+    let cached = this.layouts.get(pane);
+    if (!cached || cached.text !== text || cached.size !== size) {
+      cached = { text, size, quads: layoutText(font.metrics, content, text, pane.source.origin, pane.size) };
+      this.layouts.set(pane, cached);
+    }
+    const quads = this.visibleQuads(pane.world, cached.quads);
     if (!quads.length) return;
     const [top, bottom] = content.colors;
     const alpha = pane.globalAlpha;
@@ -449,6 +457,16 @@ export class Renderer {
     gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
     gl.bufferData(gl.ARRAY_BUFFER, out.subarray(0, count * FLOATS_PER_VERTEX), gl.STREAM_DRAW);
     gl.drawArrays(gl.TRIANGLES, 0, count);
+  }
+
+  /** Long letters hold thousands of glyphs; only the ones on screen are sent. */
+  private visibleQuads(world: Mtx34, quads: GlyphQuad[]): GlyphQuad[] {
+    const limit = this.screenHalf[1] + 64;
+    return quads.filter((q) => {
+      const top = this.cameraY(world[4] * q.left - world[5] * q.top + world[7]);
+      const bottom = this.cameraY(world[4] * q.left - world[5] * q.bottom + world[7]);
+      return Math.max(top, bottom) > -limit && Math.min(top, bottom) < limit;
+    });
   }
 
   /** Pane-local (y down, as DrawQuad sees it) to logical screen space; LoadMtx flips y for y-up layouts. */

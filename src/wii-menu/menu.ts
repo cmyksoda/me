@@ -90,6 +90,7 @@ export class Menu {
   private closeBoard(): void {
     this.board.hide();
     this.grid.footer.leaveBoard();
+    this.grid.footer.setMail(this.board.letterCount, false);
     this.grid.slideBack();
     this.state = 'grid';
   }

@@ -8,11 +8,15 @@ export interface Letter {
   position: [number, number];
 }
 
-/** Paragraphs separated by blank lines, each joined into one line for rewrapping. */
+/** Joins each paragraph into one line for rewrapping; centered headings keep their own lines. */
 function paragraphs(text: string): string {
   return text
     .split(/\n\s*\n/)
-    .map((block) => block.replace(/\s+/g, ' ').trim())
+    .map((block) => {
+      const lines = block.split('\n');
+      if (lines.every((line) => /^\s{10,}/.test(line))) return lines.map((line) => line.trim()).join('\n');
+      return block.replace(/\s+/g, ' ').trim();
+    })
     .join('\n\n');
 }
 
