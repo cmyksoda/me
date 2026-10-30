@@ -1,5 +1,5 @@
 import type { Assets } from './assets';
-import type { Screen } from './display';
+import { remoteReach, type Screen } from './display';
 import { layoutText, measureText, type FontMetrics } from './lyt/font';
 import { center, contains, toLocal } from './lyt/hit';
 import { AnimationPlayer, identity, type LayoutInstance, type PaneNode } from './lyt/layout';
@@ -457,7 +457,7 @@ export class Board {
     // B is a rate control: the farther from where it went down, the faster the letter keeps moving.
     // Once started it outlives the pointer leaving the TV, read at the edge of the remote's range (BScroller::calc).
     if (pointer.b && (active || this.bOrigin)) {
-      const reach = screen.wide ? 289 : 251;
+      const reach = remoteReach(screen);
       const y = Math.min(reach, Math.max(-reach, pointer.y));
       this.bOrigin ??= [pointer.x, y];
       const delta = (this.bOrigin[1] - y) / reach;
