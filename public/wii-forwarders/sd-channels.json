@@ -1,0 +1,17 @@
+[
+  {
+    "id": "FFXP",
+    "name": "25th Anniversary SMB",
+    "download": "https://archive.org/download/super-mario-bros.-25th-anniversary-en-banner-ntsc-60-hz/Super%20Mario%20Bros.%2025th%20Anniversary%20(EN%20Banner%2C%20NTSC%2060Hz).wad"
+  },
+  {
+    "id": "HADE",
+    "name": "Internet Channel",
+    "download": null
+  },
+  {
+    "id": "HAFE",
+    "name": "Forecast Channel",
+    "download": null
+  }
+]
