@@ -2,7 +2,7 @@
 
 import { drawBubbles, updateBubbles } from './bubbles';
 import { pointer, scanPad, type Pad } from './controls';
-import { beginFrame, clip, drawImage, drawText, drawTurned, endFrame, fill, screen, unclip, VIEW_HEIGHT } from './gfx';
+import { beginFrame, beginView, clip, drawBackground, drawEdges, drawImage, drawText, drawTurned, endFrame, fill, screen, unclip, VIEW_HEIGHT } from './gfx';
 import { theme } from './theme';
 import { CURSOR, ENABLED, FOCUSABLE, FOCUSED, setFlag, shows, VISIBLE, fill as fillWidget, type Cursor, type Item, type Widget } from './widgets';
 
@@ -41,6 +41,12 @@ export function enableCursor(on: boolean) {
 }
 
 export const pointing = () => cursorEnabled && pointer.valid;
+
+// Whether the pointer is on text that has more to show, which a held B drags.
+export function pointingAtScroll() {
+  const memo = shown && pointing() ? shown.view.widgets[widgetAtPointer(shown.view)]?.memo : undefined;
+  return !!memo && memo.yMin < memo.yMax;
+}
 
 export function showThrobber(on: boolean) {
   throbber = on ? 0 : null;
@@ -164,33 +170,39 @@ function drawItem(item: Item, v: View, x: number, y: number) {
   }
 }
 
-function drawView(v: View, alpha: number) {
+function drawView(v: View, alpha: number, fillsOnly = false) {
   if (v.subView) {
-    drawView(v.subView, 0);
-    fill(-5, -5, screen.width + 10, VIEW_HEIGHT + 10, alpha);
+    drawView(v.subView, 0, fillsOnly);
+    const edge = Math.min(-5, screen.left - 1);
+    fill(edge, -5, Math.max(screen.width + 5, screen.right + 1) - edge, VIEW_HEIGHT + 10, alpha);
   }
   for (const w of v.widgets) {
     if (!w || !(w.flags & VISIBLE)) continue;
     for (const l of w.layers) {
-      if (shows(w, l)) for (const item of l.items) drawItem(item, v, v.x + w.x, v.y + w.y);
+      if (!shows(w, l)) continue;
+      for (const item of l.items) if (!fillsOnly || item.kind === 'fill') drawItem(item, v, v.x + w.x, v.y + w.y);
     }
   }
 }
 
 export function render() {
   if (!shown) return;
+  const { view, alpha, cursor } = shown;
   beginFrame();
-  drawImage(screen.wide ? theme.background_wide : theme.background, 0, 0);
+  const backdrop = screen.wide ? theme.background_wide : theme.background;
+  drawEdges(backdrop, () => drawView(view, alpha, true));
+  beginView();
+  drawBackground(backdrop);
   drawBubbles();
   drawImage(theme.logo, 0, 416);
-  drawView(shown.view, shown.alpha);
+  drawView(view, alpha);
   if (throbber !== null) {
     const { throbber: image } = theme;
     drawTurned(image, Math.trunc((screen.width - image.width) / 2), Math.trunc((VIEW_HEIGHT - image.height) / 2), 1, throbber);
   }
-  if (shown.cursor) {
+  if (cursor) {
     // The hotspot is the middle of the hand's 96 x 96 picture, with its shade 2 right and 4 down.
-    const drag = shown.cursor === 'drag';
+    const drag = cursor === 'drag';
     const x = pointer.exactX - 48;
     const y = pointer.exactY - 48;
     drawImage(drag ? theme.cursor_drag_shade : theme.cursor_shade, x + 2, y + 4);

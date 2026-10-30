@@ -5,7 +5,13 @@ import type { TextRun } from './font';
 export const VIEW_HEIGHT = 480;
 export const WIDESCREEN_RATIO = 852 / 640;
 
-export const screen = { wide: true, width: 852 };
+const WIDTH_4_3 = 640;
+export const WIDTH_16_9 = 852;
+// Windows this close to 4:3 or 16:9 get exactly the console's layout, which was matched pixel for pixel.
+const NATIVE_TOLERANCE = 0.005;
+
+// width is the view's size in HBC pixels; left and right are where the window's edges fall in them.
+export const screen = { wide: true, width: WIDTH_16_9, left: 0, right: WIDTH_16_9 };
 
 const canvas = document.querySelector<HTMLCanvasElement>('#tv')!;
 const ctx = canvas.getContext('2d', { alpha: false })!;
@@ -15,33 +21,48 @@ let top = 0;
 let clipTop = 0;
 let clipBottom = VIEW_HEIGHT;
 
-// Widescreen once the window is closer to 16:9 than to 4:3.
-export function prefersWide() {
-  return innerWidth / innerHeight >= Math.sqrt((4 / 3) * (16 / 9));
+function windowSize() {
+  const ratio = devicePixelRatio || 1;
+  return { width: Math.round(innerWidth * ratio), height: Math.round(innerHeight * ratio) };
 }
 
-export function setWidescreen(wide: boolean) {
-  screen.wide = wide;
-  screen.width = wide ? 852 : 640;
+// Text is laid out for 16:9 once the window is closer to it than to 4:3. Windows narrower than 4:3 stay 4:3, letterboxed.
+export function windowLayout() {
+  const { width, height } = windowSize();
+  const aspect = height > 0 ? width / height : 0;
+  const near = (ratio: number) => Math.abs(aspect / ratio - 1) < NATIVE_TOLERANCE;
+  let viewWidth = WIDTH_4_3;
+  if (near(16 / 9)) viewWidth = WIDTH_16_9;
+  else if (!near(4 / 3)) viewWidth = Math.max(WIDTH_4_3, Math.floor(VIEW_HEIGHT * aspect + 1e-6));
+  return { wide: aspect >= Math.sqrt((4 / 3) * (16 / 9)), width: viewWidth };
+}
+
+export function setLayout(layout: { wide: boolean; width: number }) {
+  screen.wide = layout.wide;
+  screen.width = layout.width;
 }
 
 function fit() {
-  const ratio = devicePixelRatio || 1;
-  const width = Math.round(innerWidth * ratio);
-  const height = Math.round(innerHeight * ratio);
+  const { width, height } = windowSize();
   if (canvas.width !== width || canvas.height !== height) {
     canvas.width = width;
     canvas.height = height;
   }
-  scale = Math.min(width / screen.width, height / VIEW_HEIGHT);
+  // A view a hair too wide is cropped; a much wider one (the window just narrowed) shrinks to fit until laid out again.
+  const full = height / VIEW_HEIGHT;
+  scale = screen.width * full <= width * (1 + NATIVE_TOLERANCE) ? full : width / screen.width;
   left = Math.round((width - screen.width * scale) / 2);
   top = Math.round((height - VIEW_HEIGHT * scale) / 2);
+  screen.left = -left / scale;
+  screen.right = (width - left) / scale;
 }
 
 export function toView(clientX: number, clientY: number) {
   const ratio = devicePixelRatio || 1;
   return { x: (clientX * ratio - left) / scale, y: (clientY * ratio - top) / scale };
 }
+
+export const cssToView = (length: number) => (length * (devicePixelRatio || 1)) / scale;
 
 export function beginFrame() {
   fit();
@@ -50,6 +71,10 @@ export function beginFrame() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.setTransform(scale, 0, 0, scale, left, top);
   ctx.imageSmoothingQuality = 'high';
+}
+
+// The scene is clipped to the view's own box, so its pixels don't depend on how wide the window is.
+export function beginView() {
   ctx.save();
   ctx.beginPath();
   ctx.rect(0, 0, screen.width, VIEW_HEIGHT);
@@ -58,6 +83,30 @@ export function beginFrame() {
 
 export function endFrame() {
   ctx.restore();
+}
+
+// HBC has backdrops for 4:3 and 16:9 only; other widths crop or stretch one.
+export function drawBackground(image: HTMLImageElement) {
+  const first = Math.max(0, Math.floor((image.width - screen.width) / 2));
+  if (image.width === screen.width) ctx.drawImage(image, 0, 0);
+  else ctx.drawImage(image, first, 0, Math.min(image.width, screen.width), VIEW_HEIGHT, 0, 0, screen.width, VIEW_HEIGHT);
+}
+
+// The window can show a bit more than the view (more while the page is laid out again). The backdrop's
+// edge columns carry on there, under `overlay`, the scene's dimming and fades.
+export function drawEdges(image: HTMLImageElement, overlay: () => void) {
+  const first = Math.max(0, Math.floor((image.width - screen.width) / 2));
+  const last = first + Math.min(image.width, screen.width) - 1;
+  for (const [from, to, column] of [[screen.left, 0, first], [screen.width, screen.right, last]]) {
+    if (to - from <= 0) continue;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(from, 0, to - from, VIEW_HEIGHT);
+    ctx.clip();
+    ctx.drawImage(image, column, 0, 1, VIEW_HEIGHT, from, 0, to - from, VIEW_HEIGHT);
+    overlay();
+    ctx.restore();
+  }
 }
 
 export function drawImage(image: HTMLImageElement, x: number, y: number, alpha = 1) {

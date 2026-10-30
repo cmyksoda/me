@@ -1,5 +1,18 @@
 [
   {
+    "repo": "AM2R-GX",
+    "dirname": "am2r",
+    "name": "AM2R GX",
+    "coder": "cmyksoda",
+    "version": "1.0.0",
+    "shortDescription": "AM2R 1.5.5 on Wii!",
+    "longDescription": "\nAM2R GX — AM2R 1.5.5 (Community Update) on the Wii, built on the Butterscotch engine with native GX. Bring your own AM2R 1.1 zip; the first boot builds 1.5.5 from it. Hold HOME, or X + B + Start on a GameCube controller, to quit.\n\nFree software under the AGPL-3.0: see LICENSE.txt and NOTICE.txt.\n\nNot affiliated with Nintendo, YoYo Games, DoctorM64, or the AM2R Community Developers.\n  ",
+    "longDescriptionDraft": "AM2R GX is a Wii port of AM2R (Another Metroid 2 Remake) 1.5.5, running on Butterscotch, an open-source GameMaker runner.\n\nYou'll need your own copy of the original AM2R 1.1 release zip. The first boot builds 1.5.5 from it, which takes about four minutes.",
+    "icon": true,
+    "source": "https://github.com/cmyksoda/AM2R-GX",
+    "download": "https://github.com/cmyksoda/AM2R-GX/releases/download/v1.0.0/am2r-gx-1.0.0.zip"
+  },
+  {
     "repo": "ASCII-Odyssey",
     "dirname": "asciiodyssey",
     "name": "ASCII Odyssey",
@@ -7,7 +20,7 @@
     "version": "1.0.0",
     "shortDescription": "Generative music and ASCII visuals",
     "longDescription": "Press start and ASCII Odyssey makes you a brand new voyage: a tracker song composed from a seed, with a light show drawn only in text that dances to the beat.\n\nTen genres, a hundred scenes, and dozens of color palettes. <3",
-    "longDescriptionDraft": "ASCII Odyssey is a Wii app that makes you a brand new voyage every time: a tracker song composed from a seed, with a light show drawn only in text that dances to the beat.\n\nIt has ten genres, a hundred scenes, and sixty color palettes. The same seed always sails the same voyage.",
+    "longDescriptionDraft": "ASCII Odyssey is a Wii app that composes a brand-new voyage every time you press Start: a tracker song created from a seed, with a light show drawn only from text that dances to the beat.\n\nIt has ten genres, a hundred scenes, and sixty color palettes.",
     "icon": true,
     "source": "https://github.com/cmyksoda/ASCII-Odyssey",
     "download": "https://github.com/cmyksoda/ASCII-Odyssey/releases/download/v1.0.0/ASCII-Odyssey.zip"
@@ -33,7 +46,7 @@
     "version": "1.0.0",
     "shortDescription": "Create invisible forwarder channels",
     "longDescription": "Pick a homebrew app and get a WAD for a channel that looks like an unused slot on the Wii Menu and opens that app. The WAD is saved to sd:/wad; install it with a WAD manager such as YAWMM ModMii Edition.",
-    "longDescriptionDraft": "A Homebrew Channel app that makes invisible forwarder channels: channels that look exactly like an unused slot on the Wii Menu, with no name when you hover over them. Open one and the banner is the same static filling the screen, with quiet white noise. Start it and your homebrew app opens.",
+    "longDescriptionDraft": "A Homebrew Channel app that makes invisible forwarder channel WADs. You can select any homebrew software you have installed, and the app will generate a WAD for you to install with the WAD manager of your choice.\n\nThe installed channel looks exactly like an unused slot on the Wii Menu, and can only be detected when hovered over. The banner recreates the same look as the icon and has gentle white noise as its audio.",
     "icon": true,
     "source": "https://github.com/cmyksoda/empty-slot-creator",
     "download": "https://github.com/cmyksoda/empty-slot-creator/releases/download/v1.0.0/EmptySlotCreator-v1.0.0.zip"
@@ -98,7 +111,7 @@
     "version": "1.0.0-beta",
     "shortDescription": "USB Camera Application",
     "longDescription": "Take photos and record video with a USB camera. It can record sound, too.\n\nIn testing, sound works at every resolution. However, it only stays available at the size the camera first opened with. To record sound at another size, restart WiiCam; the menu tells you when.\n\nAfter a photo, or a video stopped with A, a review page opens: 1 plays the video back, and Minus twice deletes it.\n\nChoose a size from 160 x 120 up to 848 x 480 (depending on the camera), set a 3, 5 or 10 second photo timer, or refresh the camera source from the menu.\n\nPhotos are saved to SD:/DCIM/100WC04 and videos to SD:/wc04-camera/videos. Videos are AVI files limited to 60 seconds or 128 MiB. Photos and videos can be viewed and edited in the Photo Channel.\n\nRequires IOS58 and an SD card to save.\n\nTested with the Ubisoft / Hercules WC04 camera (photos and silent video) and a W2 webcam, USB ID 0c45:6366 (photos, video and sound at every size). Other UVC 1.0 MJPEG cameras may work.",
-    "longDescriptionDraft": "A Wii USB camera app, inspired by ZodiaKGalXy's GBAtemp request.\n\nIt shows a live preview and takes JPEG photos from 160×120 up to 848×480, depending on the camera, instantly or on a 3, 5, or 10 second timer. It also records AVI video, silent or with sound, up to 60 seconds or 128 MiB, but video is currently unreliable, and different cameras give varying results.\n\nIt needs IOS58, and an SD card to save to. It's tested with the Ubisoft / Hercules WC04 camera and a W2 webcam, and other UVC 1.0 MJPEG cameras may work.",
+    "longDescriptionDraft": "A Wii USB camera app, inspired by ZodiaKGalXy's GBAtemp request.\n\nFeatures a live preview, countdown timers, and the ability to record videos both with and without sound (assuming your webcam has a compatible microphone).\n\nIt's in early development, so many USB cameras may not work yet. More features are planned for the future.",
     "icon": true,
     "source": "https://github.com/cmyksoda/WiiCam",
     "download": "https://github.com/cmyksoda/WiiCam/releases/download/v1.0.0-beta/WiiCam.zip"
@@ -108,12 +121,12 @@
     "dirname": "WiiEAS",
     "name": "WiiEAS",
     "coder": "cmyksoda",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "shortDescription": "Live EAS alerts from the United States",
-    "longDescription": "\nWiiEAS shows live Emergency Alert System messages from the GlobalEAS Central Alert Repository on your Wii, in the style of offical DASDEC alerts.\n\nBrowse active alerts with left/right. Press A to play the alert audio. Leave it running with auto-play on by pressing B, and new alerts play as they appear.\n\nPlus/Start opens a menu showing information about the currently playing alert. Hold HOME/Start to exit the application.\n\nBe responsible when using this app and keep the volume at a reasonable level.\n\nThe audio signals streamed in this app contain unmodified SAME data codes, which if picked up by a nearby microphone, smart speaker, ham radio, or PC running decoder software, could accidentally trigger real emergency alert systems. Broadcasting these tones over the internet or over radio waves may violate federal laws and result in severe penalties.\n\nYou are solely responsible for how and where the audio is played. The author is not liable for misuse of the tones provided by this application.\n\nData: alerts.globaleas.org (public). Idea originally proposed by RetrokVR.\n  ",
+    "longDescription": "\nWiiEAS shows live Emergency Alert System messages from the GlobalEAS Central Alert Repository on your Wii, in the style of official DASDEC alerts.\n\nBrowse active alerts with left/right. Press A to play the alert audio. Leave it running with auto-play on by pressing B, and new alerts play as they appear.\n\nPlus/Start opens a menu showing information about the currently playing alert. Hold HOME/Start to exit the application.\n\nBe responsible when using this app and keep the volume at a reasonable level.\n\nThe audio signals streamed in this app contain unmodified SAME data codes, which if picked up by a nearby microphone, smart speaker, ham radio, or PC running decoder software, could accidentally trigger real emergency alert systems. Broadcasting these tones over the internet or over radio waves may violate federal laws and result in severe penalties.\n\nYou are solely responsible for how and where the audio is played. The author is not liable for misuse of the tones provided by this application.\n\nData: alerts.globaleas.org (public). Idea originally proposed by RetrokVR.\n  ",
     "longDescriptionDraft": "Live Emergency Alert System alerts from across the United States on the Nintendo Wii, drawn to resemble the screen of a DASDEC (Digital Alert Systems Decoder), the hardware many US cable companies use.\n\nData comes from the free public GlobalEAS Central Alert Repository. Idea originally proposed by RetrokVR.\n\nBe responsible when using this app and keep the volume at a reasonable level.\n\nThe audio signals streamed in this app contain unmodified SAME data codes, which if picked up by a nearby microphone, smart speaker, ham radio, or PC running decoder software, could accidentally trigger real emergency alert systems. Broadcasting these tones over the internet or over radio waves may violate federal laws and result in severe penalties.\n\nYou are solely responsible for how and where the audio is played. The author is not liable for misuse of the tones provided by this application.",
     "icon": true,
     "source": "https://github.com/cmyksoda/WiiEAS",
-    "download": "https://github.com/cmyksoda/WiiEAS/releases/download/v1.0.1/WiiEAS.zip"
+    "download": "https://github.com/cmyksoda/WiiEAS/releases/download/v1.0.2/WiiEAS.zip"
   }
 ]

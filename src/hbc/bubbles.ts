@@ -1,6 +1,6 @@
 // Bubbles: fewest at 4 in the morning, most at 4 in the afternoon, and they pop at a touch (bubbles.c).
 
-import { drawTurned, screen, VIEW_HEIGHT } from './gfx';
+import { drawTurned, screen, VIEW_HEIGHT, WIDTH_16_9 } from './gfx';
 import { theme } from './theme';
 
 const MAX_COUNT = 20;
@@ -59,8 +59,10 @@ function updateCount() {
       : Math.trunc(((MAX_COUNT - MIN_COUNT) * (DAY - minute)) / (DAY - BUSIEST_AFTER)) + MIN_COUNT;
   }
   if (divider % 6 === 0) {
-    while (bubbles.length < target) bubbles.push(spawn());
-    if (bubbles.length > target) bubbles.pop();
+    // Windows wider than 16:9 get more bubbles, so the water stays as busy.
+    const count = Math.round((target * Math.max(screen.width, WIDTH_16_9)) / WIDTH_16_9);
+    while (bubbles.length < count) bubbles.push(spawn());
+    if (bubbles.length > count) bubbles.pop();
   }
 }
 
