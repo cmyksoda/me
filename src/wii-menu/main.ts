@@ -1,11 +1,30 @@
-import { loadAssets } from './assets';
+import { loadAssets, root } from './assets';
 import { measureScreen, SCREEN_HEIGHT, toScreen, type Screen } from './display';
 import { Renderer } from './lyt/renderer';
 import { Menu, type MenuPointer } from './menu';
 import { Sound } from './sound';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#screen')!;
-const renderer = new Renderer(canvas);
+const links = document.querySelector<HTMLElement>('#channel-links')!;
+// The channels as plain links: for screen readers, and the whole page if WebGL is missing.
+void fetch(new URL('channels.json', root)).then((r) => r.json()).then((list: { name: string; repo: string }[]) => {
+  for (const channel of list) {
+    const link = document.createElement('a');
+    link.href = channel.repo;
+    link.textContent = channel.name || 'Empty Slot';
+    links.append(link);
+  }
+});
+let renderer: Renderer;
+try {
+  renderer = new Renderer(canvas);
+} catch {
+  // Without WebGL 2 the menu can't be drawn, so the channel links become the page.
+  canvas.remove();
+  links.className = 'fallback';
+  links.prepend(Object.assign(document.createElement('p'), { textContent: 'This Wii Menu needs WebGL 2. Here are my forwarder channels:' }));
+  throw new Error('WebGL 2 is unavailable');
+}
 const sound = new Sound();
 const assets = await loadAssets(renderer);
 const menu = new Menu(assets, renderer, sound);
@@ -15,13 +34,6 @@ menu.grid.onOptions = () => {
   menu.grid.footer.setSoundLabel(sound.enabled);
 };
 
-const links = document.querySelector('#channel-links')!;
-for (const channel of assets.channels) {
-  const link = document.createElement('a');
-  link.href = channel.repo;
-  link.textContent = channel.name || 'Empty Slot';
-  links.append(link);
-}
 
 const pointer: MenuPointer = {
   x: 0, y: 0, a: false, b: false, aPressed: false, bPressed: false, sincePress: null, inside: false,
