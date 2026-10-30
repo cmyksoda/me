@@ -111,7 +111,9 @@ export class Footer {
     this.clips.set('sdPoint', sdClip('BtnL_RollOver', 'Btn_L_Roll'));
     this.clips.set('sdLeave', sdClip('BtnL_RollOut', 'Btn_L_Roll'));
     this.clips.set('sdOut', sdClip('BtnL_Out', 'Btn_L_InOut').seek(0));
-    this.sd.pane('N_Btn_On').visible = false;
+    this.clips.set('sdSelect', sdClip('BtnL_On', 'Btn_L_On'));
+    // A card is always in the slot (toggle_insert), so the button wears its blue face.
+    this.sd.pane('N_Btn_Off').visible = false;
 
     // The Wii button shows the page's sound instead of the Wii logo, in the logo's own shade.
     const [face] = parseTPL(cmnBtn.files.get('arc/timg/my_TopBtn_a.tpl')!);
@@ -227,7 +229,8 @@ export class Footer {
   hit(x: number, y: number): FooterTarget | null {
     if (this.busy) return null;
     const pane = (target: FooterTarget): PaneNode => {
-      if (target === 'sd') return this.sd.pane('N_Btn');
+      // CsChanSelSDMenuEventHandler tests the Ac bounding pane, a little larger than the card.
+      if (target === 'sd') return this.sd.pane('Ac');
       if (target === 'left' || target === 'right') return this.layout.pane(target === 'left' ? 'B_ArwL' : 'B_ArwR');
       return this.layout.pane(BUTTONS[target]!);
     };
@@ -275,6 +278,9 @@ export class Footer {
       this.sound.play('WIPL_SE_DECIDE');
     } else if (target === 'board') {
       this.clips.get('pressBoard')!.play();
+      this.sound.play('WIPL_SE_DECIDE');
+    } else if (target === 'sd') {
+      this.clips.get('sdSelect')!.play();
       this.sound.play('WIPL_SE_DECIDE');
     }
   }

@@ -1,4 +1,4 @@
-import type { Assets, Channel } from './assets';
+import type { Archive, Assets, Channel, ChannelBase } from './assets';
 import type { Screen } from './display';
 import { contains } from './lyt/hit';
 import { AnimationPlayer, identity, type LayoutInstance } from './lyt/layout';
@@ -17,20 +17,30 @@ const WIDE_FRAME_TEXTURES: [string, string[]][] = [
   ['Picture_06', ['Fre_b', 'Fre_c', 'Fre_j', 'Fre_k']],
 ];
 
-interface Banner {
-  channel: Channel;
+/** The button bar a preview wears (the Wii Menu's or the SD Card Menu's) and where its banner sounds live. */
+export interface PreviewStyle {
+  archive: Archive;
+  layout: string;
+  back: string;
+  sounds: string;
+}
+
+interface Banner<C> {
+  channel: C;
   instance: LayoutInstance;
   start: AnimationPlayer | null;
   loop: AnimationPlayer | null;
 }
 
 /** The channel preview (iplChannelTitle.cpp): a channel's banner under the Back and Download buttons. */
-export class Preview {
+export class Preview<C extends ChannelBase = Channel> {
   hovered: PreviewButton | null = null;
   private readonly frame: LayoutInstance;
   private readonly clips: Record<string, AnimationPlayer>;
-  private banner: Banner;
-  private next: Channel | null = null;
+  private readonly style: PreviewStyle;
+  private banner: Banner<C>;
+  private next: C | null = null;
+  private downloadOn = true;
   private changing = 0;
   private wide = false;
 
@@ -38,15 +48,17 @@ export class Preview {
     private readonly assets: Assets,
     private readonly renderer: Renderer,
     private readonly sound: Sound,
-    channel: Channel,
+    channel: C,
+    style?: PreviewStyle,
   ) {
-    const chanTtl = assets.menu.chanTtl;
-    this.frame = chanTtl.instance('my_ChTop_a');
-    this.frame.pane('T_BtnA').text = 'Back';
+    this.style = style ?? { archive: assets.menu.chanTtl, layout: 'my_ChTop_a', back: 'Back', sounds: 'channels' };
+    const { archive, layout } = this.style;
+    this.frame = archive.instance(layout);
+    this.frame.pane('T_BtnA').text = this.style.back;
     this.frame.pane('T_BtnB').text = 'Download';
     const groups = this.frame.layout.groups;
     const clip = (file: string, group: string) => new AnimationPlayer(
-      chanTtl.animation(`my_ChTop_a_${file}`)!, this.frame, { panes: groups.get(group) ?? [] },
+      archive.animation(`${layout}_${file}`)!, this.frame, { panes: groups.get(group) ?? [] },
     );
     this.clips = {
       onBack: clip('FocusBtn_on', 'G_FocusBtnA'),
@@ -55,15 +67,27 @@ export class Preview {
       offDownload: clip('FocusBtnA_off', 'G_FocusBtnB'),
       pressBack: clip('SelectBtn_Ac', 'G_SelectBtnA'),
       pressDownload: clip('SelectBtn_Ac', 'G_SelectBtnB'),
+      dimDownload: clip('OffBtn', 'G_OnOffBtnB'),
+      lightDownload: clip('OnBtn', 'G_OnOffBtnB'),
     };
     this.banner = this.load(channel);
   }
 
-  get channel(): Channel {
+  get channel(): C {
     return this.banner.channel;
   }
 
-  private load(channel: Channel): Banner {
+  /** Grays the Download button out (OffBtn) or lights it again (OnBtn), as changeStartButton does for Start. */
+  setDownload(on: boolean, instant = false): void {
+    if (on === this.downloadOn) return;
+    this.downloadOn = on;
+    if (!on && this.hovered === 'download') this.point(null);
+    const clip = this.clips[on ? 'lightDownload' : 'dimDownload'];
+    if (instant) clip.seek(clip.to);
+    else clip.play();
+  }
+
+  private load(channel: C): Banner<C> {
     const instance = channel.banner.instance('banner');
     for (const language of OTHER_LANGUAGES) {
       for (const name of channel.banner.layout('banner').groups.get(language) ?? []) {
@@ -86,11 +110,11 @@ export class Preview {
   begin(soundDelay = 0): void {
     if (this.banner.start) this.banner.start.play();
     else this.banner.loop?.play();
-    this.sound.playBanner(`channels/${this.banner.channel.id}`, soundDelay);
+    this.sound.playBanner(`${this.style.sounds}/${this.banner.channel.id}`, soundDelay);
   }
 
   /** Previous/next: the old banner plays on for 10 updates, then the new one holds for 10 before it starts. */
-  change(channel: Channel): void {
+  change(channel: C): void {
     if (this.changing) return;
     this.next = channel;
     this.changing = CHANGE_FRAMES * 2;
@@ -108,6 +132,8 @@ export class Preview {
   }
 
   point(button: PreviewButton | null): void {
+    // A grayed-out Download takes no hover, only its gray press.
+    if (button === 'download' && !this.downloadOn) button = null;
     if (button === this.hovered) return;
     if (this.hovered) this.clips[this.hovered === 'back' ? 'offBack' : 'offDownload'].play();
     this.hovered = button;
@@ -128,9 +154,8 @@ export class Preview {
 
   update(frames: number): void {
     // Both focus clips sit on one pane; the "on" clip, bound later, wins while it plays.
-    for (const name of ['offBack', 'offDownload', 'onBack', 'onDownload', 'pressBack', 'pressDownload']) {
-      this.clips[name].step(frames);
-    }
+    const order = ['dimDownload', 'lightDownload', 'offBack', 'offDownload', 'onBack', 'onDownload', 'pressBack', 'pressDownload'];
+    for (const name of order) this.clips[name].step(frames);
     const banner = this.banner;
     banner.start?.step(frames);
     if (banner.start && !banner.start.playing && banner.loop && !banner.loop.playing && banner.start.frame > 0) {

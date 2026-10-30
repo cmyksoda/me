@@ -38,13 +38,13 @@ export class Balloon {
     return this.state !== 'hidden' && this.state !== 'waiting';
   }
 
-  /** Sets the label with the menu's truncation: 20 characters, then "..." until it fits. */
-  setText(renderer: Renderer, label: string): void {
+  /** Sets the label with the menu's truncation: 20 characters, then "..." until it fits; `whole` skips it (bNoLimit). */
+  setText(renderer: Renderer, label: string, whole = false): void {
     const pane = this.instance.pane('T_Balloon');
     const content = pane.source.text!;
     const font = renderer.fonts.get(this.instance.layout.fonts[content.font].replace(/\.brfn[ta]$/, ''))!.metrics;
-    let text = label.slice(0, MAX_CHARACTERS);
-    let limit = MAX_WIDTH;
+    let text = whole ? label : label.slice(0, MAX_CHARACTERS);
+    let limit = whole ? Infinity : MAX_WIDTH;
     while (text.length > 0 && measureText(font, content, text) > limit) {
       text = `${text.replace(/\.\.\.$/, '').slice(0, -1)}...`;
       limit = CUT_WIDTH;

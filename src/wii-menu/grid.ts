@@ -72,6 +72,7 @@ export class ChannelGrid {
   onSelect: ((channel: Channel, slot: PaneNode) => void) | null = null;
   onBoard: (() => void) | null = null;
   onOptions: (() => void) | null = null;
+  onSd: (() => void) | null = null;
 
   private readonly top: LayoutInstance;
   private readonly clock: Clock;
@@ -293,7 +294,7 @@ export class ChannelGrid {
     }
   }
 
-  private resetHovers(): void {
+  private resetHovers(keepFooter = false): void {
     for (const slot of this.slots) {
       slot.state = 'hidden';
       slot.queued = null;
@@ -301,7 +302,7 @@ export class ChannelGrid {
       slot.balloon.hideNow();
     }
     this.hoveredSlot = -1;
-    this.footer.releaseAll();
+    if (!keepFooter) this.footer.releaseAll();
   }
 
   private pointSlot(index: number): void {
@@ -432,7 +433,8 @@ export class ChannelGrid {
   startScroll(direction: -1 | 1): void {
     const next = this.page + direction;
     if (this.state !== 'normal' || next < 0 || next >= PAGES) return;
-    this.resetHovers();
+    // A hovered page arrow keeps its hover through the slide (preparePageScrolling).
+    this.resetHovers(true);
     this.state = 'scroll';
     this.scrolling = direction;
     this.scroll[direction < 0 ? 'left' : 'right'].play();
@@ -524,6 +526,11 @@ export class ChannelGrid {
     else if (target === 'right') this.startScroll(1);
     else if (target === 'board') this.onBoard?.();
     else if (target === 'options') this.onOptions?.();
+    else if (target === 'sd' && this.onSd) {
+      // START_SD_MENU: the grid takes no more input, hovers and all, while the screen fades out.
+      this.state = 'selected';
+      this.onSd();
+    }
   }
 
   /** A remote pointing off the TV leaves whatever it was on: the tile, its balloon, a footer button. */
