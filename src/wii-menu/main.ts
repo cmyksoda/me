@@ -65,6 +65,10 @@ canvas.addEventListener('pointerup', (event) => {
   if (event.button === 0) pointer.a = false;
   else if (event.button === 2) pointer.b = false;
 });
+// A button released while the page can't see it (another window took focus) must not stay held.
+const releaseAll = () => (pointer.a = pointer.b = false);
+canvas.addEventListener('lostpointercapture', releaseAll);
+window.addEventListener('blur', releaseAll);
 canvas.addEventListener('wheel', (event) => {
   event.preventDefault();
   scenes.wheel(event.deltaY * (SCREEN_HEIGHT / screen.viewport[3]) * devicePixelRatio);

@@ -354,9 +354,12 @@ export class Board {
     active: boolean, screen: Screen): void {
     const start = this.scroll;
     // B is a rate control: the farther from where it went down, the faster the letter keeps moving.
-    if (pointer.b && active) {
-      this.bOrigin ??= [pointer.x, pointer.y];
-      const delta = (this.bOrigin[1] - pointer.y) / (screen.wide ? 289 : 251);
+    // Once started it outlives the pointer leaving the TV, read at the edge of the remote's range (BScroller::calc).
+    if (pointer.b && (active || this.bOrigin)) {
+      const reach = screen.wide ? 289 : 251;
+      const y = Math.min(reach, Math.max(-reach, pointer.y));
+      this.bOrigin ??= [pointer.x, y];
+      const delta = (this.bOrigin[1] - y) / reach;
       this.bSpeed = Math.abs(delta) < 0.01 ? 0 : Math.sign(delta) * 10 * delta * delta;
       this.target = null;
       this.wheelTo = null;
@@ -472,7 +475,8 @@ export class Board {
     this.bScroll.pane('BArwBase').visible = this.bSpeed === 0;
     const arrow = this.bScroll.pane('N_BArw');
     arrow.visible = this.bSpeed !== 0;
-    arrow.scale[1] = this.bSpeed < 0 ? -1 : 1;
+    // set_arw_param: scrolling up is POINT_DOWN, a y-scale of +1, which this arrow draws pointing up.
+    arrow.scale[1] = this.bSpeed < 0 ? 1 : -1;
     this.bScroll.pane('W_BArw').size[1] = Math.min(128, Math.max(32, Math.abs(y - oy)));
     this.bScroll.update(translation(ox, oy), screen);
     this.renderer.drawLayout(this.bScroll);
