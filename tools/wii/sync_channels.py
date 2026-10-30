@@ -42,7 +42,8 @@ LOCAL_WADS = {
     "empty-slot-creator": Path.home()
     / "Documents/Dev/wii-homebrew/Empty-Slot-Forwarder/Empty Slot - ESLT [cmyksoda].wad",
 }
-FIRST = "empty-slot-creator"
+# Jaxi's slot order, from the top left; channels not listed follow, oldest first.
+ORDER = ["empty-slot-creator", "hbc-upside-down", "mgba-gx-forwarder-channel", "vboy-color-gx-forwarder-channel"]
 
 
 def gh(*args):
@@ -156,7 +157,7 @@ def release_wad(repo):
 def main():
     repos = gh("repo", "list", OWNER, "--topic", "wii-forwarder", "--visibility", "public",
                "--json", "name,createdAt,url")
-    repos.sort(key=lambda r: (r["name"] != FIRST, r["createdAt"]))
+    repos.sort(key=lambda r: (ORDER.index(r["name"]) if r["name"] in ORDER else len(ORDER), r["createdAt"]))
     channels = []
     for repo in repos:
         release, asset, wad = release_wad(repo["name"])

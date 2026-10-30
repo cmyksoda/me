@@ -8,12 +8,28 @@
     "download": "https://github.com/cmyksoda/empty-slot-creator/releases/tag/v1.0.0"
   },
   {
+    "id": "UHBC",
+    "name": "Homebrew Channel",
+    "repo": "https://github.com/cmyksoda/hbc-upside-down",
+    "release": "https://github.com/cmyksoda/hbc-upside-down/releases/tag/v1.0.1",
+    "version": "v1.0.1",
+    "download": "https://github.com/cmyksoda/hbc-upside-down/releases/download/v1.0.1/Wii-ONLY-UHBC-v1.zip"
+  },
+  {
     "id": "GBGX",
     "name": "mGBA GX",
     "repo": "https://github.com/cmyksoda/mgba-gx-forwarder-channel",
     "release": "https://github.com/cmyksoda/mgba-gx-forwarder-channel/releases/tag/v3.0.0",
     "version": "v3.0.0",
     "download": "https://github.com/cmyksoda/mgba-gx-forwarder-channel/releases/download/v3.0.0/Wii-ONLY-GBGX-v3.zip"
+  },
+  {
+    "id": "VBCG",
+    "name": "VBoy Color GX",
+    "repo": "https://github.com/cmyksoda/vboy-color-gx-forwarder-channel",
+    "release": "https://github.com/cmyksoda/vboy-color-gx-forwarder-channel/releases/tag/v1.0.1",
+    "version": "v1.0.1",
+    "download": "https://github.com/cmyksoda/vboy-color-gx-forwarder-channel/releases/download/v1.0.1/Wii-ONLY-VBCG-v1.zip"
   },
   {
     "id": "LSDE",
@@ -30,21 +46,5 @@
     "release": "https://github.com/cmyksoda/z-gx-forwarder-channel/releases/tag/v2.0.0",
     "version": "v2.0.0",
     "download": "https://github.com/cmyksoda/z-gx-forwarder-channel/releases/download/v2.0.0/Wii-ONLY-ZGXA-v2.zip"
-  },
-  {
-    "id": "UHBC",
-    "name": "Homebrew Channel",
-    "repo": "https://github.com/cmyksoda/hbc-upside-down",
-    "release": "https://github.com/cmyksoda/hbc-upside-down/releases/tag/v1.0.1",
-    "version": "v1.0.1",
-    "download": "https://github.com/cmyksoda/hbc-upside-down/releases/download/v1.0.1/Wii-ONLY-UHBC-v1.zip"
-  },
-  {
-    "id": "VBCG",
-    "name": "VBoy Color GX",
-    "repo": "https://github.com/cmyksoda/vboy-color-gx-forwarder-channel",
-    "release": "https://github.com/cmyksoda/vboy-color-gx-forwarder-channel/releases/tag/v1.0.1",
-    "version": "v1.0.1",
-    "download": "https://github.com/cmyksoda/vboy-color-gx-forwarder-channel/releases/download/v1.0.1/Wii-ONLY-VBCG-v1.zip"
   }
 ]
