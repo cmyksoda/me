@@ -120,7 +120,7 @@ function releaseAll() {
   unlockPointer();
 }
 
-// `scrolls` says whether B would now drag something: the hand is open over text that scrolls.
+// `scrolls` says whether B would now drag something: the pointer is over text with more to show.
 export function listen(canvas: HTMLCanvasElement, scrolls: () => boolean) {
   canvas.addEventListener('pointerdown', (event) => {
     canvas.setPointerCapture(event.pointerId);
