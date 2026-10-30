@@ -42,12 +42,6 @@ export function enableCursor(on: boolean) {
 
 export const pointing = () => cursorEnabled && pointer.valid;
 
-// Whether the pointer is on text that has more to show, which a held B drags.
-export function pointingAtScroll() {
-  const memo = shown && pointing() ? shown.view.widgets[widgetAtPointer(shown.view)]?.memo : undefined;
-  return !!memo && memo.yMin < memo.yMax;
-}
-
 export function showThrobber(on: boolean) {
   throbber = on ? 0 : null;
 }
