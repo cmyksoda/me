@@ -107,7 +107,9 @@ export class Footer {
     this.sd.pane('N_Btn_On').visible = false;
 
     const labels: [FooterTarget, string][] = [['board', '15'], ['sd', '161'], ['calendar', '17'], ['create', '18'], ['menu', '16']];
+    // The Wii button turns the page's sound on and off instead of opening Wii Options.
     this.balloons = { options: new Balloon(balloon, sound, BALLOON_DELAY, true) };
+    this.balloons.options!.setText(renderer, 'Toggle Sound On/Off');
     for (const [target, message] of labels) {
       const label = new Balloon(balloon, sound, BALLOON_DELAY, true);
       label.setText(renderer, assets.messages[message]);
@@ -155,10 +157,6 @@ export class Footer {
     this.mode = 'grid';
     this.play('toGrid');
     this.play('sdOut', true);
-  }
-
-  setSoundLabel(on: boolean): void {
-    this.balloons.options!.setText(this.renderer, on ? 'Sound: On' : 'Sound: Off');
   }
 
   /** Shows or hides each page arrow at once, as initArrowAppearance does at startup. */

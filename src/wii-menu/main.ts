@@ -28,11 +28,7 @@ try {
 const sound = new Sound();
 const assets = await loadAssets(renderer);
 const menu = new Menu(assets, renderer, sound);
-menu.grid.footer.setSoundLabel(sound.enabled);
-menu.grid.onOptions = () => {
-  sound.setEnabled(!sound.enabled);
-  menu.grid.footer.setSoundLabel(sound.enabled);
-};
+menu.grid.onOptions = () => sound.setEnabled(!sound.enabled);
 
 
 const pointer: MenuPointer = {
