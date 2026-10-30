@@ -16,21 +16,38 @@ export type Project = {
   url: string;
 };
 
+/** A whole subpage of the site, shown by a capture of the page itself. */
+export type Room = {
+  title: string;
+  description: string;
+  color: Project['color'];
+  /** Path relative to public/, a 16:9 capture of the room. */
+  image: string;
+  imageAlt: string;
+  /** Path of the subpage, relative to the homepage. */
+  url: string;
+};
+
+export const rooms: Room[] = [
+  {
+    title: 'Wii Forwarder Channels',
+    description: 'Every forwarder channel I\'ve released, on a Wii Menu you can click around in. Open a channel to watch its banner, or hold the right mouse button to move it to another slot.',
+    color: 'cyan',
+    image: 'projects/wii-forwarders.webp',
+    imageAlt: 'The Wii Menu, with cmyksoda\'s forwarder channels in its slots',
+    url: 'wii-forwarders/',
+  },
+  {
+    title: 'Wii Homebrew Apps',
+    description: 'My homebrew apps for the Wii, in the Homebrew Channel. Pick one to read about it and download it.',
+    color: 'pink',
+    image: 'projects/wii-homebrew.webp',
+    imageAlt: 'The Homebrew Channel, listing cmyksoda\'s Wii homebrew apps',
+    url: 'wii-homebrew/',
+  },
+];
+
 export const projects: Project[] = [
-  {
-    title: 'VectrexWii',
-    description: 'Wii port of Vecx, a Vectrex emulator. I picked up this project after it had been abandoned by its original developer, Aruskano, for over a decade; it now comes with all of the originally released Vectrex games, some mods and demos, every official overlay, and *sound support*, which had been a missing feature since the project had stopped development in 2014.',
-    color: 'pink', art: 'window',
-    image: 'projects/vectrexwii.png', imageAlt: 'VectrexWii logo', roundedImage: true,
-    url: 'https://github.com/cmyksoda/vectrexwii',
-  },
-  {
-    title: 'WiiEAS',
-    description: 'A cute little homebrew application for playing recent and live emergency alert broadcasts from the United States using the [GlobalEAS Central Alert Repository](https://alerts.globaleas.org/) API. It displays them in DASDEC style and supports live mode, where new alerts will play automatically.',
-    color: 'cyan', art: 'sparkles',
-    image: 'projects/wiieas.png', imageAlt: 'WiiEAS logo', roundedImage: true,
-    url: 'https://github.com/cmyksoda/WiiEAS',
-  },
   {
     title: 'Tanka',
     description: 'Work-in-progress. An operating system based on Haiku, the free and open-source spiritual successor to BeOS. Runs natively on the Nintendo Wii, using [ActionRetro\'s Tabby for PowerPC](https://github.com/ActionRetro/Tabby-PPC) as a baseline.',

@@ -107,7 +107,6 @@ h1 > span:first-child { color: var(--pink); }
 .projects-section { padding-top: 4.0625rem; scroll-margin-top: 0.9375rem; }
 .section-heading { display: flex; align-items: flex-end; justify-content: space-between; max-width: 988px; margin: 0 auto 1.625rem; gap: 1rem; }
 h2 { display: flex; align-items: center; gap: 0.6875rem; margin: 0; font-size: 1.6875rem; font-weight: 600; letter-spacing: -0.05rem; }
-.project-count { font-size: 0.6875rem; font-weight: 500; color: var(--muted); padding: 0.25rem 0.5rem; border: 0.0625rem solid var(--line); border-radius: 0.4375rem; letter-spacing: 0; transform: rotate(-6deg); }
 .project-grid {
   --project-gap: 24px;
   --edge-cyan: color-mix(in srgb, var(--cyan) 50%, var(--card));
@@ -200,6 +199,10 @@ h2 { display: flex; align-items: center; gap: 0.6875rem; margin: 0; font-size: 1
 .project-link:hover { color: var(--pink-ink); }
 .project-link:is(:hover, :focus-visible) h3 { text-decoration-color: var(--pink); }
 .project-content p a { color: var(--pink-ink); text-decoration: underline; text-underline-offset: 3px; }
+.room-card { flex-basis: calc((100% - var(--project-gap)) / 2); padding: 0.875em 0.875em 1.25em; }
+.room-card .project-heading { gap: 0.875em; }
+.room-shot { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 0.625em; background: var(--surface); }
+.room-card .project-content p { padding-inline: 0.375em; }
 .site-footer { border-top: 0.0625rem solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; padding: 1.5625rem 0 1.875rem; margin-top: 3.0625rem; color: var(--muted); font-size: 0.6875rem; font-weight: 350; }
 .footer-signature { display: flex; align-items: center; gap: 0.5625rem; }
 .footer-source { text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
@@ -251,7 +254,7 @@ h2 { display: flex; align-items: center; gap: 0.6875rem; margin: 0; font-size: 1
   .section-heading { max-width: 360px; margin-bottom: 1.375rem; }
   h2 { font-size: 1.5625rem; }
   .project-grid { --project-gap: 23px; max-width: 360px; }
-  .project-card { flex-basis: 100%; }
+  .project-card, .room-card { flex-basis: 100%; }
   .site-footer { margin-top: 2.25rem; padding-block: 1.5rem; gap: 0.875rem; }
 }
 

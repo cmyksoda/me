@@ -1,4 +1,4 @@
-import { projects, type Project } from './projects';
+import { projects, rooms, type Project, type Room } from './projects';
 
 const artwork: Record<Project['art'], string> = {
   flower: '<path class="art-shadow" d="M50 22c-11-22-34-8-23 10-25-3-29 24-5 27-17 19 4 36 20 17 3 25 29 22 27-2 19 17 36-4 17-20 25-3 22-29-2-27 7-21-18-30-25-8-2-3-5-3-9 3Z"/><path class="art-main" d="M46 18c-11-22-34-8-23 10-25-3-29 24-5 27-17 19 4 36 20 17 3 25 29 22 27-2 19 17 36-4 17-20 25-3 22-29-2-27 7-21-18-30-25-8-2-3-5-3-9 3Z"/><circle class="art-white" cx="48" cy="46" r="15"/><path class="art-line" d="M42 47q6 7 12 0"/><circle class="art-ink" cx="42" cy="41" r="1.6"/><circle class="art-ink" cx="54" cy="41" r="1.6"/>',
@@ -92,8 +92,33 @@ function createProjectCard(project: Project) {
   return card;
 }
 
+function createRoomCard(room: Room) {
+  const card = document.createElement('article');
+  card.className = `project-card room-card color-${room.color}`;
+  const link = document.createElement('a');
+  link.className = 'project-heading project-link';
+  link.href = `${import.meta.env.BASE_URL}${room.url}`;
+  const shot = document.createElement('img');
+  shot.className = 'room-shot';
+  shot.src = `${import.meta.env.BASE_URL}${room.image}`;
+  shot.alt = room.imageAlt;
+  shot.width = 960;
+  shot.height = 540;
+  shot.decoding = 'async';
+  const title = document.createElement('h3');
+  title.textContent = room.title;
+  link.append(shot, title);
+  const description = document.createElement('p');
+  appendDescription(description, room.description);
+  const content = document.createElement('div');
+  content.className = 'project-content';
+  content.append(description);
+  card.append(link, content);
+  return card;
+}
+
 const grid = document.querySelector<HTMLDivElement>('#project-grid')!;
-grid.append(...projects.map(createProjectCard));
+grid.append(...rooms.map(createRoomCard), ...projects.map(createProjectCard));
 
 // Keep the border and raised-edge masks aligned to one gradient across the grid.
 function syncCardPattern() {
@@ -109,10 +134,6 @@ const patternObserver = new ResizeObserver(syncCardPattern);
 patternObserver.observe(grid);
 for (const card of grid.children) patternObserver.observe(card);
 syncCardPattern();
-
-const count = document.querySelector<HTMLElement>('.project-count')!;
-count.textContent = String(projects.length);
-count.setAttribute('aria-label', `${projects.length} projects`);
 
 const toggle = document.querySelector<HTMLButtonElement>('.theme-toggle')!;
 const media = window.matchMedia('(prefers-color-scheme: dark)');
