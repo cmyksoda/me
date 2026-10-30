@@ -55,7 +55,7 @@ function latestForecast(now = Date.now()): { fahrenheit: number; stamp: string }
 function moduleClip(archive: Archive, instance: LayoutInstance, layout: string): AnimationPlayer {
   const animation = archive.animation(`${layout}_Rso0`)!;
   const panes = archive.layout(layout).groups.get('Rso0');
-  return new AnimationPlayer(animation, instance, { panes, loop: animation.loop });
+  return new AnimationPlayer(animation, instance, { panes, loop: animation.loop, wholeFrames: true });
 }
 
 /** Every weather symbol under `code` hides but the mark's own. */
