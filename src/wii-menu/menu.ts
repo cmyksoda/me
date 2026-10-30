@@ -232,7 +232,7 @@ export class Menu {
     this.grid.footer.drawArrows(screen);
     if (pointer.inside) {
       if (this.board.bScrolling) this.board.drawCursor(screen, pointer.x, pointer.y);
-      else this.cursor.draw(renderer, screen, pointer.x, pointer.y, false);
+      else this.cursor.draw(renderer, screen, pointer.x, pointer.y, this.grid.grabbing);
     }
     if (this.fade < FADE_FRAMES) {
       const alpha = 255 - Math.floor((this.fade * 255) / FADE_FRAMES);

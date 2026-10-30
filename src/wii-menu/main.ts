@@ -24,10 +24,11 @@ for (const channel of assets.channels) {
 }
 
 const pointer: MenuPointer = {
-  x: 0, y: 0, a: false, b: false, aPressed: false, sincePress: null, inside: false,
+  x: 0, y: 0, a: false, b: false, aPressed: false, bPressed: false, sincePress: null, inside: false,
 };
 let screen: Screen = measureScreen(canvas);
 let pressed = false;
+let pressedB = false;
 
 function track(event: PointerEvent) {
   [pointer.x, pointer.y] = toScreen(screen, canvas, event.clientX, event.clientY);
@@ -45,6 +46,7 @@ canvas.addEventListener('pointerdown', (event) => {
     if (link) window.open(link, '_blank', 'noopener');
   } else if (event.button === 2) {
     pointer.b = true;
+    pressedB = true;
     pointer.sincePress = null;
   }
 });
@@ -68,6 +70,8 @@ function frame(now: number) {
   screen = measureScreen(canvas);
 
   pointer.aPressed = pressed;
+  pointer.bPressed = pressedB;
+  pressedB = false;
   if (pressed) pointer.sincePress = 0;
   else if (pointer.sincePress !== null) pointer.sincePress += frames;
   pressed = false;

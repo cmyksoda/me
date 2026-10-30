@@ -1,5 +1,6 @@
 import type { Assets, Channel } from './assets';
 import { Balloon } from './balloon';
+import { Carry } from './carry';
 import { Clock } from './clock';
 import type { Screen } from './display';
 import { Footer, type FooterTarget } from './footer';
@@ -24,6 +25,7 @@ export interface Pointer {
   a: boolean;
   b: boolean;
   aPressed: boolean;
+  bPressed: boolean;
   /** Updates since A was last pressed, held or not; null once spent or cancelled by B. */
   sincePress: number | null;
 }
@@ -46,7 +48,7 @@ interface Slot {
   balloon: Balloon;
 }
 
-type State = 'normal' | 'scroll' | 'selected' | 'away' | 'sliding';
+type State = 'normal' | 'scroll' | 'selected' | 'away' | 'sliding' | 'carry' | 'dropping';
 
 export function translation(x: number, y: number): Mtx34 {
   const m = identity();
@@ -74,6 +76,7 @@ export class ChannelGrid {
   private readonly mask: AnimationPlayer;
   private masking = false;
   private readonly slide: Record<'up' | 'down', AnimationPlayer>;
+  private readonly carry: Carry;
   private scrolling: -1 | 0 | 1 = 0;
   private hoveredSlot = -1;
   private screen: Screen | null = null;
@@ -138,6 +141,7 @@ export class ChannelGrid {
       pane.onDraw = (slot) => this.drawThumbnail(slot, relative, index);
     }
     this.footer.placeArrows(this.page, PAGES);
+    this.carry = new Carry(chanSel);
   }
 
   /** The slot order as the visitor last arranged it; channels not placed yet fill the first free slots. */
@@ -241,6 +245,8 @@ export class ChannelGrid {
     }
     instance.update(translation(x, y), screen);
     this.renderer.drawLayout(instance);
+    const absolute = page * SLOTS_PER_PAGE + index;
+    this.carry.drawSlot(this.renderer, screen, absolute, channel !== null, x, y);
     this.renderer.setClip(null);
   }
 
@@ -303,6 +309,99 @@ export class ChannelGrid {
     }
   }
 
+  get grabbing(): boolean {
+    return this.state === 'carry';
+  }
+
+  /** The Disc Channel's slot holds the Empty Slot channel here, and like the Disc Channel it never moves. */
+  private pinned(absolute: number): boolean {
+    return absolute === 0;
+  }
+
+  /** startDrag: the right button (A+B) picks up a channel; its slot shows static while it's carried. */
+  private pickUp(index: number): void {
+    const absolute = this.page * SLOTS_PER_PAGE + index;
+    if (!this.channelAt(absolute) || this.pinned(absolute)) return;
+    for (const [i, slot] of this.slots.entries()) {
+      slot.balloon.hideNow();
+      if (i !== index) {
+        slot.state = 'hidden';
+        slot.queued = null;
+        slot.focus.pane('Cursur_a').visible = false;
+      }
+    }
+    this.footer.releaseAll();
+    this.carry.start(absolute);
+    this.state = 'carry';
+    this.hoveredSlot = index;
+    this.sound.play('WIPL_SE_CH_HOLD');
+  }
+
+  /** A drop is legal on an empty slot or back on its own slot; there is no swapping. */
+  private drop(index: number | null): void {
+    const source = this.carry.source;
+    const target = index === null ? null : this.page * SLOTS_PER_PAGE + index;
+    const legal = target !== null && (target === source || (this.order[target] === null && !this.pinned(target)));
+    this.state = 'dropping';
+    if (legal) {
+      this.sound.play('WIPL_SE_CH_SET');
+      this.carry.land(target, () => {
+        if (target === source) return;
+        this.order[target] = this.order[source];
+        this.order[source] = null;
+        this.saveOrder();
+        this.labelSlots();
+      });
+    } else {
+      this.sound.play('WIPL_SE_CH_NOT_MOVE');
+      this.carry.refuse();
+    }
+    for (const slot of this.slots) {
+      slot.state = 'hidden';
+      slot.queued = null;
+      slot.focus.pane('Cursur_a').visible = false;
+    }
+    this.hoveredSlot = -1;
+  }
+
+  private updateCarry(frames: number, pointer: Pointer): void {
+    this.carry.follow(pointer.x, pointer.y);
+    if (this.state === 'scroll') return;
+    // Edge paging: resting on a shown page arrow for 15 updates turns the page under the carried tile.
+    const arrow = this.footer.hitArrow(pointer.x, pointer.y);
+    if (arrow !== this.footer.hovered) {
+      if (this.footer.hovered) this.footer.leave(this.footer.hovered);
+      if (arrow) this.footer.point(arrow);
+    }
+    if (this.carry.dwell(arrow, frames) && arrow) {
+      this.footer.press(arrow);
+      this.state = 'normal';
+      this.startScroll(arrow === 'left' ? -1 : 1);
+      this.state = 'scroll';
+      return;
+    }
+    // Legal targets light their focus frame; occupied slots stay dark.
+    let index = -1;
+    if (!arrow) {
+      index = this.slots.findIndex((slot) => contains(slot.pane, pointer.x, pointer.y));
+      const absolute = this.page * SLOTS_PER_PAGE + index;
+      const legal = index >= 0 && (absolute === this.carry.source || (this.order[absolute] === null && !this.pinned(absolute)));
+      if (!legal) index = -1;
+    }
+    if (index !== this.hoveredSlot) {
+      if (this.hoveredSlot >= 0) this.slotFocus(this.slots[this.hoveredSlot], 'out');
+      this.hoveredSlot = index;
+      if (index >= 0) {
+        this.slotFocus(this.slots[index], 'in');
+        this.sound.play('WIPL_SE_CH_TARGETTING');
+      }
+    }
+    if (!pointer.b && this.carry.ready) {
+      const under = this.slots.findIndex((slot) => contains(slot.pane, pointer.x, pointer.y));
+      this.drop(under >= 0 ? under : null);
+    }
+  }
+
   startScroll(direction: -1 | 1): void {
     const next = this.page + direction;
     if (this.state !== 'normal' || next < 0 || next >= PAGES) return;
@@ -316,7 +415,7 @@ export class ChannelGrid {
     this.page += this.scrolling;
     this.top.pane('N_ChAll').translate[0] = 0;
     this.scrolling = 0;
-    this.state = 'normal';
+    this.state = this.carry.active ? 'carry' : 'normal';
     this.labelSlots();
     this.footer.updateArrows(this.page, PAGES);
     try {
@@ -346,10 +445,21 @@ export class ChannelGrid {
         else this.resume();
       }
     }
+    this.carry.update(frames);
     if (this.state === 'scroll') {
       const clip = this.scroll[this.scrolling < 0 ? 'left' : 'right'];
       clip.step(frames);
-      if (!clip.playing) this.finishScroll();
+      if (this.carry.active) this.carry.follow(pointer.x, pointer.y);
+      if (!clip.playing) {
+        this.finishScroll();
+        // Letting go during the slide is an illegal drop once the slide ends.
+        if (this.carry.active && !pointer.b) this.drop(null);
+      }
+    }
+    if (this.state === 'dropping' && !this.carry.busy) this.state = 'normal';
+    if (this.state === 'carry') {
+      this.updateCarry(frames, pointer);
+      return;
     }
     if (this.state !== 'normal' || !active || !this.screen) return;
 
@@ -366,6 +476,10 @@ export class ChannelGrid {
     }
     this.pointSlot(slotIndex);
 
+    if (pointer.bPressed && slotIndex >= 0) {
+      this.pickUp(slotIndex);
+      return;
+    }
     if (pointer.aPressed && footerTarget) this.pressFooter(footerTarget);
     // decide() opens a channel on the fifth update after A; a mouse click is often shorter than that.
     const since = pointer.sincePress;
@@ -446,5 +560,6 @@ export class ChannelGrid {
       this.renderer.drawLayout(this.top, (pane) => pane === mask);
       mask.visible = false;
     }
+    this.carry.drawTile(this.renderer, screen);
   }
 }
