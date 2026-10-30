@@ -121,12 +121,14 @@ export class Sound {
       }
       // The first time sound comes on is the menu's first boot: its jingle and the music start together.
       this.booted = true;
+      this.musicWanted = true;
       const cues = this.cues;
       void cues.then(async (all) => {
         const jingle = all[JINGLE] && (await this.load(`sound/${all[JINGLE].file}`));
         await (all[MUSIC] && this.load(`sound/${all[MUSIC].file}`));
         if (jingle && this.enabled) this.track(JINGLE, this.start(jingle, all[JINGLE].gain));
-        this.startMusic();
+        // A channel opened while the music loaded has already asked for silence.
+        if (this.musicWanted) this.startMusic();
       });
     } else {
       this.musicWanted = false;
