@@ -19,6 +19,9 @@ const TEXT_WIDTH = 413;
 const ARROW_STEP = 300;
 const ARROW_FRAMES = 20;
 const DECIDE_AFTER = 5;
+const PLACES_KEY = 'wii-forwarders.letter-places';
+// RBRGetPosRect: where a letter can be pinned, in the board's 4:3 units.
+const BOUNDS = { left: -230, right: 230, top: 180, bottom: -80 };
 const FONT = 'RevoIpl_UtrilloProGrecoStd_M_32_I4';
 // UrlProcessor::parse: links are Wii blue, orange and raised while pointed at, yellow when chosen.
 const LINK: RGBA = [0x34, 0xbe, 0xed, 255];
@@ -42,6 +45,8 @@ interface Reading {
 
 interface Card {
   letter: Letter;
+  /** Where it's pinned, which the visitor can change by picking it up. */
+  position: [number, number];
   instance: LayoutInstance;
   clips: Record<'paste' | 'idle' | 'focusIn' | 'focusOut' | 'select' | 'exit', AnimationPlayer>;
   hovered: boolean;
@@ -66,6 +71,15 @@ function wrap(font: FontMetrics, content: Parameters<typeof measureText>[1], tex
     lines.push(line);
   }
   return lines.join('\n');
+}
+
+function clampPlace(x: number, y: number): [number, number] {
+  return [Math.min(BOUNDS.right, Math.max(BOUNDS.left, x)), Math.min(BOUNDS.top, Math.max(BOUNDS.bottom, y))];
+}
+
+/** The pointer in the board's 4:3 units, as stt_pinch scales the remote's x on a wide screen. */
+function toBoard(pointer: { x: number; y: number }, screen: Screen): [number, number] {
+  return [pointer.x * (608 / screen.width), pointer.y];
 }
 
 /**
@@ -102,10 +116,15 @@ export class Board {
   private pointedLink: Link | null = null;
   private chosenLink: Link | null = null;
   private hoveredArrow: 'up' | 'down' | null = null;
+  private pinched: { card: Card; from: [number, number]; offset: [number, number] } | null = null;
 
   constructor(private readonly assets: Assets, private readonly renderer: Renderer, private readonly sound: Sound,
     letterList: Letter[]) {
     const { board, cursor } = assets.menu;
+    let places: Record<string, [number, number]> = {};
+    try {
+      places = JSON.parse(localStorage.getItem(PLACES_KEY) ?? '{}') ?? {};
+    } catch {}
     this.backdrop = board.instance('my_IplTop_c');
     new AnimationPlayer(board.animation('my_IplTop_c')!, this.backdrop, { from: 0, to: 0 }).seek(0);
     this.setDate(new Date());
@@ -116,8 +135,10 @@ export class Board {
       for (const hidden of ['Nigaoe', 'N_Pic', 'PinSD0', 'PinSD1']) instance.pane(hidden).visible = false;
       // The card shows six characters of the title, then "..." if there's more.
       instance.pane('T_Letter').text = letter.title.length > 6 ? `${letter.title.slice(0, 6)}...` : letter.title;
+      const saved = places[letter.title];
       const card: Card = {
         letter,
+        position: Array.isArray(saved) && saved.every(Number.isFinite) ? clampPlace(saved[0], saved[1]) : [...letter.position],
         instance,
         clips: {
           paste: clip('PasteLetter'),
@@ -287,6 +308,46 @@ export class Board {
     return link.href;
   }
 
+  /** While B holds a card, the hand is the grabbing hand. */
+  get pinching(): boolean {
+    return this.pinched !== null;
+  }
+
+  /** Board::pinch: B on a card picks it up (A+B on the console). */
+  private pinch(card: Card, pointer: { x: number; y: number }, screen: Screen): void {
+    this.pinched = { card, from: toBoard(pointer, screen), offset: [0, 0] };
+    this.sound.play('WIPL_SE_BOARD_HOLD', card.position[0] / 304);
+  }
+
+  /**
+   * stt_pinch: the card follows the hand, unclamped, while B is held. Letting go pins it inside the
+   * board's bounds; pointing off the TV first drops it back where it was, as an invalid pointer does.
+   */
+  private updatePinch(pointer: { x: number; y: number; b: boolean }, frames: number, screen: Screen, active: boolean): void {
+    const pinched = this.pinched!;
+    const { card } = pinched;
+    if (pointer.b && active) {
+      const [x, y] = toBoard(pointer, screen);
+      const offset: [number, number] = [x - pinched.from[0], y - pinched.from[1]];
+      const speed = Math.hypot(offset[0] - pinched.offset[0], offset[1] - pinched.offset[1]) / Math.max(frames, 1e-3);
+      pinched.offset = offset;
+      this.sound.hold('WIPL_SE_BOARD_DRAG', { pan: (card.position[0] + offset[0]) / 304, volume: Math.min(1, (2 * speed) / 304) });
+      return;
+    }
+    if (active) {
+      card.position = clampPlace(card.position[0] + pinched.offset[0], card.position[1] + pinched.offset[1]);
+      this.savePlaces();
+    }
+    this.pinched = null;
+    this.sound.play('WIPL_SE_BOARD_RELEASE', card.position[0] / 304);
+  }
+
+  private savePlaces(): void {
+    try {
+      localStorage.setItem(PLACES_KEY, JSON.stringify(Object.fromEntries(this.cards.map((c) => [c.letter.title, c.position]))));
+    } catch {}
+  }
+
   /** A remote pointing off the TV leaves the cards, the reader's arrows and its links. */
   pointAway(): void {
     for (const card of this.cards) this.leaveCard(card);
@@ -340,7 +401,7 @@ export class Board {
     return this.bOrigin !== null;
   }
 
-  update(frames: number, pointer: { x: number; y: number; a: boolean; b: boolean; aPressed: boolean; sincePress: number | null },
+  update(frames: number, pointer: { x: number; y: number; a: boolean; b: boolean; aPressed: boolean; bPressed: boolean; sincePress: number | null },
     active: boolean, screen: Screen): void {
     for (const card of this.cards) for (const clip of Object.values(card.clips)) clip.step(frames);
     this.maskIn.step(frames);
@@ -372,14 +433,20 @@ export class Board {
     }
 
     if (this.state === 'reading') this.updateReader(frames, pointer, active, screen);
-    else if (this.state === 'normal' && active) this.updateCards(pointer, frames);
+    else if (this.pinched) this.updatePinch(pointer, frames, screen, active);
+    else if (this.state === 'normal' && active) this.updateCards(pointer, frames, screen);
   }
 
-  private updateCards(pointer: { x: number; y: number; b: boolean; sincePress: number | null }, frames: number): void {
+  private updateCards(pointer: { x: number; y: number; b: boolean; bPressed: boolean; sincePress: number | null },
+    frames: number, screen: Screen): void {
     let hit: Card | null = null;
     for (const card of this.cards) if (contains(card.instance.pane('B_Letter'), pointer.x, pointer.y)) hit = card;
     for (const card of this.cards) if (card !== hit) this.leaveCard(card);
     if (hit) this.pointCard(hit);
+    if (hit && pointer.bPressed) {
+      this.pinch(hit, pointer, screen);
+      return;
+    }
     const since = pointer.sincePress;
     if (hit && since !== null && since >= DECIDE_AFTER && since - frames < DECIDE_AFTER && !pointer.b) this.openLetter(hit);
   }
@@ -457,10 +524,12 @@ export class Board {
     const view = identity();
     this.backdrop.update(view, screen);
     this.renderer.drawLayout(this.backdrop);
-    for (const card of this.cards) {
-      const [x, y] = card.letter.position;
+    // The card in hand is drawn last, over the others.
+    const pinched = this.pinched;
+    for (const card of pinched ? [...this.cards.filter((c) => c !== pinched.card), pinched.card] : this.cards) {
+      const [dx, dy] = card === pinched?.card ? pinched.offset : [0, 0];
       // Cards spread out on a wide screen but aren't stretched.
-      card.instance.update(translation(x * (screen.width / 608), y), screen);
+      card.instance.update(translation((card.position[0] + dx) * (screen.width / 608), card.position[1] + dy), screen);
       this.renderer.drawLayout(card.instance);
     }
     if (this.masked) {
@@ -473,7 +542,7 @@ export class Board {
 
   private drawReader(screen: Screen): void {
     // The reader flies in a straight line from its card to the middle of the screen.
-    const [cardX, cardY] = this.open!.letter.position;
+    const [cardX, cardY] = this.open!.position;
     const t = this.state === 'closing' ? 1 - this.fly / FLY_FRAMES : this.fly / FLY_FRAMES;
     const view = translation(cardX * (1 - t), cardY * (1 - t));
     const memo = this.reader.pane('N_Memo');

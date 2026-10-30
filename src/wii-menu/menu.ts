@@ -156,7 +156,7 @@ export class Menu {
 
   private updateBoardFooter(pointer: MenuPointer): void {
     const footer = this.grid.footer;
-    if (this.board.bScrolling) return;
+    if (this.board.bScrolling || this.board.pinching) return;
     const target = this.board.state === 'normal' || this.board.state === 'reading' ? footer.hit(pointer.x, pointer.y) : null;
     if (target !== footer.hovered) {
       if (footer.hovered) footer.leave(footer.hovered);
@@ -252,7 +252,7 @@ export class Menu {
     this.grid.footer.drawArrows(screen);
     // The B-scroll marker stays where B went down, even with the hand off the TV.
     if (this.board.bScrolling) this.board.drawCursor(screen, pointer.x, pointer.y);
-    else if (pointer.inside) this.cursor.draw(renderer, screen, pointer.x, pointer.y, this.grid.grabbing);
+    else if (pointer.inside) this.cursor.draw(renderer, screen, pointer.x, pointer.y, this.grid.grabbing || this.board.pinching);
     if (this.fade < FADE_FRAMES) {
       const alpha = 255 - Math.floor((this.fade * 255) / FADE_FRAMES);
       const half = screen.width / 2;
