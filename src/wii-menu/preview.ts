@@ -97,7 +97,7 @@ export class Preview<C extends ChannelBase = Channel> {
     }
     const animation = (name: string, loop: boolean) => {
       const data = channel.banner.animation(name);
-      return data ? new AnimationPlayer(data, instance, { loop }) : null;
+      return data ? new AnimationPlayer(data, instance, { loop, wholeFrames: true }) : null;
     };
     const start = animation('banner_Start', false);
     const loop = animation('banner_Loop', true) ?? animation('banner', true);

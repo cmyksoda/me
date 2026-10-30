@@ -180,6 +180,8 @@ export interface PlaybackOptions {
   loop?: boolean;
   /** Only bind targets with a key inside from–to, as binding the clip's own group would. */
   keyedOnly?: boolean;
+  /** Sample whole frames only, as the console's updates do; banner tools draw jumps as one-frame slides. */
+  wholeFrames?: boolean;
 }
 
 /**
@@ -194,10 +196,12 @@ export class AnimationPlayer {
   readonly from: number;
   readonly to: number;
   readonly loop: boolean;
+  private readonly wholeFrames: boolean;
   private readonly bindings: { track: Track; pane?: PaneNode; material?: MaterialState }[] = [];
 
   constructor(readonly animation: Animation, readonly instance: LayoutInstance, options: PlaybackOptions = {}) {
     this.loop = options.loop ?? false;
+    this.wholeFrames = options.wholeFrames ?? false;
     this.from = options.from ?? 0;
     this.to = options.to ?? (this.loop ? animation.frameSize : animation.frameSize - 1);
     this.frame = this.from;
@@ -249,8 +253,9 @@ export class AnimationPlayer {
   }
 
   apply(): void {
+    const frame = this.wholeFrames ? Math.floor(this.frame) : this.frame;
     for (const { track, pane, material } of this.bindings) {
-      const value = sampleTrack(track, this.frame);
+      const value = sampleTrack(track, frame);
       if (pane) applyPaneTrack(pane, track, value);
       else if (material) applyMaterialTrack(material, track, value, this.animation.textures);
     }

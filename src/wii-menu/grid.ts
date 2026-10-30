@@ -113,7 +113,7 @@ export class ChannelGrid {
       const instance = channel.icon.instance('icon');
       const animation = channel.icon.animation('icon');
       // Forwarder icons have no module, so the clip's own loop flag decides (createWadThumbnail).
-      const clip = animation ? new AnimationPlayer(animation, instance, { loop: animation.loop }).play() : null;
+      const clip = animation ? new AnimationPlayer(animation, instance, { loop: animation.loop, wholeFrames: true }).play() : null;
       // Every icon starts somewhere random in its clip.
       if (clip) clip.frame = clip.from + Math.floor(Math.random() * (clip.to - clip.from));
       for (const language of OTHER_LANGUAGES) {
