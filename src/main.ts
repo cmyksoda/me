@@ -118,12 +118,7 @@ function createRoomCard(room: Room) {
   const title = document.createElement('h3');
   title.textContent = room.title;
   link.append(shot, title);
-  const description = document.createElement('p');
-  appendDescription(description, room.description);
-  const content = document.createElement('div');
-  content.className = 'project-content';
-  content.append(description);
-  card.append(link, content);
+  card.append(link);
   return card;
 }
 
