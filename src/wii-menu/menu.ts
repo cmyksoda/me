@@ -252,7 +252,7 @@ export class Menu {
     }
     this.grid.footer.drawArrows(screen);
     // The B-scroll marker stays where B went down, even with the hand off the TV.
-    if (this.board.bScrolling) this.board.drawCursor(screen, pointer.x, pointer.y);
+    if (this.board.bScrolling) this.board.drawCursor(screen);
     else if (pointer.inside) this.cursor.draw(renderer, screen, pointer.x, pointer.y, this.grid.grabbing || this.board.pinching);
     if (this.fade < FADE_FRAMES) {
       const alpha = 255 - Math.floor((this.fade * 255) / FADE_FRAMES);

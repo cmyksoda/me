@@ -1,5 +1,5 @@
 import type { Assets } from './assets';
-import type { Screen } from './display';
+import { SCREEN_HEIGHT, type Screen } from './display';
 import { layoutText, measureText, type FontMetrics } from './lyt/font';
 import { center, contains, toLocal } from './lyt/hit';
 import { AnimationPlayer, identity, type LayoutInstance, type PaneNode } from './lyt/layout';
@@ -110,6 +110,8 @@ export class Board {
   private target: { from: number; to: number; frame: number } | null = null;
   private bOrigin: [number, number] | null = null;
   private bSpeed = 0;
+  /** How far the pointer is from where B went down, in the remote's −1…1 units. */
+  private bDelta = 0;
   private scrolled = 0;
   private arrowsShown = { up: false, down: false };
   private links: Link[] = [];
@@ -432,7 +434,7 @@ export class Board {
       }
     }
 
-    if (this.state === 'reading') this.updateReader(frames, pointer, active, screen);
+    if (this.state === 'reading') this.updateReader(frames, pointer, active);
     else if (this.pinched) this.updatePinch(pointer, frames, screen, active);
     else if (this.state === 'normal' && active) this.updateCards(pointer, frames, screen);
   }
@@ -452,16 +454,17 @@ export class Board {
   }
 
   private updateReader(frames: number, pointer: { x: number; y: number; b: boolean; aPressed: boolean },
-    active: boolean, screen: Screen): void {
+    active: boolean): void {
     const start = this.scroll;
     // B is a rate control: the farther from where it went down, the faster the letter keeps moving.
-    // Once started it outlives the pointer leaving the TV, read at the edge of the remote's range (BScroller::calc).
+    // Once started it outlives the pointer leaving the TV (BScroller::calc). Full speed comes at the picture's
+    // edge rather than the remote's slightly farther reach, so the mouse never needs to leave the page.
     if (pointer.b && (active || this.bOrigin)) {
-      const reach = screen.wide ? 289 : 251;
-      const y = Math.min(reach, Math.max(-reach, pointer.y));
+      const edge = SCREEN_HEIGHT / 2;
+      const y = Math.min(edge, Math.max(-edge, pointer.y));
       this.bOrigin ??= [pointer.x, y];
-      const delta = (this.bOrigin[1] - y) / reach;
-      this.bSpeed = Math.abs(delta) < 0.01 ? 0 : Math.sign(delta) * 10 * delta * delta;
+      this.bDelta = (this.bOrigin[1] - y) / edge;
+      this.bSpeed = Math.abs(this.bDelta) < 0.01 ? 0 : Math.sign(this.bDelta) * 10 * this.bDelta * this.bDelta;
       this.target = null;
       this.wheelTo = null;
       const before = this.scroll;
@@ -474,6 +477,7 @@ export class Board {
     } else {
       this.bOrigin = null;
       this.bSpeed = 0;
+      this.bDelta = 0;
     }
 
     if (this.target) {
@@ -572,7 +576,7 @@ export class Board {
     return false;
   }
 
-  drawCursor(screen: Screen, x: number, y: number): void {
+  drawCursor(screen: Screen): void {
     if (!this.bOrigin) return;
     const [ox, oy] = this.bOrigin;
     this.bScroll.pane('BArwBase').visible = this.bSpeed === 0;
@@ -580,9 +584,8 @@ export class Board {
     arrow.visible = this.bSpeed !== 0;
     // set_arw_param: scrolling up is POINT_DOWN, a y-scale of +1, which this arrow draws pointing up.
     arrow.scale[1] = this.bSpeed < 0 ? 1 : -1;
-    this.bScroll.pane('W_BArw').size[1] = Math.min(128, Math.max(32, Math.abs(y - oy)));
+    this.bScroll.pane('W_BArw').size[1] = Math.min(128, Math.max(32, Math.abs(this.bDelta) * SCREEN_HEIGHT));
     this.bScroll.update(translation(ox, oy), screen);
     this.renderer.drawLayout(this.bScroll);
-    void x;
   }
 }
