@@ -9,6 +9,11 @@ const FLOATS_PER_VERTEX = 22;
 const ATTRIBUTES = ['aPosition', 'aRaster', ...Array.from({ length: 8 }, (_, i) => `aTexCoord${i}`)];
 const WHITE: RGBA = [255, 255, 255, 255];
 const UNIT_UV: Quad<Vec2> = [[0, 0], [1, 0], [0, 1], [1, 1]];
+// Channel banners name the console's shared fonts directly; the menu's own names are built from the same files.
+const SHARED_FONTS: Record<string, string> = {
+  wbf1: 'RevoIpl_RodinNTLGPro_DB_32_I4',
+  wbf2: 'RevoIpl_UtrilloProGrecoStd_M_32_I4',
+};
 
 interface Program {
   program: WebGLProgram;
@@ -402,7 +407,7 @@ export class Renderer {
   private drawText(instance: LayoutInstance, pane: PaneNode): void {
     const content = pane.source.text!;
     const fontName = instance.layout.fonts[content.font]?.replace(/\.brfn[ta]$/, '');
-    const font = fontName ? this.fonts.get(fontName) : undefined;
+    const font = fontName ? this.fonts.get(SHARED_FONTS[fontName] ?? fontName) : undefined;
     const state = instance.materials[content.material];
     const text = pane.text ?? content.text;
     if (!font || !state || !text) return;
