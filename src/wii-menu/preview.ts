@@ -1,5 +1,6 @@
 import type { Archive, Assets, Channel, ChannelBase } from './assets';
 import type { Screen } from './display';
+import { forecastBanner } from './forecast';
 import { contains } from './lyt/hit';
 import { AnimationPlayer, identity, type LayoutInstance } from './lyt/layout';
 import type { Renderer } from './lyt/renderer';
@@ -99,7 +100,7 @@ export class Preview<C extends ChannelBase = Channel> {
       const data = channel.banner.animation(name);
       return data ? new AnimationPlayer(data, instance, { loop }) : null;
     };
-    const start = animation('banner_Start', false);
+    const start = animation('banner_Start', false) ?? forecastBanner(channel, instance);
     const loop = animation('banner_Loop', true) ?? animation('banner', true);
     // The zoom shows the banner's first frame; it only starts moving once the zoom has finished.
     (start ?? loop)?.seek(0);
