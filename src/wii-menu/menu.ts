@@ -89,7 +89,6 @@ export class Menu {
   }
 
   private closeBoard(): void {
-    this.board.returnToToday();
     this.board.hide();
     this.grid.footer.leaveBoard();
     this.grid.footer.setMail(this.board.letterCount, false);
@@ -175,8 +174,6 @@ export class Menu {
     } else if (target === 'back') {
       this.board.closeLetter();
       footer.closeLetter();
-    } else if (target === 'left' || target === 'right') {
-      if (this.board.pageDay(target === 'left' ? -1 : 1)) footer.press(target);
     } else {
       // Calendar, Create Message and Trash belong to scenes this page doesn't have.
       this.sound.play('WIPL_SE_GRAY_BUTTON');

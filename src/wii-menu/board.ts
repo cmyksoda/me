@@ -90,21 +90,12 @@ export class Board {
   private pointedLink: Link | null = null;
   private chosenLink: Link | null = null;
   private hoveredArrow: 'up' | 'down' | null = null;
-  // Days from today on show; the letters are all pinned to today.
-  private day = 0;
-  private readonly dayClips: { previous: AnimationPlayer; next: AnimationPlayer };
-  private paging: -1 | 0 | 1 = 0;
 
   constructor(private readonly assets: Assets, private readonly renderer: Renderer, private readonly sound: Sound,
     letterList: Letter[]) {
     const { board, cursor } = assets.menu;
     this.backdrop = board.instance('my_IplTop_c');
-    const backClip = board.animation('my_IplTop_c')!;
-    new AnimationPlayer(backClip, this.backdrop, { from: 0, to: 0 }).seek(0);
-    this.dayClips = {
-      previous: new AnimationPlayer(backClip, this.backdrop, { from: 0, to: 20 }),
-      next: new AnimationPlayer(backClip, this.backdrop, { from: 30, to: 50 }),
-    };
+    new AnimationPlayer(board.animation('my_IplTop_c')!, this.backdrop, { from: 0, to: 0 }).seek(0);
     this.setDate(new Date());
 
     this.cards = letterList.map((letter) => {
@@ -162,11 +153,11 @@ export class Board {
     this.bScroll = cursor.instance('my_BScroll_a');
   }
 
-  /** "Fri 10/30": the day before, the day on show and the day after sit side by side for the slides. */
-  private setDate(center: Date, labels = ['a', 'b', 'c']): void {
-    labels.forEach((suffix, i) => {
-      const day = new Date(center);
-      day.setDate(center.getDate() + i - 1);
+  /** "Fri 10/30": yesterday, today and tomorrow sit side by side for the midnight slide. */
+  private setDate(today: Date): void {
+    ['a', 'b', 'c'].forEach((suffix, i) => {
+      const day = new Date(today);
+      day.setDate(today.getDate() + i - 1);
       const weekday = this.assets.messages[String(WEEKDAYS[day.getDay()])];
       this.backdrop.pane(`T_Day_${suffix}`).text = `${weekday} ${day.getMonth() + 1}/${day.getDate()}`;
     });
@@ -178,46 +169,6 @@ export class Board {
 
   show(): void {
     this.state = 'normal';
-  }
-
-  /** Board::onEventDerived: the footer arrows page a day at a time, the date and that day's letters sliding together. */
-  pageDay(direction: -1 | 1): boolean {
-    if (this.state !== 'normal' || this.paging) return false;
-    for (const card of this.cards) this.leaveCard(card);
-    this.paging = direction;
-    this.dayClips[direction < 0 ? 'previous' : 'next'].play();
-    return true;
-  }
-
-  /** Leaving for the Wii Menu slides back to today in one step, today's label written in the incoming place. */
-  returnToToday(): void {
-    if (this.day === 0 || this.paging) return;
-    const today = new Date();
-    if (this.day > 0) this.backdrop.pane('T_Day_a').text = this.dayLabel(today);
-    else this.backdrop.pane('T_Day_c').text = this.dayLabel(today);
-    this.paging = this.day > 0 ? -1 : 1;
-    this.dayClips[this.paging < 0 ? 'previous' : 'next'].play();
-    this.day = -this.paging;
-  }
-
-  private dayLabel(day: Date): string {
-    return `${this.assets.messages[String(WEEKDAYS[day.getDay()])]} ${day.getMonth() + 1}/${day.getDate()}`;
-  }
-
-  private finishPaging(): void {
-    const clip = this.dayClips[this.paging < 0 ? 'previous' : 'next'];
-    this.day += this.paging;
-    this.paging = 0;
-    const shown = new Date();
-    shown.setDate(shown.getDate() + this.day);
-    this.setDate(shown);
-    clip.seek(clip.from);
-    if (this.day !== 0) return;
-    // Back on today, the letters are read in again: pinned on, each with its sound placed by its x.
-    for (const card of this.cards) {
-      card.clips.paste.play();
-      this.sound.play('WIPL_SE_MSG_DISP', card.letter.position[0] / 304);
-    }
   }
 
   hide(): void {
@@ -371,11 +322,6 @@ export class Board {
     this.maskOut.step(frames);
     if (this.masked && this.state === 'normal' && !this.maskOut.playing) this.masked = false;
     for (const clip of Object.values(this.readerClips)) clip.step(frames);
-    if (this.paging) {
-      const clip = this.dayClips[this.paging < 0 ? 'previous' : 'next'];
-      clip.step(frames);
-      if (!clip.playing) this.finishPaging();
-    }
 
     if (this.state === 'opening' || this.state === 'closing') {
       this.fly = Math.min(FLY_FRAMES, this.fly + frames);
@@ -392,7 +338,7 @@ export class Board {
     }
 
     if (this.state === 'reading') this.updateReader(frames, pointer, active, screen);
-    else if (this.state === 'normal' && active && !this.paging && this.day === 0) this.updateCards(pointer, frames);
+    else if (this.state === 'normal' && active) this.updateCards(pointer, frames);
   }
 
   private updateCards(pointer: { x: number; y: number; b: boolean; sincePress: number | null }, frames: number): void {
@@ -474,11 +420,10 @@ export class Board {
     const view = identity();
     this.backdrop.update(view, screen);
     this.renderer.drawLayout(this.backdrop);
-    // Cards spread out on a wide screen but aren't stretched; they ride the backdrop's day slide.
-    const slide = this.backdrop.pane('N_TopBack').translate[0];
-    for (const card of this.day === 0 ? this.cards : []) {
+    for (const card of this.cards) {
       const [x, y] = card.letter.position;
-      card.instance.update(translation((x + slide) * (screen.width / 608), y), screen);
+      // Cards spread out on a wide screen but aren't stretched.
+      card.instance.update(translation(x * (screen.width / 608), y), screen);
       this.renderer.drawLayout(card.instance);
     }
     if (this.masked) {
