@@ -97,8 +97,9 @@ export function drawText(run: TextRun, x: number, y: number) {
     x = Math.trunc((x - half) / WIDESCREEN_RATIO) * WIDESCREEN_RATIO + half;
   }
   ctx.font = run.css;
-  ctx.fillStyle = '#fff';
+  ctx.fillStyle = run.color ?? '#fff';
   for (const glyph of run.glyphs) ctx.fillText(glyph.ch, x + glyph.x, baseline);
+  if (run.underline) ctx.fillRect(x + first.x, baseline + 2, last.x - first.x + ctx.measureText(last.ch).width, 1);
 }
 
 export function clip(x: number, y: number, width: number, height: number) {

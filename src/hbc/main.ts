@@ -3,7 +3,7 @@
 import { apps, loadApps, type App } from './apps';
 import { browser, browserGenView, browserInit, browserRelayout, browserSelection, browserSetFocus, browserSwitchMode, INFO, VIEW_MODE } from './browser';
 import { A, B, DOWN, DPAD, LEFT, listen, MINUS, PLUS, RIGHT, TWO, UP } from './controls';
-import { DIALOG_MASK_COLOR, dialogAbout, dialogApp, dialogFade } from './dialogs';
+import { DIALOG_MASK_COLOR, dialogAbout, dialogApp, dialogFade, pointingAtSourceLink, SOURCE_URL } from './dialogs';
 import { lineSpacing } from './font';
 import { prefersWide, screen, setWidescreen } from './gfx';
 import { loadTheme } from './theme';
@@ -84,9 +84,9 @@ function* channel(): Generator<void, void, void> {
         else if (clicked === 1) yield* browserGenView('next');
         else if (clicked === VIEW_MODE) yield* browserSwitchMode();
         else if (clicked === INFO) {
+          // HBC hides the pointer over About; the page keeps it so the source link can be clicked.
           about = dialogAbout(browser);
           current = about;
-          enableCursor(false);
           yield* dialogFade(about, true);
         } else {
           app = browserSelection();
@@ -135,13 +135,17 @@ function* channel(): Generator<void, void, void> {
     }
 
     if (current === about) {
+      if (pad.down & A && pointingAtSourceLink(about)) {
+        open(SOURCE_URL, '_blank', 'noopener');
+        continue;
+      }
       if (pad.down & (A | B)) {
         yield* dialogFade(about, false);
         current = browser;
         about = null;
-        enableCursor(true);
         continue;
       }
+      pointingAtSourceLink(about);
       if (frame > 60 * 2 && frame % 3 === 0) scrollMemo(about.widgets[2]!, -1);
     }
   }

@@ -12,6 +12,8 @@ export interface TextRun {
   css: string;
   y: number;
   glyphs: { ch: string; x: number }[];
+  color?: string;
+  underline?: boolean;
 }
 
 type Face = (typeof metrics.faces)['regular-16'];
@@ -40,6 +42,13 @@ function face(id: FontId): Face {
 function glyph(f: Face, ch: string) {
   const i = glyphIndex.get(ch.codePointAt(0)!) ?? missingGlyph;
   return { advance: f.advance[i], left: f.width[i] ? f.left[i] : 0, width: f.width[i] };
+}
+
+export const ascender = (id: FontId) => face(id).ascender;
+
+export function textWidth(id: FontId, text: string) {
+  const chars = [...text];
+  return stringWidth(face(id), chars, chars.length) * xRatio();
 }
 
 export function lineSpacing(id: FontId) {

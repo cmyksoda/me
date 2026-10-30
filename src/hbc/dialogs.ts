@@ -1,15 +1,18 @@
 // The app details and About dialogs, and their slide up from the bottom (dialogs.c).
 
 import type { App } from './apps';
-import { B } from './controls';
-import { lineSpacing } from './font';
+import { B, pointer } from './controls';
+import { ascender, lineSpacing, textWidth, type TextRun } from './font';
 import { screen, VIEW_HEIGHT } from './gfx';
 import { theme } from './theme';
-import { newView, plot, setFocus, type View } from './view';
-import { button, image, label, memo, memoDeco } from './widgets';
+import { newView, plot, pointing, setFocus, type View } from './view';
+import { button, image, label, memo, memoDeco, type Item, type Widget } from './widgets';
 
 export const DIALOG_MASK_COLOR = 0x101010a0;
 const TRANS_STEPS = 15;
+export const SOURCE_URL = 'https://github.com/cmyksoda/me';
+// HBC's text is all white; the page's one link takes a light tint of its highlight blue (#56869e).
+const LINK = '#a6d2e6';
 
 // Draft for Jaxi's review: what this page is, and whose work it shows.
 const notice = [
@@ -18,7 +21,7 @@ const notice = [
   "This page recreates the Homebrew Channel in your browser to list cmyksoda's Wii homebrew apps. "
     + 'Its code is free software under the GNU AGPLv3.',
   '',
-  'Source code: https://github.com/cmyksoda/me',
+  `Source code: ${SOURCE_URL}`,
   '',
   "The Homebrew Channel's graphics and fonts come from its open source release by Team Twiizers, "
     + 'under the GNU GPLv2 or later. The Droid Sans fonts are by Google, under the Apache License 2.0.',
@@ -131,5 +134,46 @@ export function dialogAbout(subView: View) {
   const credits = memo(32, top, background.width - 64, height, aboutText, 'center');
   credits.cursor = 'standard';
   v.widgets[2] = credits;
+  sourceLink = splitLink(credits, SOURCE_URL);
   return v;
+}
+
+interface Link {
+  run: TextRun;
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
+let sourceLink: Link | null = null;
+
+// Gives a link's glyphs a run of their own (the line keeps its layout), so it can take a color.
+function splitLink(w: Widget, url: string): Link | null {
+  const items = w.layers[0].items;
+  for (const [i, item] of items.entries()) {
+    if (item.kind !== 'text') continue;
+    const at = item.run.glyphs.map((g) => g.ch).join('').indexOf(url);
+    if (at < 0) continue;
+    const glyphs = item.run.glyphs.splice(at, url.length);
+    const run: TextRun = { css: item.run.css, y: item.run.y, glyphs, color: LINK };
+    items.splice(i + 1, 0, { kind: 'text', run } satisfies Item);
+    const top = run.y - ascender('memo');
+    return { run, left: glyphs[0].x, right: glyphs[0].x + textWidth('memo', url), top, bottom: top + lineSpacing('memo') };
+  }
+  return null;
+}
+
+/** Whether the pointer is on the About text's source link, which lights up while it is. */
+export function pointingAtSourceLink(v: View): boolean {
+  const link = sourceLink;
+  const credits = v.widgets[2];
+  if (!link || !credits) return false;
+  const box = credits.layers[0].items[0] as Extract<Item, { kind: 'clip' }>;
+  const x = pointer.x - v.x - credits.x;
+  const y = pointer.y - v.y - credits.y;
+  const inBox = pointer.y >= v.y + box.y && pointer.y < v.y + box.y + box.height;
+  const on = pointing() && inBox && x >= link.left && x <= link.right && y >= link.top && y < link.bottom;
+  link.run.underline = on;
+  return on;
 }
