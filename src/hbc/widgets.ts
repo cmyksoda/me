@@ -60,7 +60,7 @@ const picture = (image: HTMLImageElement, x = 0, y = 0, alpha = 1): Item => ({ k
 
 const text = (run: TextRun): Item => ({ kind: 'text', run });
 
-// A plate as it is when it is the size it was drawn at, and stretched in the middle otherwise.
+// At its own size a plate is drawn whole, so HBC's own layouts keep their exact pixels.
 function plate(image: HTMLImageElement, width: number, height: number, insets: Insets, alpha = 1): Item {
   if (width === image.width && height === image.height) return picture(image, 0, 0, alpha);
   return { kind: 'sliced', image, x: 0, y: 0, width, height, insets, alpha };
@@ -95,7 +95,6 @@ export function image(x: number, y: number, normal: HTMLImageElement, disabled?:
   return widget(x - reach, y - reach, normal.width + 2 * reach, normal.height + 2 * reach, false, layers);
 }
 
-// A dialog's background at the size the dialog is.
 export function panel(width: number, height: number) {
   return widget(0, 0, width, height, false, [layer(ENABLED, 0, plate(theme.dialog_background, width, height, DIALOG_INSETS))]);
 }

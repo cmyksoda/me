@@ -83,7 +83,7 @@ const MEMO_LINES = 8;
 const cardWidth = () => (screen.portrait ? screen.width - 2 * CARD_MARGIN : theme.dialog_background.width);
 const cardPadding = () => (screen.portrait ? CARD_PADDING : 32);
 
-// `text` is what the card shows to read; without any, the card is as tall as it can be.
+// Without text to read (the credits), the card takes all the height it can.
 function cardHeight(text?: string) {
   if (!screen.portrait) return theme.dialog_background.height;
   const lines = text === undefined ? Infinity : wrap('memo', text, cardWidth() - 2 * cardPadding()).length;

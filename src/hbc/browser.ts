@@ -22,6 +22,7 @@ const SAVED_MODE = 'hbc-browse-mode';
 const TALL_TOP = 16;
 const TALL_MARGIN = 12;
 const TALL_GAP = 8;
+const TALL_LOGO_GAP = 4;
 const TALL_BUTTON_SPREAD = 26;
 const TALL_BUTTON_REACH = 8;
 
@@ -36,11 +37,12 @@ let topOffset = 0;
 let columnsCurrent = 1;
 let columnsNew = 1;
 
-const controlsY = () => screen.height - theme.logo.height - 4 - theme.apps_previous.height;
+const controlsY = () => screen.height - theme.logo.height - TALL_LOGO_GAP - theme.apps_previous.height;
 const firstRowY = () => (screen.portrait ? TALL_TOP : 64);
 const plateWidth = () => (screen.portrait ? Math.min(theme.apps_list.width, screen.width - 2 * TALL_MARGIN) : theme.apps_list.width);
 const rowHeight = (columns: number) => (columns === 1 ? entryHeight(plateWidth()) : theme.apps_grid.height);
-const rows = (columns: number) => (screen.portrait ? Math.max(1, Math.trunc((controlsY() - TALL_GAP - TALL_TOP) / rowHeight(columns))) : ROWS);
+const rows = (columns: number) =>
+  screen.portrait ? Math.max(1, Math.trunc((controlsY() - TALL_GAP - TALL_TOP) / rowHeight(columns))) : ROWS;
 const pageSize = (columns: number) => columns * rows(columns);
 
 // As many columns as fit between the page arrows: 3 in 4:3, 4 in 16:9, and more in wider windows. A tall view

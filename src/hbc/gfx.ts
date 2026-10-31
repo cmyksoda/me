@@ -58,7 +58,7 @@ export function setLayout(layout: Layout) {
   Object.assign(screen, layout);
 }
 
-// HBC pixels in a distance measured in CSS pixels, for what a finger can tell apart.
+// A finger's slop is a distance on the glass, so it is measured in CSS pixels and converted here.
 export const viewPixels = (cssPixels: number) => (cssPixels * (devicePixelRatio || 1)) / scale;
 
 function fit() {
@@ -147,8 +147,8 @@ export function drawImage(image: HTMLImageElement, x: number, y: number, alpha =
 // How far in from the image's left, top, right and bottom edges the part that stays as it is reaches.
 export type Insets = readonly [left: number, top: number, right: number, bottom: number];
 
-// The image at another size, with its corners and edges as drawn and only the middle stretched. The pieces
-// meet on whole device pixels, so no seam shows between them at a fractional scale.
+// Resizes an image by stretching only its middle. The pieces meet on whole device pixels, so no seam
+// shows between them at a fractional scale.
 export function drawSliced(image: HTMLImageElement, x: number, y: number, width: number, height: number, insets: Insets, alpha = 1) {
   const [l, t, r, b] = insets;
   const sx = [0, l, image.width - r, image.width];
