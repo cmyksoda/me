@@ -1,5 +1,10 @@
 import type { Pane } from './lyt/brlyt';
-import type { Display, LayoutInstance, MaterialState, PaneNode } from './lyt/layout';
+import { wings, type Screen } from './display';
+import { identity, type LayoutInstance, type MaterialState, type PaneNode } from './lyt/layout';
+import type { Renderer } from './lyt/renderer';
+
+// How far a pane is drawn out from the console picture's edge, so its column there covers the window beyond.
+const DRAW_OUT = 1000;
 
 /** Copies the 16:9 textures from donor panes onto the panes they stand in for, or puts the 4:3 ones back. */
 export function useWideTextures(instance: LayoutInstance, donors: [string, string[]][], wide: boolean): void {
@@ -13,14 +18,14 @@ export function useWideTextures(instance: LayoutInstance, donors: [string, strin
 }
 
 /** Widens a full-screen pane (a dimmer, a backdrop) to a window wider than the projection. */
-export function cover(pane: PaneNode, screen: Display): void {
+export function cover(pane: PaneNode, screen: Screen): void {
   const width = pane.source.size[0];
-  pane.size[0] = screen.width > screen.projection ? Math.max(width, (608 * screen.width) / screen.projection) : width;
+  pane.size[0] = screen.window > screen.projection ? Math.max(width, (608 * screen.window) / screen.projection) : width;
 }
 
 /** Spreads side-by-side full-screen pages with a window wider than the projection, each widened to meet the next. */
-export function spreadPages(instance: LayoutInstance, names: string[], screen: Display): void {
-  const spread = screen.width / screen.projection;
+export function spreadPages(instance: LayoutInstance, names: string[], screen: Screen): void {
+  const spread = screen.window / screen.projection;
   for (const name of names) {
     const { source, translate, size } = instance.pane(name);
     translate[0] = spread === 1 ? source.translate[0] : spread * source.translate[0];
@@ -28,7 +33,48 @@ export function spreadPages(instance: LayoutInstance, names: string[], screen: D
   }
 }
 
+/**
+ * Contained, draws some of a layout's panes over the window either side of the console picture: each one
+ * crossing the picture's edge is drawn out along its own length from there, as if it ran on to the window's edge.
+ */
+export function drawWings(renderer: Renderer, screen: Screen, instance: LayoutInstance, only: (pane: PaneNode) => boolean): void {
+  for (const side of wings(screen)) {
+    const edge = side[0] < 0 ? side[2] : side[0];
+    const worlds = new Map<PaneNode, Float32Array>();
+    const find = (pane: PaneNode) => {
+      if (!pane.visible) return;
+      if (only(pane) && crosses(pane, edge)) worlds.set(pane, pane.world.slice());
+      pane.children.forEach(find);
+    };
+    find(instance.root);
+    for (const pane of worlds.keys()) drawOut(pane, edge);
+    renderer.within(side, () => renderer.drawLayout(instance, (pane) => worlds.has(pane)));
+    for (const [pane, world] of worlds) pane.world.set(world);
+  }
+}
+
+/** Where a pane's middle line meets x = edge, in its own units along it. */
+const crossing = (pane: PaneNode, edge: number) => (edge - pane.world[3]) / pane.world[0];
+
+function crosses(pane: PaneNode, edge: number): boolean {
+  const left = -((pane.source.origin % 3) / 2) * pane.size[0];
+  const at = crossing(pane, edge);
+  return at >= left && at <= left + pane.size[0];
+}
+
+/** Stretches a pane's world matrix along its own x axis about where it meets x = edge. */
+function drawOut(pane: PaneNode, edge: number): void {
+  const m = pane.world;
+  const shift = crossing(pane, edge) * (1 - DRAW_OUT);
+  for (const row of [0, 4, 8]) {
+    m[row + 3] += m[row] * shift;
+    m[row] *= DRAW_OUT;
+  }
+}
+
 const BAR = ['Shade', 'board', 'Line'];
+// A page's own panes: its slots, where its tiles draw, and its frames.
+const PAGE_ONLY = /^(N_Ch_[a-e]\d\d|Edge\d)$/;
 // The far pages' slots the grid layouts leave out: x of each missing column, and the slot numbers per row.
 const FAR_SLOTS: [string, [number, number[]][]][] = [
   ['a', [[-192, [1, 5, 9]], [-64, [2, 6, 10]], [64, [3, 7, 11]]]],
@@ -39,7 +85,8 @@ const ROWS = [175, 79, -17];
 /**
  * What a channel grid layout (my_IplTop_a, mn_SdcardMenu_a) needs past 16:9: slots for more of the far
  * pages' tiles, a bottom bar whose page curves spread with the window like the pods, with flat bar
- * between them, and a zoom dimmer as wide as the window.
+ * between them, and a zoom dimmer as wide as the window. Contained, it keeps the pages in the console
+ * picture instead, with only the backdrop and the bar around it.
  */
 export class WideGrid {
   private readonly bar: { pane: PaneNode; x: number }[] = [];
@@ -93,7 +140,7 @@ export class WideGrid {
   }
 
   /** Before the layout's update: places the bar pieces, their fillers and the dimmer for this window. */
-  place(screen: Display): void {
+  place(screen: Screen): void {
     const spread = screen.width / screen.projection;
     const slide = this.top.pane('N_ChAll').translate[0];
     for (const { pane, x } of this.bar) pane.translate[0] = spread === 1 ? x : spread * (x + slide) - slide;
@@ -105,5 +152,24 @@ export class WideGrid {
       fill.pane.size[0] = to - from;
     }
     cover(this.mask, screen);
+  }
+
+  /**
+   * Draws the pages; contained, they stay in the console picture, and either side the backdrop and bar run on
+   * with no page. A curve sliding past the picture's edge carries the bar beside it along, so it never breaks.
+   */
+  draw(renderer: Renderer, screen: Screen, drawPages: () => void): void {
+    renderer.within(screen.contained, drawPages);
+    if (!screen.contained) return;
+    // The backdrop runs on as it rests: each page's is lit in its middle, which would brighten the sides mid-slide.
+    const isBar = (pane: PaneNode) => this.bar.some((piece) => piece.pane === pane);
+    const all = this.top.pane('N_ChAll');
+    const slide = all.translate[0];
+    all.translate[0] = 0;
+    this.top.update(identity(), screen.tv);
+    drawWings(renderer, screen, this.top, (pane) => !PAGE_ONLY.test(pane.name) && !isBar(pane));
+    all.translate[0] = slide;
+    this.top.update(identity(), screen.tv);
+    drawWings(renderer, screen, this.top, isBar);
   }
 }

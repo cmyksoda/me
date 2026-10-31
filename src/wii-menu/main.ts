@@ -76,7 +76,7 @@ function track(event: PointerEvent) {
   [pointer.x, pointer.y] = toScreen(screen, canvas, event.clientX, event.clientY);
   pointer.touch = event.pointerType === 'touch';
   // Past the TV's edges the hand is gone, as when a Wii Remote points away, so the system cursor returns.
-  pointer.inside = !scenes.rotating && Math.abs(pointer.x) <= screen.width / 2 && Math.abs(pointer.y) <= SCREEN_HEIGHT / 2;
+  pointer.inside = !scenes.rotating && Math.abs(pointer.x) <= screen.window / 2 && Math.abs(pointer.y) <= SCREEN_HEIGHT / 2;
   canvas.style.cursor = pointer.inside ? 'none' : 'auto';
 }
 canvas.addEventListener('pointermove', track);
@@ -150,7 +150,7 @@ function frame(now: number) {
       pointer.inside = false;
     }
 
-    renderer.beginFrame([screen.width, SCREEN_HEIGHT], screen.viewport);
+    renderer.beginFrame([screen.window, SCREEN_HEIGHT], screen.viewport);
     scenes.draw(screen, pointer);
     renderer.settle();
     if (notice.textContent !== scenes.notice) notice.textContent = scenes.notice;
@@ -162,7 +162,7 @@ function frame(now: number) {
       gl.readPixels(Math.floor(x + w / 2), Math.floor(y + h / 2), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, middle);
       diagnostics.status(`frame ${frameCount}  drawn middle ${[...middle].join(',')}
 css ${canvas.clientWidth}x${canvas.clientHeight}  canvas ${canvas.width}x${canvas.height}  dpr ${devicePixelRatio}
-viewport ${screen.viewport.join(' ')}  units ${Math.round(screen.width)}  portrait ${screen.portrait}
+viewport ${screen.viewport.join(' ')}  units ${Math.round(screen.window)}  portrait ${screen.portrait}
 menu ${!!scenes.menu}  sd ${!!scenes.sd}  rotating ${scenes.rotating}  gl error 0x${gl.getError().toString(16)}  lost ${gl.isContextLost()}`);
     }
     if (import.meta.env.DEV && debug.capture) {

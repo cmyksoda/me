@@ -44,7 +44,7 @@ export class Fader {
     const step = Math.floor((Math.min(FRAMES, this.frame) * 255) / FRAMES);
     const alpha = this.out ? step : 255 - step;
     if (alpha <= 0) return;
-    const half = screen.width / 2;
+    const half = screen.window / 2;
     renderer.fill([-half, SCREEN_HEIGHT / 2, half, -SCREEN_HEIGHT / 2], [0, 0, 0, alpha]);
   }
 }

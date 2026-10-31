@@ -163,9 +163,12 @@ export class SdFooter {
 
   /** SDButton::draw: the backdrop, the round buttons and the label; the arrows wait for SDArrow. */
   draw(screen: Screen): void {
-    cover(this.layout.pane('background'), screen);
+    const background = this.layout.pane('background');
+    cover(background, screen);
     this.layout.update(identity(), screen);
-    this.renderer.drawLayout(this.layout, (pane) => !isUnder(pane, ARROWS));
+    this.renderer.drawLayout(this.layout, (pane) => pane === background);
+    const buttons = (pane: PaneNode) => pane !== background && !isUnder(pane, ARROWS);
+    this.renderer.within(screen.contained, () => this.renderer.drawLayout(this.layout, buttons));
   }
 
   /** SDArrow::draw: the arrows with the default camera, then the two balloons. */
@@ -173,7 +176,7 @@ export class SdFooter {
     const camera = this.renderer.camera;
     this.renderer.camera = null;
     this.layout.update(identity(), screen);
-    this.renderer.drawLayout(this.layout, (pane) => isUnder(pane, ARROWS));
+    this.renderer.within(screen.contained, () => this.renderer.drawLayout(this.layout, (pane) => isUnder(pane, ARROWS)));
     this.renderer.camera = camera;
     const margin = perMode(screen, 30, 120);
     for (const [target, pane] of [['menu', 'B_Wiimenu'], ['help', 'B_Help']] as const) {

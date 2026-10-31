@@ -39,6 +39,8 @@ export interface Camera {
 
 export type Rect = [left: number, top: number, right: number, bottom: number];
 
+const intersect = (a: Rect, b: Rect): Rect => [Math.max(a[0], b[0]), Math.min(a[1], b[1]), Math.min(a[2], b[2]), Math.max(a[3], b[3])];
+
 export interface LoadedFont {
   metrics: FontMetrics;
   texture: WebGLTexture;
@@ -154,6 +156,8 @@ export class Renderer {
   private vertices = new Float32Array(FLOATS_PER_VERTEX * 4);
   private screenHalf: Vec2 = [304, 228];
   private viewport: [number, number, number, number] = [0, 0, 1, 1];
+  private clip: Rect | null = null;
+  private bounds: Rect | null = null;
   private target: { framebuffer: WebGLFramebuffer; texture: WebGLTexture; width: number; height: number } | null = null;
   private outerViewport: [number, number, number, number] | null = null;
   /** The zoom camera (setOrthoTransAndScale): screen = (world − center) × scale; null is the default camera. */
@@ -235,6 +239,7 @@ export class Renderer {
     this.screenHalf = [screen[0] / 2, screen[1] / 2];
     this.viewport = viewport;
     gl.viewport(...viewport);
+    this.clip = this.bounds = null;
     gl.disable(gl.SCISSOR_TEST);
     gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -242,7 +247,25 @@ export class Renderer {
 
   /** Limits drawing to a logical-screen rectangle [left, top, right, bottom] (y up), or lifts the limit. */
   setClip(rect: Rect | null): void {
+    this.clip = rect;
+    this.applyClip();
+  }
+
+  /** Keeps everything `draw` draws inside a rectangle, as a TV's edges would; clips narrow within it. Null: no bounds. */
+  within(rect: Rect | null, draw: () => void): void {
+    if (!rect) return draw();
+    const { bounds, clip } = this;
+    this.bounds = bounds ? intersect(bounds, rect) : rect;
+    this.applyClip();
+    draw();
+    this.bounds = bounds;
+    this.clip = clip;
+    this.applyClip();
+  }
+
+  private applyClip(): void {
     const gl = this.gl;
+    const rect = this.clip && this.bounds ? intersect(this.clip, this.bounds) : this.clip ?? this.bounds;
     if (!rect) {
       gl.disable(gl.SCISSOR_TEST);
       return;
