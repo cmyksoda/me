@@ -28,7 +28,7 @@ export class Scenes {
   // Fetched the first time the window is portrait, so a visitor who never holds it so downloads nothing.
   private rotateArchive: Archive | null = null;
   private rotateFiles: 'idle' | 'loading' | 'failed' = 'idle';
-  // A tap on the rotate screen means the menu is wanted upright anyway, for the rest of the visit.
+  // Set by a tap on the rotate screen or once the menu is up: from then on an upright window gets the menu.
   private continued = false;
 
   constructor(private readonly renderer: Renderer, private readonly sound: Sound) {}
@@ -40,6 +40,8 @@ export class Scenes {
   }
 
   private buildMenu(): Menu {
+    // The rotate screen only greets a visitor who opens the page upright; once the menu is up, it stays.
+    this.continued = true;
     const menu = new Menu(this.assets!, this.renderer, this.sound);
     const footer = menu.grid.footer;
     footer.setSound(this.sound.enabled);
