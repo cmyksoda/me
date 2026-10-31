@@ -204,8 +204,7 @@ h2 { display: flex; align-items: center; gap: 0.6875rem; margin: 0; font-size: 1
 .room-shot { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 0.625em; background: var(--surface); }
 .site-footer { border-top: 0.0625rem solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; padding: 1.5625rem 0 1.875rem; margin-top: 3.0625rem; color: var(--muted); font-size: 0.875rem; font-weight: 500; }
 .footer-signature { display: flex; align-items: center; gap: 0.5625rem; }
-.footer-source { text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
-.footer-source:hover { color: var(--pink-ink); text-decoration-color: var(--pink); }
+.footer-source:hover { color: var(--pink-ink); }
 .mini-flower { color: var(--pink); font-size: 1.4375rem; line-height: 1; }
 .footer-goodbye { display: inline-flex; align-items: center; justify-content: flex-end; gap: 0.35em; text-align: right; }
 .footer-heart { width: 1.2em; height: 1.2em; stroke-width: 1.6; }
