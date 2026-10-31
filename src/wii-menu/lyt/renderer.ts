@@ -374,12 +374,17 @@ export class Renderer {
     const walk = (pane: PaneNode) => {
       if (!pane.visible) return;
       if (!only || only(pane)) {
-        this.drawPane(instance, pane);
-        pane.onDraw?.(pane);
+        if (pane.bounds) this.within(pane.bounds, () => this.drawOwn(instance, pane));
+        else this.drawOwn(instance, pane);
       }
       for (const child of pane.children) walk(child);
     };
     walk(instance.root);
+  }
+
+  private drawOwn(instance: LayoutInstance, pane: PaneNode): void {
+    this.drawPane(instance, pane);
+    pane.onDraw?.(pane);
   }
 
   private drawPane(instance: LayoutInstance, pane: PaneNode): void {

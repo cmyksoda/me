@@ -1,7 +1,7 @@
 import type { Pane } from './lyt/brlyt';
 import { wings, type Screen } from './display';
 import { identity, type LayoutInstance, type MaterialState, type PaneNode } from './lyt/layout';
-import type { Renderer } from './lyt/renderer';
+import type { Rect, Renderer } from './lyt/renderer';
 
 // How far a pane is drawn out from the console picture's edge, so its column there covers the window beyond.
 const DRAW_OUT = 1000;
@@ -92,6 +92,7 @@ export class WideGrid {
   private readonly bar: { pane: PaneNode; x: number }[] = [];
   private readonly fills: { pane: PaneNode; left: PaneNode; right: PaneNode }[] = [];
   private readonly mask: PaneNode;
+  private readonly pagePanes: PaneNode[] = [];
 
   constructor(private readonly top: LayoutInstance) {
     const template = top.pane('N_Ch_c01').source;
@@ -118,6 +119,7 @@ export class WideGrid {
       }
     }
     this.mask = top.pane('ChMask');
+    for (const [name, pane] of top.panes) if (PAGE_ONLY.test(name)) this.pagePanes.push(pane);
   }
 
   /** A hidden copy of a bar piece whose textures all read their flat first column. */
@@ -159,8 +161,13 @@ export class WideGrid {
    * with no page. A curve sliding past the picture's edge carries the bar beside it along, so it never breaks.
    */
   draw(renderer: Renderer, screen: Screen, drawPages: () => void): void {
-    renderer.within(screen.contained, drawPages);
-    if (!screen.contained) return;
+    // Contained, tiles and frames stay within half a page of the middle, so no sliver of the next page shows.
+    const contained = screen.contained;
+    const half = (this.top.pane('N_Ch_d').world[3] - this.top.pane('N_Ch_c').world[3]) / 2;
+    const bounds: Rect | null = contained && [-half, contained[1], half, contained[3]];
+    for (const pane of this.pagePanes) pane.bounds = bounds;
+    renderer.within(contained, drawPages);
+    if (!contained) return;
     // The backdrop runs on as it rests: each page's is lit in its middle, which would brighten the sides mid-slide.
     const isBar = (pane: PaneNode) => this.bar.some((piece) => piece.pane === pane);
     const all = this.top.pane('N_ChAll');

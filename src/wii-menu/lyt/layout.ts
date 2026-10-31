@@ -2,6 +2,7 @@ import type { RGBA } from './binary';
 import type { Animation, Track } from './brlan';
 import { sampleTrack } from './brlan';
 import type { Layout, Material, Pane, Quad, TexSRT, Vec2 } from './brlyt';
+import type { Rect } from './renderer';
 
 /** Row-major 3x4 affine matrix, as NW4R's MTX34. */
 export type Mtx34 = Float32Array;
@@ -71,6 +72,8 @@ export interface PaneNode {
   texCoords?: Quad<Vec2>[];
   /** Lets a scene draw something of its own (a channel icon, say) in this pane's place. */
   onDraw?: (pane: PaneNode) => void;
+  /** Keeps this pane's own drawing, onDraw included, inside a rectangle. */
+  bounds?: Rect | null;
 }
 
 export interface MaterialState {
