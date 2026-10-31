@@ -1,8 +1,8 @@
 // Views: what the pointer is over, focus, B-dragging, and drawing each frame (view.c).
 
 import { drawBubbles, updateBubbles } from './bubbles';
-import { pointer, scanPad, type Pad } from './controls';
-import { beginFrame, beginView, clip, drawBackground, drawEdges, drawImage, drawText, drawTurned, endFrame, fill, screen, unclip, VIEW_HEIGHT } from './gfx';
+import { A, pointer, scanPad, type Pad } from './controls';
+import { beginFrame, beginView, clip, drawBackground, drawEdges, drawImage, drawSliced, drawText, drawTurned, endFrame, fill, screen, unclip } from './gfx';
 import { theme } from './theme';
 import { CURSOR, ENABLED, FOCUSABLE, FOCUSED, setFlag, shows, VISIBLE, fill as fillWidget, type Cursor, type Item, type Widget } from './widgets';
 
@@ -24,6 +24,8 @@ export interface View {
 
 const FOCUS_FLAGS = VISIBLE | ENABLED | FOCUSABLE;
 const CURSOR_FLAGS = VISIBLE | ENABLED;
+// The wordmark's middle in logo.png, which has more empty room on its right than on its left.
+const LOGO_CENTER = 156;
 
 let cursorEnabled = false;
 let throbber: number | null = null;
@@ -41,6 +43,16 @@ export function enableCursor(on: boolean) {
 }
 
 export const pointing = () => cursorEnabled && pointer.valid;
+
+// The button a finger presses to take hold of the text under it: the one that drags in the shown view (A when it
+// can, so a tap on the credits' link still follows it), or 0 where there is nothing to scroll.
+export function grabButtonAt(x: number, y: number) {
+  const v = shown?.view;
+  if (!v?.dragButton) return 0;
+  const w = v.widgets[widgetAt(v, x - v.x, y - v.y)];
+  const scrolls = !!w?.memo && w.memo.yMin < w.memo.yMax;
+  return scrolls ? v.dragButton & A || v.dragButton : 0;
+}
 
 export function showThrobber(on: boolean) {
   throbber = on ? 0 : null;
@@ -123,8 +135,9 @@ export function* plot(v: View, alpha: number): Generator<void, Pad, void> {
   v.cursor = -1;
 
   const visible = pointing();
+  // A finger that has lifted leaves nothing lit.
+  if (visible || pointer.touch) setFocus(v, -1);
   if (visible) {
-    setFocus(v, -1);
     const w = v.widgets[over];
     if (w) {
       if ((w.flags & CURSOR_FLAGS) === CURSOR_FLAGS) {
@@ -145,7 +158,7 @@ export function* plot(v: View, alpha: number): Generator<void, Pad, void> {
 // Fades a black curtain away (or in) over the view.
 export function* viewFade(v: View, color: number, steps: number, change: number) {
   const fade = newView(1, v, 0, 0);
-  const curtain = fillWidget(-32, -32, screen.width + 64, VIEW_HEIGHT + 64, color);
+  const curtain = fillWidget(-32, -32, screen.width + 64, screen.height + 64, color);
   fade.widgets[0] = curtain;
   const item = curtain.layers[0].items[0] as Extract<Item, { kind: 'fill' }>;
   for (let i = 0; i < steps; i++) {
@@ -157,6 +170,7 @@ export function* viewFade(v: View, color: number, steps: number, change: number)
 function drawItem(item: Item, v: View, x: number, y: number) {
   switch (item.kind) {
     case 'image': return drawImage(item.image, x + item.x, y + item.y, item.alpha);
+    case 'sliced': return drawSliced(item.image, x + item.x, y + item.y, item.width, item.height, item.insets, item.alpha);
     case 'text': return drawText(item.run, x, y);
     case 'fill': return fill(x, y, item.width, item.height, item.color);
     case 'clip': return clip(v.x + item.x, v.y + item.y, item.width, item.height);
@@ -168,7 +182,7 @@ function drawView(v: View, alpha: number, fillsOnly = false) {
   if (v.subView) {
     drawView(v.subView, 0, fillsOnly);
     const edge = Math.min(-5, screen.left - 1);
-    fill(edge, -5, Math.max(screen.width + 5, screen.right + 1) - edge, VIEW_HEIGHT + 10, alpha);
+    fill(edge, -5, Math.max(screen.width + 5, screen.right + 1) - edge, screen.height + 10, alpha);
   }
   for (const w of v.widgets) {
     if (!w || !(w.flags & VISIBLE)) continue;
@@ -188,13 +202,16 @@ export function render() {
   beginView();
   drawBackground(backdrop);
   drawBubbles();
-  drawImage(theme.logo, 0, 416);
+  // The wordmark sits at the bottom left, or centered at the bottom when the view is tall.
+  if (screen.portrait) drawImage(theme.logo, Math.round(screen.width / 2 - LOGO_CENTER), screen.height - theme.logo.height);
+  else drawImage(theme.logo, 0, 416);
   drawView(view, alpha);
   if (throbber !== null) {
     const { throbber: image } = theme;
-    drawTurned(image, Math.trunc((screen.width - image.width) / 2), Math.trunc((VIEW_HEIGHT - image.height) / 2), 1, throbber);
+    drawTurned(image, Math.trunc((screen.width - image.width) / 2), Math.trunc((screen.height - image.height) / 2), 1, throbber);
   }
-  if (cursor) {
+  // A finger is its own pointer.
+  if (cursor && !pointer.touch) {
     // The hotspot is the middle of the hand's 96 x 96 picture, with its shade 2 right and 4 down.
     const drag = cursor === 'drag';
     const x = pointer.exactX - 48;

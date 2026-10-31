@@ -1,4 +1,5 @@
 // A Wii Remote made of a mouse and keyboard (controls.c): left button A, right button B.
+// A finger is the same remote with neither button: a tap presses A, and a finger on scrolling text holds the grab button.
 
 import { screen, toView, VIEW_HEIGHT } from './gfx';
 
@@ -17,11 +18,13 @@ export interface Pad {
   down: number;
   held: number;
   up: number;
+  // A finger's swipe across the screen this frame: 1 leftward (the next page), -1 rightward.
+  swipe: number;
 }
 
 // Whole view pixels for the logic, like the IR position; exact ones for drawing the hand.
 // Until the mouse moves, the remote points just past the TV's corner: valid, so nothing keeps focus, but not drawn.
-export const pointer = { x: -64, y: -64, exactX: -64, exactY: -64, valid: true };
+export const pointer = { x: -64, y: -64, exactX: -64, exactY: -64, valid: true, touch: false };
 
 const keys: Record<string, number> = {
   Enter: A,
@@ -39,12 +42,28 @@ const keys: Record<string, number> = {
 };
 
 const WHEEL_STEP = 40;
+// In CSS pixels: how far a finger may wander and still be tapping, and how far across it must go to be a swipe.
+export const TAP_SLOP = 10;
+const SWIPE_DISTANCE = 48;
+// A lifted finger's position stays valid this many frames, long enough for the loop to act on its tap.
+const LIFT_FRAMES = 3;
+
+interface Finger {
+  x: number;
+  y: number;
+  grab: number;
+  wandered: boolean;
+}
 
 let held = 0;
 let pressed = 0;
 let released = 0;
 let mouseButtons = 0;
 let wheel = 0;
+let finger: Finger | null = null;
+let swipe = 0;
+let lift = 0;
+let grabButtonAt: (x: number, y: number) => number = () => 0;
 
 function press(button: number) {
   if (held & button) return;
@@ -75,7 +94,10 @@ export function scanPad(): Pad {
     scroll = DOWN;
     wheel -= WHEEL_STEP;
   }
-  return { down: down | scroll, held: held | down, up };
+  if (lift > 0 && --lift === 0) pointer.valid = false;
+  const swiped = swipe;
+  swipe = 0;
+  return { down: down | scroll, held: held | down, up, swipe: swiped };
 }
 
 function setPointer(x: number, y: number) {
@@ -84,7 +106,7 @@ function setPointer(x: number, y: number) {
   pointer.x = Math.floor(x);
   pointer.y = Math.floor(y);
   // WPAD_SetVRes gives the pointer 64 pixels beyond each edge.
-  pointer.valid = x >= -64 && y >= -64 && x < screen.width + 64 && y < VIEW_HEIGHT + 64;
+  pointer.valid = x >= -64 && y >= -64 && x < screen.width + 64 && y < screen.height + 64;
 }
 
 function trackButtons(event: PointerEvent) {
@@ -104,19 +126,65 @@ function track(event: PointerEvent) {
 function releaseAll() {
   for (const button of [A, B, UP, DOWN, LEFT, RIGHT, PLUS, MINUS, TWO]) release(button);
   mouseButtons = 0;
+  finger = null;
 }
 
-export function listen(canvas: HTMLCanvasElement) {
+function touchTo(event: PointerEvent) {
+  const { x, y } = toView(event.clientX, event.clientY);
+  setPointer(x, y);
+}
+
+function touchStart(event: PointerEvent) {
+  if (!event.isPrimary) return;
+  touchTo(event);
+  pointer.touch = true;
+  lift = 0;
+  const grab = grabButtonAt(pointer.x, pointer.y);
+  finger = { x: event.clientX, y: event.clientY, grab, wandered: false };
+  if (grab) press(grab);
+}
+
+function touchMove(event: PointerEvent) {
+  if (!finger || !event.isPrimary) return;
+  touchTo(event);
+  finger.wandered ||= Math.hypot(event.clientX - finger.x, event.clientY - finger.y) > TAP_SLOP;
+}
+
+// A tap acts where the finger lifts, so a swipe can't open an app. A grab lasts as long as the finger is down.
+function touchEnd(event: PointerEvent) {
+  if (!finger || !event.isPrimary) return;
+  touchTo(event);
+  const { x, y, grab, wandered } = finger;
+  finger = null;
+  lift = LIFT_FRAMES;
+  if (grab) return release(grab);
+  if (!wandered) {
+    press(A);
+    release(A);
+    return;
+  }
+  const [across, down] = [event.clientX - x, event.clientY - y];
+  if (Math.abs(across) >= SWIPE_DISTANCE && Math.abs(across) > 1.5 * Math.abs(down)) swipe = across < 0 ? 1 : -1;
+}
+
+/** `grabAt` says which button, if any, a finger at a point presses to take hold of what is there. */
+export function listen(canvas: HTMLCanvasElement, grabAt: (x: number, y: number) => number) {
+  grabButtonAt = grabAt;
   canvas.addEventListener('pointerdown', (event) => {
     canvas.setPointerCapture(event.pointerId);
+    if (event.pointerType === 'touch') return touchStart(event);
+    pointer.touch = false;
     track(event);
   });
   canvas.addEventListener('pointermove', (event) => {
+    if (event.pointerType === 'touch') return touchMove(event);
+    pointer.touch = false;
     track(event);
     // Out past the TV's edges, the system pointer comes back so it can't get lost in the black bars.
     canvas.style.cursor = pointer.valid ? 'none' : 'auto';
   });
   canvas.addEventListener('pointerup', (event) => {
+    if (event.pointerType === 'touch') return touchEnd(event);
     track(event);
     if (event.pointerType !== 'mouse') pointer.valid = false;
   });
@@ -124,8 +192,8 @@ export function listen(canvas: HTMLCanvasElement) {
     releaseAll();
     pointer.valid = false;
   });
-  canvas.addEventListener('pointerleave', () => {
-    pointer.valid = false;
+  canvas.addEventListener('pointerleave', (event) => {
+    if (event.pointerType !== 'touch') pointer.valid = false;
   });
   canvas.addEventListener('contextmenu', (event) => event.preventDefault());
   canvas.addEventListener('wheel', (event) => {
@@ -141,6 +209,7 @@ export function listen(canvas: HTMLCanvasElement) {
     if (event.repeat) return;
     // Using the D-pad means the remote points away from the screen.
     if (button & DPAD) pointer.valid = false;
+    pointer.touch = false;
     press(button);
   });
   addEventListener('keyup', (event) => {

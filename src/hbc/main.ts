@@ -3,11 +3,11 @@
 import { apps, loadApps, type App } from './apps';
 import { browser, browserGenView, browserInit, browserRelayout, browserSelection, browserSetFocus, browserSwitchMode, INFO, VIEW_MODE } from './browser';
 import { A, B, DOWN, DPAD, LEFT, listen, MINUS, PLUS, RIGHT, TWO, UP } from './controls';
-import { aboutStep, DIALOG_MASK_COLOR, dialogAbout, dialogApp, dialogFade, dialogX, SOURCE_URL } from './dialogs';
+import { aboutStep, DIALOG_MASK_COLOR, dialogAbout, dialogApp, dialogFade, dialogX, restingY, SOURCE_URL } from './dialogs';
 import { lineSpacing } from './font';
 import { screen, setLayout, windowLayout } from './gfx';
 import { loadTheme } from './theme';
-import { enableCursor, focusNext, focusPrevious, plot, pointing, render, showThrobber, tickleThrobber, viewFade, widgetAtPointer, type View } from './view';
+import { enableCursor, focusNext, focusPrevious, grabButtonAt, plot, pointing, render, showThrobber, tickleThrobber, viewFade, widgetAtPointer, type View } from './view';
 import { scrollMemoDeco } from './widgets';
 
 const FRAME = 1000 / 60;
@@ -42,6 +42,24 @@ function* channel(): Generator<void, void, void> {
   let loadFrames = -1;
   let loading = false;
 
+  // The tall layout's cards are built to the view's size, so a new size builds them again, where they were.
+  const rebuildDialogs = () => {
+    grabbedAt = null;
+    if (detail && app) {
+      const text = detail.widgets[6]!;
+      const scrolled = text.memo!.yMax - text.y;
+      detail = dialogApp(app, browser);
+      detail.y = restingY(detail.y);
+      scrollMemoDeco(detail.widgets.slice(5, 8), -scrolled);
+      current = detail;
+    }
+    if (about) {
+      about = dialogAbout(browser);
+      about.y = restingY(about.y);
+      current = about;
+    }
+  };
+
   while (true) {
     if (current === browser && loadFrames === 0) {
       loadFrames = -2;
@@ -61,10 +79,13 @@ function* channel(): Generator<void, void, void> {
 
     // A dialog keeps its text as laid out until it closes, so only the width follows while one is open.
     const layout = windowLayout();
-    if (layout.width !== screen.width || (layout.wide !== screen.wide && current === browser)) {
-      setLayout({ wide: current === browser ? layout.wide : screen.wide, width: layout.width });
+    const turned = layout.portrait !== screen.portrait;
+    const resized = layout.width !== screen.width || layout.height !== screen.height;
+    if (turned || resized || (layout.wide !== screen.wide && current === browser)) {
+      setLayout({ ...layout, wide: current === browser || turned ? layout.wide : screen.wide });
       browserRelayout();
-      for (const dialog of [detail, about]) if (dialog) dialog.x = dialogX();
+      if (screen.portrait || turned) rebuildDialogs();
+      else for (const dialog of [detail, about]) if (dialog) dialog.x = dialogX();
     }
 
     const pad = yield* plot(current, DIALOG_MASK_COLOR);
@@ -75,6 +96,10 @@ function* channel(): Generator<void, void, void> {
     }
 
     if (current === browser) {
+      if (pad.swipe) {
+        yield* browserGenView(pad.swipe > 0 ? 'next' : 'previous');
+        continue;
+      }
       if (pad.down & TWO) {
         yield* browserSwitchMode();
         continue;
@@ -159,7 +184,7 @@ async function start() {
   loadApps();
   setLayout(windowLayout());
   browserInit();
-  listen(canvas);
+  listen(canvas, grabButtonAt);
   canvas.setAttribute('aria-label', `The Homebrew Channel, listing ${apps.map((entry) => entry.name).join(', ')}`);
 
   const steps = channel();

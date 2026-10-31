@@ -2,6 +2,7 @@
 
 import type { App } from './apps';
 import { charCount, lineSpacing, plotString, wrap, type FontId, type TextRun, type XAlign, type YAlign } from './font';
+import type { Insets } from './gfx';
 import { theme } from './theme';
 
 export const VISIBLE = 1;
@@ -13,10 +14,19 @@ const AND = 256;
 
 const DISABLED_ALPHA = 0x54 / 255;
 
+// What stays as drawn when a plate is resized: each is the same from side to side in its middle, and the
+// dialog is flat black between its blue top and bottom.
+const LIST_INSETS: Insets = [16, 24, 16, 24];
+const BUTTON_INSETS: Insets = [16, 0, 16, 0];
+const DIALOG_INSETS: Insets = [16, 192, 16, 112];
+// A button's caption has to fit its plate: HBC's 20 px caption needs the plate at least this wide.
+const BUTTON_CAPTION_MIN_WIDTH = 124;
+
 export type Cursor = 'standard' | 'drag';
 
 export type Item =
   | { kind: 'image'; image: HTMLImageElement; x: number; y: number; alpha: number }
+  | { kind: 'sliced'; image: HTMLImageElement; x: number; y: number; width: number; height: number; insets: Insets; alpha: number }
   | { kind: 'text'; run: TextRun }
   | { kind: 'fill'; width: number; height: number; color: number }
   | { kind: 'clip'; x: number; y: number; width: number; height: number }
@@ -50,6 +60,12 @@ const picture = (image: HTMLImageElement, x = 0, y = 0, alpha = 1): Item => ({ k
 
 const text = (run: TextRun): Item => ({ kind: 'text', run });
 
+// At its own size a plate is drawn whole, so HBC's own layouts keep their exact pixels.
+function plate(image: HTMLImageElement, width: number, height: number, insets: Insets, alpha = 1): Item {
+  if (width === image.width && height === image.height) return picture(image, 0, 0, alpha);
+  return { kind: 'sliced', image, x: 0, y: 0, width, height, insets, alpha };
+}
+
 export function shows(w: Widget, l: Layer) {
   if (!l.flags) return true;
   const f = (w.flags ^ l.invert) & l.flags & 0xff;
@@ -61,19 +77,26 @@ export function setFlag(w: Widget, flag: number, on: boolean) {
 }
 
 // Normal when idle, faded when disabled, the focus image when focused.
-function focusLayers(normal: HTMLImageElement, focused: HTMLImageElement) {
+function focusLayers(normal: HTMLImageElement, focused: HTMLImageElement, width = normal.width, height = normal.height, insets: Insets = [0, 0, 0, 0]) {
+  const at = (image: HTMLImageElement, alpha?: number) => plate(image, width, height, insets, alpha);
   return [
-    layer(FOCUSED | AND | ENABLED, FOCUSED, picture(normal)),
-    layer(ENABLED, ENABLED, picture(normal, 0, 0, DISABLED_ALPHA)),
-    layer(FOCUSED | AND | ENABLED, 0, picture(focused)),
+    layer(FOCUSED | AND | ENABLED, FOCUSED, at(normal)),
+    layer(ENABLED, ENABLED, at(normal, DISABLED_ALPHA)),
+    layer(FOCUSED | AND | ENABLED, 0, at(focused)),
   ];
 }
 
-export function image(x: number, y: number, normal: HTMLImageElement, disabled?: HTMLImageElement, hover?: HTMLImageElement) {
-  const layers = [hover ? layer(ENABLED | AND | CURSOR, CURSOR, picture(normal)) : layer(ENABLED, 0, picture(normal))];
-  if (disabled) layers.push(layer(ENABLED, ENABLED, picture(disabled)));
-  if (hover) layers.push(layer(ENABLED | AND | CURSOR, 0, picture(hover)));
-  return widget(x, y, normal.width, normal.height, false, layers);
+// `reach` widens what answers to the pointer past the picture, for buttons a finger has to hit.
+export function image(x: number, y: number, normal: HTMLImageElement, disabled?: HTMLImageElement, hover?: HTMLImageElement, reach = 0) {
+  const at = (image: HTMLImageElement, alpha = 1) => picture(image, reach, reach, alpha);
+  const layers = [hover ? layer(ENABLED | AND | CURSOR, CURSOR, at(normal)) : layer(ENABLED, 0, at(normal))];
+  if (disabled) layers.push(layer(ENABLED, ENABLED, at(disabled)));
+  if (hover) layers.push(layer(ENABLED | AND | CURSOR, 0, at(hover)));
+  return widget(x - reach, y - reach, normal.width + 2 * reach, normal.height + 2 * reach, false, layers);
+}
+
+export function panel(width: number, height: number) {
+  return widget(0, 0, width, height, false, [layer(ENABLED, 0, plate(theme.dialog_background, width, height, DIALOG_INSETS))]);
 }
 
 export function label(x: number, y: number, caption: string, width: number, xalign: XAlign, yalign: YAlign, font: FontId) {
@@ -81,26 +104,40 @@ export function label(x: number, y: number, caption: string, width: number, xali
   return widget(x, y, 0, 0, false, [layer(0, 0, text(run))]);
 }
 
-export function button(x: number, y: number, caption: string) {
+export function button(x: number, y: number, caption: string, plateWidth = theme.button_tiny.width) {
   const normal = theme.button_tiny;
-  const width = normal.width - 32;
-  const count = charCount('button', caption, width);
-  const run = plotString('button', caption, 16, normal.height / 2, width, 'center', 'emCenter', count);
-  const layers = [...focusLayers(normal, theme.button_tiny_focus), layer(0, 0, text(run))];
-  return widget(x, y, normal.width, normal.height, true, layers);
+  // A narrow plate takes the 16 px caption, with a little less room on each side.
+  const [font, inset] = plateWidth >= BUTTON_CAPTION_MIN_WIDTH ? (['button', 16] as const) : (['label', 12] as const);
+  const width = plateWidth - 2 * inset;
+  const count = charCount(font, caption, width);
+  const run = plotString(font, caption, inset, normal.height / 2, width, 'center', 'emCenter', count);
+  const layers = [...focusLayers(normal, theme.button_tiny_focus, plateWidth, normal.height, BUTTON_INSETS), layer(0, 0, text(run))];
+  return widget(x, y, plateWidth, normal.height, true, layers);
 }
 
-export function appEntry(x: number, y: number, app: App) {
+// A plate narrower than HBC's shows little of a description on one line, so it grows by a line and lets
+// the description take two.
+export const entryHeight = (plateWidth = theme.apps_list.width) =>
+  theme.apps_list.height + (plateWidth < theme.apps_list.width ? lineSpacing('appdesc') : 0);
+
+export function appEntry(x: number, y: number, app: App, plateWidth = theme.apps_list.width) {
   const background = theme.apps_list;
-  const width = background.width - 156 - 16;
+  const height = entryHeight(plateWidth);
+  const grown = height - background.height;
+  const width = plateWidth - 156 - 16;
+  const spacing = lineSpacing('appdesc');
   const description = app.shortDescription ?? '<no description>';
+  const lines = grown ? wrap('appdesc', description, width).slice(0, 2).map((line) => line ?? '') : [description];
+  // The text stays in the middle of the plate, so a single line sits half a line lower than two would.
+  const shift = Math.trunc((grown - (lines.length - 1) * spacing) / 2);
   const items = [
-    text(plotString('appname', app.name, 156, 8, width, 'left', 'ascender', charCount('appname', app.name, width))),
-    text(plotString('appdesc', description, 156, 54, width, 'left', 'descender', charCount('appdesc', description, width))),
+    text(plotString('appname', app.name, 156, 8 + shift, width, 'left', 'ascender', charCount('appname', app.name, width))),
+    ...lines.map((line, i) =>
+      text(plotString('appdesc', line, 156, 54 + shift + i * spacing, width, 'left', 'descender', charCount('appdesc', line, width)))),
   ];
-  if (app.icon) items.push(picture(app.icon, 8, 8));
-  const layers = [...focusLayers(background, theme.apps_list_hover), layer(0, 0, ...items)];
-  return widget(x, y, background.width, background.height, true, layers);
+  if (app.icon) items.push(picture(app.icon, 8, 8 + Math.trunc(grown / 2)));
+  const layers = [...focusLayers(background, theme.apps_list_hover, plateWidth, height, LIST_INSETS), layer(0, 0, ...items)];
+  return widget(x, y, plateWidth, height, true, layers);
 }
 
 export function gridAppEntry(x: number, y: number, app: App) {

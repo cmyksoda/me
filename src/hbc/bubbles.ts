@@ -9,6 +9,7 @@ const DAY = 60 * 24;
 const QUIETEST = 60 * 4;
 const BUSIEST_AFTER = 60 * 12;
 const SIZE = 64;
+const AREA_16_9 = WIDTH_16_9 * VIEW_HEIGHT;
 
 interface Bubble {
   x: number;
@@ -41,7 +42,7 @@ let divider = 0;
 function spawn(): Group {
   const tex = irand(3);
   const x = irand(screen.width);
-  const py = VIEW_HEIGHT + irand(200);
+  const py = screen.height + irand(200);
   const speed = 1.2 + frand(4 - tex);
   return {
     tex, x, py, speed, xm: 3 + irand(tex + 1) * speed, val: 0, step: (2 * Math.PI) / (64 + frand(64)),
@@ -59,8 +60,8 @@ function updateCount() {
       : Math.trunc(((MAX_COUNT - MIN_COUNT) * (DAY - minute)) / (DAY - BUSIEST_AFTER)) + MIN_COUNT;
   }
   if (divider % 6 === 0) {
-    // Windows wider than 16:9 get more bubbles, so the water stays as busy.
-    const count = Math.round((target * Math.max(screen.width, WIDTH_16_9)) / WIDTH_16_9);
+    // Views larger than 16:9 get more bubbles, so the water stays as busy.
+    const count = Math.round((target * Math.max(screen.width * screen.height, AREA_16_9)) / AREA_16_9);
     while (bubbles.length < count) bubbles.push(spawn());
     if (bubbles.length > count) bubbles.pop();
   }
