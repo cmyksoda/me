@@ -23,9 +23,8 @@
     </script>
     <style>
       html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
-      canvas { display: block; width: 100vw; height: 100vh; cursor: none; touch-action: none; }
-      /* A phone's address bar covers the bottom of 100vh, which would push the rotate screen off center. */
-      @media (orientation: portrait) { canvas { height: 100dvh; } }
+      /* The visible height, not 100vh: a phone's browser bars would otherwise cover the bottom of the menu. */
+      canvas { display: block; width: 100vw; height: 100vh; height: 100dvh; cursor: none; touch-action: none; }
       .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
       .fallback { position: fixed; inset: 0; margin: 0; display: grid; place-content: center; gap: 0.75rem; padding: 2rem; color: #e8e8ee; font: 1rem/1.6 system-ui, sans-serif; text-align: center; }
       .fallback a { color: #6fd6ff; }
