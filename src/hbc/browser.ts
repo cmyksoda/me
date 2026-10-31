@@ -5,7 +5,7 @@ import { DOWN, LEFT, RIGHT, UP } from './controls';
 import { screen } from './gfx';
 import { theme } from './theme';
 import { focusNext, focusPrevious, moveFocus, newView, plot, setFocus } from './view';
-import { appEntry, gridAppEntry, image, setFlag, VISIBLE } from './widgets';
+import { appEntry, entryHeight, gridAppEntry, image, setFlag, VISIBLE } from './widgets';
 
 export const INFO = 2;
 export const VIEW_MODE = 3;
@@ -38,8 +38,10 @@ let columnsNew = 1;
 
 const controlsY = () => screen.height - theme.logo.height - 4 - theme.apps_previous.height;
 const firstRowY = () => (screen.portrait ? TALL_TOP : 64);
-const rows = () => (screen.portrait ? Math.max(1, Math.trunc((controlsY() - TALL_GAP - TALL_TOP) / theme.apps_list.height)) : ROWS);
 const plateWidth = () => (screen.portrait ? Math.min(theme.apps_list.width, screen.width - 2 * TALL_MARGIN) : theme.apps_list.width);
+const rowHeight = (columns: number) => (columns === 1 ? entryHeight(plateWidth()) : theme.apps_grid.height);
+const rows = (columns: number) => (screen.portrait ? Math.max(1, Math.trunc((controlsY() - TALL_GAP - TALL_TOP) / rowHeight(columns))) : ROWS);
+const pageSize = (columns: number) => columns * rows(columns);
 
 // As many columns as fit between the page arrows: 3 in 4:3, 4 in 16:9, and more in wider windows. A tall view
 // has its arrows below the list, so its columns only keep to the margins.
@@ -72,7 +74,7 @@ export function browserInit() {
 }
 
 function browserLayout() {
-  setSize = gridColumns() * rows();
+  setSize = Math.max(pageSize(1), pageSize(gridColumns()));
   const w = (browser.widgets = Array(FIRST_ENTRY + setSize * 2).fill(null));
   const arrowsY = screen.portrait ? controlsY() : 192;
   w[0] = image(ARROW_INSET, arrowsY, theme.apps_previous, undefined, theme.apps_previous_hover);
@@ -90,7 +92,7 @@ function setTopOffset(app: App | null) {
   }
   const index = apps.indexOf(app);
   if (index >= 0) topOffset = index;
-  const page = columnsNew * rows();
+  const page = pageSize(columnsNew);
   topOffset = Math.trunc(topOffset / page) * page;
   if (topOffset > apps.length - 1) topOffset -= page;
 }
@@ -99,7 +101,7 @@ function setTopOffset(app: App | null) {
 function placeEntries(first: number, x: number, app: App | null) {
   let focus = first;
   let y = firstRowY();
-  for (let i = 0; i < columnsNew * rows(); i++) {
+  for (let i = 0; i < pageSize(columnsNew); i++) {
     const entry = apps[topOffset + i];
     if (entry) {
       if (entry === app) focus += i;
@@ -107,7 +109,7 @@ function placeEntries(first: number, x: number, app: App | null) {
         ? appEntry(x, y, entry, plateWidth())
         : gridAppEntry(x + (i % columnsNew) * theme.apps_grid.width, y, entry);
     }
-    if ((i + 1) % columnsNew === 0) y += theme.apps_list.height;
+    if ((i + 1) % columnsNew === 0) y += rowHeight(columnsNew);
   }
   return focus;
 }
@@ -116,21 +118,21 @@ const roundf = (value: number) => Math.sign(value) * Math.round(Math.abs(value))
 
 // Each row starts its half-cosine slide one frame after the row above it. A page taller than HBC's five
 // rows starts them all within the same five frames.
-const lag = (row: number) => Math.trunc((row * (ROWS - 1)) / Math.max(rows() - 1, 1));
+const lag = (row: number, columns: number) => Math.trunc((row * (ROWS - 1)) / Math.max(rows(columns) - 1, 1));
 
 export function* browserGenView(action: BrowserAction, app: App | null = null) {
   if (action === 'add' || action === 'refresh') setTopOffset(app);
   if (action === 'next') {
-    if (apps.length <= topOffset + columnsNew * rows()) return;
-    topOffset += columnsCurrent * rows();
+    if (apps.length <= topOffset + pageSize(columnsNew)) return;
+    topOffset += pageSize(columnsCurrent);
   }
   if (action === 'previous') {
-    if (topOffset < 1 || topOffset < columnsCurrent * rows()) return;
-    topOffset -= columnsCurrent * rows();
+    if (topOffset < 1 || topOffset < pageSize(columnsCurrent)) return;
+    topOffset -= pageSize(columnsCurrent);
   }
 
   const less = topOffset > 0;
-  const more = apps.length > topOffset + columnsNew * rows();
+  const more = apps.length > topOffset + pageSize(columnsNew);
   const slots = setSize;
   const [oldSet, newSet] = firstSet ? [FIRST_ENTRY, FIRST_ENTRY + slots] : [FIRST_ENTRY + slots, FIRST_ENTRY];
   firstSet = !firstSet;
@@ -156,8 +158,8 @@ export function* browserGenView(action: BrowserAction, app: App | null = null) {
     w[1]!.x = arrowRight - s;
 
     for (let j = 0; j < slots; j++) {
-      const row1 = lag(Math.trunc(j / columnsCurrent));
-      const row2 = lag(Math.trunc(j / columnsNew));
+      const row1 = lag(Math.trunc(j / columnsCurrent), columnsCurrent);
+      const row2 = lag(Math.trunc(j / columnsNew), columnsNew);
       if (i > row1 && i < TRANS_STEPS - (ROWS - row1)) val1[j] += Math.PI / (TRANS_STEPS - 6);
       if (i > row2 && i < TRANS_STEPS - (ROWS - row2)) val2[j] += Math.PI / (TRANS_STEPS - 6);
       const leaving = w[oldSet + j];
@@ -194,7 +196,7 @@ export function browserRelayout() {
   browser.widgets.fill(null, FIRST_ENTRY);
   const focus = placeEntries(firstSet ? FIRST_ENTRY : FIRST_ENTRY + setSize, rowStart(columnsNew), app);
   setFlag(browser.widgets[0]!, VISIBLE, topOffset > 0);
-  setFlag(browser.widgets[1]!, VISIBLE, apps.length > topOffset + columnsNew * rows());
+  setFlag(browser.widgets[1]!, VISIBLE, apps.length > topOffset + pageSize(columnsNew));
   setFocus(browser, focus);
 }
 
