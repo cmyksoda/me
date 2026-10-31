@@ -98,7 +98,7 @@
     "version": "0.8",
     "shortDescription": "Vectrex Emulator",
     "longDescription": "Wii port of Vecx - a vectrex emulator written by Valavan Manohararajah.",
-    "longDescriptionDraft": "VectrexWii is a Wii port of Vecx, a Vectrex emulator written by Valavan Manohararajah.\n\nOriginally ported by community member Aruskano, and now maintained by cmyksoda, it seeks to bring as much of the charm of the Vectrex to the Wii as possible.",
+    "longDescriptionDraft": "VectrexWii is a Wii port of Vecx, a Vectrex emulator written by Valavan Manohararajah.\n\nOriginally ported by community member Aruskano, and now maintained by myself, it seeks to bring as much of the charm of the Vectrex to the Wii as possible.",
     "icon": true,
     "source": "https://github.com/cmyksoda/vectrexwii",
     "download": "https://github.com/cmyksoda/vectrexwii/releases/download/v0.8/vecxwii.zip"
