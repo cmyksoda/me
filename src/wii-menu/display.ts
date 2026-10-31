@@ -4,7 +4,7 @@ import type { Rect } from './lyt/renderer';
 export const SCREEN_HEIGHT = 456;
 const STANDARD = 4 / 3;
 const WIDE = 16 / 9;
-// Past 32:9 the menu is pillarboxed.
+// Past 32:9 the menu is pillarboxed, unless it is contained (?wide=fill) and its backdrops can run on.
 const WIDEST = 32 / 9;
 // The console's two projections, 608 and 832 units wide; between them, a window gets one of its own.
 const PROJECTION_STANDARD = 608;
@@ -33,7 +33,7 @@ export interface Screen extends Display {
 }
 
 /**
- * Fills any landscape window from 4:3 to 32:9. Up to 16:9 the projection widens with the window, as
+ * Fills any landscape window from 4:3 to 32:9, or any width when contained. Up to 16:9 the projection widens with the window, as
  * the console's location adjust would; past it, the 16:9 picture stays and the window shows more around it
  * (or, contained, only the menu's backdrops).
  */
@@ -51,7 +51,7 @@ export function measureScreen(canvas: HTMLCanvasElement): Screen {
     const viewHeight = Math.round(width / STANDARD);
     logical = PROJECTION_STANDARD;
     viewport = [0, Math.round((height - viewHeight) / 2), width, viewHeight];
-  } else if (aspect > WIDEST) {
+  } else if (aspect > WIDEST && !CONTAIN) {
     const viewWidth = Math.round(height * WIDEST);
     logical = WIDE_UNITS_PER_HEIGHT * WIDEST;
     viewport = [Math.round((width - viewWidth) / 2), 0, viewWidth, height];
