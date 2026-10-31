@@ -100,3 +100,22 @@ export async function testGraphics(): Promise<string[]> {
     }),
   ];
 }
+
+/** Tiny canvases cleared to green, one per context setting: one that stays black is a kind this phone can't show. */
+export function visibleCanvases(): HTMLElement {
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:8px;margin-top:6px';
+  for (const alpha of [false, true]) {
+    for (const antialias of [false, true]) {
+      const canvas = Object.assign(document.createElement('canvas'), { width: 48, height: 32 });
+      canvas.style.cssText = 'display:block;width:48px;height:32px;outline:1px solid #7f7';
+      const gl = canvas.getContext('webgl2', { alpha, antialias, premultipliedAlpha: false });
+      gl?.clearColor(0, 1, 0, 1);
+      gl?.clear(gl.COLOR_BUFFER_BIT);
+      const cell = document.createElement('div');
+      cell.append(canvas, `alpha ${alpha ? 'on' : 'off'}\naa ${antialias ? 'on' : 'off'}`);
+      row.append(cell);
+    }
+  }
+  return row;
+}

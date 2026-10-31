@@ -18,7 +18,7 @@
         addEventListener('DOMContentLoaded', () => document.body.append(box));
         addEventListener('error', (e) => (log.data += `error: ${e.message || e.target?.src || e.target?.href || e.type}\n`), true);
         addEventListener('unhandledrejection', (e) => (log.data += `rejection: ${e.reason?.stack || e.reason}\n`));
-        window.__debug = { log: (line) => (log.data += `${line}\n`), status: (text) => (status.data = text) };
+        window.__debug = { log: (line) => (log.data += `${line}\n`), status: (text) => (status.data = text), append: (node) => box.append(node) };
       }
     </script>
     <style>

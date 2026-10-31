@@ -9,7 +9,9 @@ const canvas = document.querySelector<HTMLCanvasElement>('#screen')!;
 const links = document.querySelector<HTMLElement>('#channel-links')!;
 const notice = document.querySelector<HTMLElement>('#notice')!;
 // Set by the page's inline script when the address has ?debug.
-const diagnostics = (window as { __debug?: { log: (line: string) => void; status: (text: string) => void } }).__debug;
+const diagnostics = (window as {
+  __debug?: { log: (line: string) => void; status: (text: string) => void; append: (node: Node) => void };
+}).__debug;
 diagnostics?.log('module running');
 // The channels as plain links: for screen readers, and the whole page if WebGL is missing.
 void fetch(new URL('channels.json', root)).then((r) => (r.ok ? r.json() : [])).catch(() => []).then((list: { name: string; repo: string }[]) => {
@@ -46,7 +48,10 @@ canvas.addEventListener('webglcontextlost', () => stop(new Error('the graphics c
 if (diagnostics) {
   const info = renderer.gl.getExtension('WEBGL_debug_renderer_info');
   diagnostics.log(`gpu: ${renderer.gl.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : renderer.gl.RENDERER)}`);
-  void import('./gl-test').then(({ testGraphics }) => testGraphics()).then((lines) => lines.forEach(diagnostics.log));
+  void import('./gl-test').then(({ testGraphics, visibleCanvases }) => {
+    diagnostics.append(visibleCanvases());
+    return testGraphics();
+  }).then((lines) => lines.forEach(diagnostics.log));
 }
 const sound = new Sound();
 const scenes = new Scenes(renderer, sound);
