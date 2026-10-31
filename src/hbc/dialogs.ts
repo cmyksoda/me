@@ -84,10 +84,10 @@ const cardWidth = () => (screen.portrait ? screen.width - 2 * CARD_MARGIN : them
 const cardPadding = () => (screen.portrait ? CARD_PADDING : 32);
 
 // Without text to read (the credits), the card takes all the height it can.
-function cardHeight(text?: string) {
+function cardHeight(text?: string, extra = 0) {
   if (!screen.portrait) return theme.dialog_background.height;
   const lines = text === undefined ? Infinity : wrap('memo', text, cardWidth() - 2 * cardPadding()).length;
-  const chrome = theme.dialog_background.height - MEMO_LINES * lineSpacing('memo');
+  const chrome = theme.dialog_background.height - MEMO_LINES * lineSpacing('memo') + extra;
   return Math.min(Math.max(chrome + lines * lineSpacing('memo'), CARD_MIN_HEIGHT), screen.height - 2 * CARD_MARGIN);
 }
 
@@ -119,21 +119,26 @@ export function dialogApp(app: App, subView: View) {
   const width = cardWidth();
   const pad = cardPadding();
   const description = app.longDescription ?? 'no description available';
-  const height = cardHeight(description);
-  const { x, y } = cardOrigin(height);
-  const v = newView(11, subView, x, y, B);
-  const w = v.widgets;
   const textX = pad + 16 + 128;
   const textWidth = width - textX - 24;
+  // Beside the icon a phone's card is narrow, so an author that doesn't fit takes a second line there.
+  const author = app.coder ? `Author: ${app.coder}` : '';
+  const authorLines = screen.portrait ? wrap('label', author, textWidth) : [author];
+  const extra = authorLines.length > 1 ? lineSpacing('label') : 0;
+  const height = cardHeight(description, extra);
+  const { x, y } = cardOrigin(height);
+  const v = newView(extra ? 12 : 11, subView, x, y, B);
+  const w = v.widgets;
 
   w[0] = panel(width, height);
   w[1] = label(pad, 16, app.name, width - 2 * pad, 'center', 'ascender', 'dlgtitle');
   if (app.icon) w[2] = image(pad, 48, app.icon);
   w[3] = label(textX, 72, app.version ? `Version: ${app.version}` : '', textWidth, 'left', 'descender', 'label');
-  w[4] = label(textX, 72, app.coder ? `Author: ${app.coder}` : '', textWidth, 'left', 'ascender', 'label');
+  w[4] = label(textX, 72, authorLines[0] ?? '', textWidth, 'left', 'ascender', 'label');
+  if (extra) w[11] = label(textX, 72 + extra, authorLines.slice(1).join(' '), textWidth, 'left', 'ascender', 'label');
 
   const buttonsY = height - tiny.height - 16;
-  const memoY = 48 + 48 + 8;
+  const memoY = 48 + 48 + 8 + extra;
   [w[5], w[6], w[7]] = memoDeco(pad, memoY, width - 2 * pad, buttonsY - memoY - 8, description, 'left');
 
   // Delete and Load become Source and Download. A narrow card has narrower plates.
