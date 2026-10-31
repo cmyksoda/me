@@ -18,7 +18,7 @@ const LINK = '#a6d2e6';
 const notice = [
   'About this page',
   '',
-  "This page recreates the Homebrew Channel in your browser to list cmyksoda's Wii homebrew apps. "
+  "This page recreates the Homebrew Channel in your browser to list my Wii homebrew apps. "
     + "The page's code is free software under the GNU AGPLv3.",
   '',
   `Source code: ${SOURCE_URL}`,
