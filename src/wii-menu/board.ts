@@ -233,7 +233,7 @@ export class Board {
       return { from, to, href: match[0].startsWith('http') ? match[0] : `https://${match[0]}`, box };
     });
     const sections = Math.max(1, Math.ceil((text.split('\n').length * LINE) / SECTION));
-    return { text, links, sections, scrollMax: Math.max(0, 160 + sections * SECTION + 144 + 64 - 456) };
+    return { text, links, sections, scrollMax: Math.max(0, 160 + sections * SECTION + 144 + 64 - SCREEN_HEIGHT) };
   }
 
   /** "Fri 10/30": yesterday, today and tomorrow sit side by side for the midnight slide. */
