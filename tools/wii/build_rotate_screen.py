@@ -33,7 +33,7 @@ WORDS = {
     "body": ["BEFORE BROWSING, ROTATE YOUR DEVICE", "SIDEWAYS IF YOU WOULD PREFER NOT TO", "VIEW THE WII MENU LETTERBOXED."],
     "online": "Or view from your desktop at:",
     "address": "cmyksoda.cc/wii-forwarders/",
-    "last": "Rotate your device to continue.",
+    "last": "Rotate or tap to continue.",
 }
 
 SCREEN = (608, 456)  # the layout's size in units; the main picture covers it
