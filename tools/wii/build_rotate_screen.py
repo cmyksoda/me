@@ -31,7 +31,7 @@ OUTPUT = ROOT / "public/wii-forwarders/menu/rotate.u8"
 WORDS = {
     "heading": "WARNING-SCREEN ORIENTATION",
     "body": ["BEFORE BROWSING, ROTATE YOUR DEVICE", "SIDEWAYS FOR THE BEST VIEW OF", "THE WII MENU AND ITS CHANNELS."],
-    "online": "Also online at",
+    "online": "Or view from your desktop at:",
     "address": "cmyksoda.cc/wii-forwarders/",
     "last": "Rotate your device to continue.",
 }
