@@ -80,8 +80,13 @@ function drawOut(pane: PaneNode, edge: number): void {
 const BAR = ['Shade', 'board', 'Line'];
 // A page's own panes: its slots, where its tiles draw, and its frames.
 const PAGE_ONLY = /^(N_Ch_[a-e]\d\d|Edge\d)$/;
-// Each page's own backdrop, lit in its middle, which slides with the page.
-const PAGE_BACKDROP = /^(BaseMask|Picture_0)\d$/;
+// Each page's striped TV sheet, lit in its middle, under its tiles.
+const PAGE_BACKDROP = /^BaseMask\d$/;
+// The same sheet over the tiles, with holes that round their corners, so it has to slide with them.
+const PLATE = /^Picture_0[0-4]$/;
+// A strip of the sheet above the tiles, which covers their top edge, so it draws after them.
+const BAND = /^Picture_0[5-9]$/;
+const GX_REPEAT = 1;
 // An empty rectangle, for panes already drawn another way.
 const DRAWN: Rect = [0, 0, 0, 0];
 // From this shape (sideways phones, ultrawide monitors; not a desktop browser window) pages fade out at the picture's
@@ -108,6 +113,8 @@ export class WideGrid {
   private readonly mask: PaneNode;
   private readonly pagePanes: PaneNode[] = [];
   private readonly backdrop = new Set<PaneNode>();
+  private readonly plates: PaneNode[] = [];
+  private readonly sheets: PaneNode[] = [];
 
   constructor(private readonly top: LayoutInstance) {
     const template = top.pane('N_Ch_c01').source;
@@ -139,6 +146,8 @@ export class WideGrid {
     for (const [name, pane] of top.panes) {
       if (PAGE_ONLY.test(name)) this.pagePanes.push(pane);
       if (PAGE_BACKDROP.test(name)) this.backdrop.add(pane);
+      if (PLATE.test(name)) this.plates.push(pane);
+      if (PLATE.test(name) || BAND.test(name)) this.sheets.push(pane);
     }
   }
 
@@ -197,27 +206,30 @@ export class WideGrid {
       const slide = all.translate[0];
       all.translate[0] = 0;
       this.top.update(identity(), screen.tv);
-      for (const pane of this.backdrop) pane.bounds = null;
+      const restX = this.sheets.map((sheet) => sheet.world[3]);
+      for (const pane of [...this.backdrop, ...this.plates]) pane.bounds = null;
       renderer.within(contained, () => this.drawBackdrop(renderer));
       drawWings(renderer, screen, this.top, (pane) => !PAGE_ONLY.test(pane.name) && !this.isBar(pane));
       all.translate[0] = slide;
       this.top.update(identity(), screen.tv);
+      this.holdSheets(restX);
       if (fade) renderer.keep(strips);
     }
     // Contained, the pages stay within half a page of the middle, so no sliver of the next shows, or fade out past it.
-    for (const pane of this.pagePanes) pane.bounds = fade ? contained : window;
+    for (const pane of [...this.pagePanes, ...this.plates]) pane.bounds = fade ? contained : window;
     for (const pane of this.backdrop) pane.bounds = contained && DRAWN;
     renderer.within(contained, drawPages);
+    this.releaseSheets();
     if (fade) this.fadeStrips(renderer, strips);
     if (contained) drawWings(renderer, screen, this.top, (pane) => this.isBar(pane));
   }
 
-  /** Between the pages' window and the picture's edges, from the top down to the page frames' foot (the bar stays live). */
+  /** Between the pages' window and the picture's edges, as high as the page frames reach (the band and bar stay live). */
   private strips(contained: Rect, half: number): [Rect, Rect] {
     const frame = this.top.pane('Edge2');
     const m = frame.world;
-    const bottom = m[7] + m[5] * (Math.floor(frame.source.origin / 3) / 2 - 1) * frame.size[1];
-    const top = contained[1];
+    const top = m[7] + m[5] * (Math.floor(frame.source.origin / 3) / 2) * frame.size[1];
+    const bottom = top - m[5] * frame.size[1];
     return [[contained[0], top, -half, bottom], [half, top, contained[2], bottom]];
   }
 
@@ -231,6 +243,39 @@ export class WideGrid {
     renderer.fadeBack([fadeLeft, top, innerLeft, bottom], 1, 0);
     renderer.fadeBack([innerRight, top, fadeRight, bottom], 0, 1);
     renderer.fadeBack([fadeRight, top, outerRight, bottom], 1, 1);
+  }
+
+  private readonly held: { srt: { translate: [number, number] }; u: number; map: { wrapS: number }; wrapS: number }[] = [];
+
+  /** Offsets the sheet in the plates and bands against the slide: their holes and edges travel, the stripes and light rest. */
+  private holdSheets(restX: number[]): void {
+    const done = new Set<MaterialState>();
+    this.sheets.forEach((pane, i) => {
+      const state = this.top.materials[pane.source.picture!.material];
+      if (done.has(state)) return;
+      done.add(state);
+      const sheet = state.textures.findIndex((name) => name?.startsWith('my_TVSheet'));
+      // A material without TEV stages draws its first texture through its first coordinates.
+      const stage = state.source.tevStages.find((s) => s.texMap === sheet);
+      const gen = state.source.texCoordGens[stage ? stage.texCoord : 0];
+      const srt = gen && gen.matrix >= 30 && gen.matrix < 60 ? state.texSRTs[(gen.matrix - 30) / 3] : undefined;
+      const coords = gen && (pane.texCoords ?? pane.source.picture!.texCoords)[gen.source - 4];
+      const map = state.source.texMaps[sheet];
+      if (!srt || !coords || !map) return;
+      const perUnit = (coords[1][0] - coords[0][0]) / (pane.size[0] * pane.world[0]);
+      this.held.push({ srt, u: srt.translate[0], map, wrapS: map.wrapS });
+      srt.translate[0] += srt.scale[0] * (pane.world[3] - restX[i]) * perUnit;
+      // The sheet repeats page after page, so held still it reads on past its own page as the next one's.
+      map.wrapS = GX_REPEAT;
+    });
+  }
+
+  private releaseSheets(): void {
+    for (const { srt, u, map, wrapS } of this.held) {
+      srt.translate[0] = u;
+      map.wrapS = wrapS;
+    }
+    this.held.length = 0;
   }
 
   private isBar(pane: PaneNode): boolean {
