@@ -30,7 +30,7 @@ OUTPUT = ROOT / "public/wii-forwarders/menu/rotate.u8"
 # The original's lines, in the same shape: a heading, three lines, an address and a last line.
 WORDS = {
     "heading": "WARNING-SCREEN ORIENTATION",
-    "body": ["BEFORE BROWSING, ROTATE YOUR DEVICE", "SIDEWAYS FOR THE BEST VIEW OF", "THE WII MENU AND ITS CHANNELS."],
+    "body": ["BEFORE BROWSING, ROTATE YOUR DEVICE", "SIDEWAYS IF YOU WOULD PREFER NOT TO", "VIEW THE WII MENU LETTERBOXED."],
     "online": "Or view from your desktop at:",
     "address": "cmyksoda.cc/wii-forwarders/",
     "last": "Rotate your device to continue.",
