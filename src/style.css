@@ -202,7 +202,7 @@ h2 { display: flex; align-items: center; gap: 0.6875rem; margin: 0; font-size: 1
 .room-card { flex-basis: calc((100% - var(--project-gap)) / 2); padding: 0.875em 0.875em 1.25em; }
 .room-card .project-heading { gap: 0.875em; }
 .room-shot { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 0.625em; background: var(--surface); }
-.site-footer { border-top: 0.0625rem solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; padding: 1.5625rem 0 1.875rem; margin-top: 3.0625rem; color: var(--muted); font-size: 0.875rem; font-weight: 350; }
+.site-footer { border-top: 0.0625rem solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; padding: 1.5625rem 0 1.875rem; margin-top: 3.0625rem; color: var(--muted); font-size: 0.875rem; font-weight: 500; }
 .footer-signature { display: flex; align-items: center; gap: 0.5625rem; }
 .footer-source { text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
 .footer-source:hover { color: var(--pink-ink); text-decoration-color: var(--pink); }
