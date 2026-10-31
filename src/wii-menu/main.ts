@@ -79,8 +79,16 @@ function track(event: PointerEvent) {
   canvas.style.cursor = pointer.inside ? 'none' : 'auto';
 }
 canvas.addEventListener('pointermove', track);
-canvas.addEventListener('pointerleave', () => (pointer.inside = false));
+// A lifted finger keeps pointing until its tap is decided (the fifth update after the press), or a quick tap
+// on a channel would be forgotten before it could open.
+const TAP_DECIDED = 6;
+let fingerLifted = false;
+canvas.addEventListener('pointerleave', (event) => {
+  if (event.pointerType === 'touch') fingerLifted = true;
+  else pointer.inside = false;
+});
 canvas.addEventListener('pointerdown', (event) => {
+  fingerLifted = false;
   sound.unlock();
   if (scenes.rotating) scenes.continueUpright();
   track(event);
@@ -128,6 +136,10 @@ function frame(now: number) {
     pressed = false;
     scenes.update(frames, pointer, screen.portrait);
     sound.endUpdate();
+    if (fingerLifted && (pointer.sincePress === null || pointer.sincePress >= TAP_DECIDED)) {
+      fingerLifted = false;
+      pointer.inside = false;
+    }
 
     renderer.beginFrame([screen.width, SCREEN_HEIGHT], screen.viewport);
     scenes.draw(screen, pointer);
