@@ -80,6 +80,8 @@ function drawOut(pane: PaneNode, edge: number): void {
 const BAR = ['Shade', 'board', 'Line'];
 // A page's own panes: its slots, where its tiles draw, and its frames.
 const PAGE_ONLY = /^(N_Ch_[a-e]\d\d|Edge\d)$/;
+// Each page's own backdrop, lit in its middle, which slides with the page.
+const PAGE_BACKDROP = /^(BaseMask|Picture_0)\d$/;
 // The far pages' slots the grid layouts leave out: x of each missing column, and the slot numbers per row.
 const FAR_SLOTS: [string, [number, number[]][]][] = [
   ['a', [[-192, [1, 5, 9]], [-64, [2, 6, 10]], [64, [3, 7, 11]]]],
@@ -98,6 +100,7 @@ export class WideGrid {
   private readonly fills: { pane: PaneNode; left: PaneNode; right: PaneNode }[] = [];
   private readonly mask: PaneNode;
   private readonly pagePanes: PaneNode[] = [];
+  private readonly backdrop = new Set<PaneNode>();
 
   constructor(private readonly top: LayoutInstance) {
     const template = top.pane('N_Ch_c01').source;
@@ -126,7 +129,10 @@ export class WideGrid {
       }
     }
     this.mask = top.pane('ChMask');
-    for (const [name, pane] of top.panes) if (PAGE_ONLY.test(name)) this.pagePanes.push(pane);
+    for (const [name, pane] of top.panes) {
+      if (PAGE_ONLY.test(name)) this.pagePanes.push(pane);
+      if (PAGE_BACKDROP.test(name)) this.backdrop.add(pane);
+    }
   }
 
   /** A hidden copy of a bar piece whose textures all read their flat first column. */
@@ -168,26 +174,43 @@ export class WideGrid {
   }
 
   /**
-   * Draws the pages; contained, they stay in the console picture, and either side the backdrop and bar run on
-   * with no page. A curve sliding past the picture's edge carries the bar beside it along, so it never breaks.
+   * Draws the pages; contained, they slide within half a page of the middle, and either side the backdrop rests
+   * while the bar runs on. A curve sliding past the picture's edge carries the bar beside it along, so it never breaks.
    */
   draw(renderer: Renderer, screen: Screen, drawPages: () => void): void {
-    // Contained, tiles and frames stay within half a page of the middle, so no sliver of the next page shows.
     const contained = screen.contained;
     const half = (this.top.pane('N_Ch_d').world[3] - this.top.pane('N_Ch_c').world[3]) / 2;
-    const bounds: Rect | null = contained && [-half, contained[1], half, contained[3]];
-    for (const pane of this.pagePanes) pane.bounds = bounds;
+    const window: Rect | null = contained && [-half, contained[1], half, contained[3]];
+    if (contained) {
+      // Outside the pages' window the backdrop shows as it rests: each page's is lit in its middle, which would
+      // brighten the sides mid-slide.
+      const all = this.top.pane('N_ChAll');
+      const slide = all.translate[0];
+      all.translate[0] = 0;
+      this.top.update(identity(), screen.tv);
+      for (const pane of this.backdrop) pane.bounds = null;
+      const [left, top, right, bottom] = contained;
+      renderer.within([left, top, -half, bottom], () => this.drawBackdrop(renderer));
+      renderer.within([half, top, right, bottom], () => this.drawBackdrop(renderer));
+      drawWings(renderer, screen, this.top, (pane) => !PAGE_ONLY.test(pane.name) && !this.isBar(pane));
+      all.translate[0] = slide;
+      this.top.update(identity(), screen.tv);
+    }
+    // Contained, the pages and their backdrop stay within half a page of the middle, so no sliver of the next shows.
+    for (const pane of this.pagePanes) pane.bounds = window;
+    for (const pane of this.backdrop) pane.bounds = window;
     renderer.within(contained, drawPages);
-    if (!contained) return;
-    // The backdrop runs on as it rests: each page's is lit in its middle, which would brighten the sides mid-slide.
-    const isBar = (pane: PaneNode) => this.bar.some((piece) => piece.pane === pane);
-    const all = this.top.pane('N_ChAll');
-    const slide = all.translate[0];
-    all.translate[0] = 0;
-    this.top.update(identity(), screen.tv);
-    drawWings(renderer, screen, this.top, (pane) => !PAGE_ONLY.test(pane.name) && !isBar(pane));
-    all.translate[0] = slide;
-    this.top.update(identity(), screen.tv);
-    drawWings(renderer, screen, this.top, isBar);
+    if (contained) drawWings(renderer, screen, this.top, (pane) => this.isBar(pane));
+  }
+
+  private isBar(pane: PaneNode): boolean {
+    return this.bar.some((piece) => piece.pane === pane);
+  }
+
+  /** The pages' backdrop in the grid's two passes: the masks first, then the pictures. */
+  private drawBackdrop(renderer: Renderer): void {
+    const mask = (pane: PaneNode) => pane.name.startsWith('BaseMask');
+    renderer.drawLayout(this.top, (pane) => this.backdrop.has(pane) && mask(pane));
+    renderer.drawLayout(this.top, (pane) => this.backdrop.has(pane) && !mask(pane));
   }
 }
