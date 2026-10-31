@@ -7,6 +7,7 @@ import { Sound } from './sound';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#screen')!;
 const links = document.querySelector<HTMLElement>('#channel-links')!;
+const notice = document.querySelector<HTMLElement>('#notice')!;
 // The channels as plain links: for screen readers, and the whole page if WebGL is missing.
 void fetch(new URL('channels.json', root)).then((r) => (r.ok ? r.json() : [])).catch(() => []).then((list: { name: string; repo: string }[]) => {
   for (const channel of list) {
@@ -58,13 +59,14 @@ let pressedB = false;
 function track(event: PointerEvent) {
   [pointer.x, pointer.y] = toScreen(screen, canvas, event.clientX, event.clientY);
   // Past the TV's edges the hand is gone, as when a Wii Remote points away, so the system cursor returns.
-  pointer.inside = !screen.portrait && Math.abs(pointer.x) <= screen.width / 2 && Math.abs(pointer.y) <= SCREEN_HEIGHT / 2;
+  pointer.inside = !scenes.rotating && Math.abs(pointer.x) <= screen.width / 2 && Math.abs(pointer.y) <= SCREEN_HEIGHT / 2;
   canvas.style.cursor = pointer.inside ? 'none' : 'auto';
 }
 canvas.addEventListener('pointermove', track);
 canvas.addEventListener('pointerleave', () => (pointer.inside = false));
 canvas.addEventListener('pointerdown', (event) => {
   sound.unlock();
+  if (scenes.rotating) scenes.continueUpright();
   track(event);
   canvas.setPointerCapture(event.pointerId);
   if (event.button === 0) {
@@ -114,6 +116,7 @@ function frame(now: number) {
     renderer.beginFrame([screen.width, SCREEN_HEIGHT], screen.viewport);
     scenes.draw(screen, pointer);
     renderer.settle();
+    if (notice.textContent !== scenes.notice) notice.textContent = scenes.notice;
     if (import.meta.env.DEV && debug.capture) {
       debug.png = canvas.toDataURL('image/png');
       debug.capture = false;

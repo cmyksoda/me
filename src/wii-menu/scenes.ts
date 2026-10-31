@@ -28,6 +28,8 @@ export class Scenes {
   // Fetched the first time the window is portrait, so a visitor who never holds it so downloads nothing.
   private rotateArchive: Archive | null = null;
   private rotateFiles: 'idle' | 'loading' | 'failed' = 'idle';
+  // A tap on the rotate screen means the menu is wanted upright anyway, for the rest of the visit.
+  private continued = false;
 
   constructor(private readonly renderer: Renderer, private readonly sound: Sound) {}
 
@@ -112,7 +114,23 @@ export class Scenes {
     else this.next = 'rotate';
   }
 
-  update(frames: number, pointer: MenuPointer, portrait: boolean): void {
+  /** The rotate screen is showing or on its way. */
+  get rotating(): boolean {
+    return this.rotate !== null || this.next === 'rotate';
+  }
+
+  /** What the rotate screen says, while it says it. */
+  get notice(): string {
+    return this.rotate && !this.rotate.leaving ? this.rotate.words : '';
+  }
+
+  /** Tapped: the rotate screen fades out and the menu comes upright, letterboxed. */
+  continueUpright(): void {
+    this.continued = true;
+  }
+
+  update(frames: number, pointer: MenuPointer, tall: boolean): void {
+    const portrait = tall && !this.continued;
     this.menu?.update(frames, pointer);
     this.sd?.update(frames, pointer);
     this.rotate?.update(frames);

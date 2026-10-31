@@ -228,6 +228,9 @@ def main(nand):
     main_picture, last_picture = typeset(face)
     files["arc/timg/it_Has_a_US_ENG.png"] = png(main_picture)
     files["arc/timg/it_Has_b_US_ENG.png"] = png(last_picture)
+    # The same words as text, for screen readers, which can't read the pictures.
+    lines = [WORDS["heading"], *WORDS["body"], WORDS["online"], WORDS["address"], WORDS["last"]]
+    files["arc/words.txt"] = "\n".join(lines).encode()
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_bytes(u8_archive(files))
     for path, data in files.items():

@@ -42,6 +42,8 @@ export async function loadRotateFiles(renderer: Renderer): Promise<Archive> {
  * fades in, a second later the last line starts pulsing, and the whole screen fades out when it's left.
  */
 export class RotateScreen {
+  /** Its words as text, for screen readers. */
+  readonly words: string;
   private readonly instance: LayoutInstance;
   // Bound in this order, so a later clip wins where two share a pane, as on the console.
   private readonly seenIn: AnimationPlayer;
@@ -52,6 +54,7 @@ export class RotateScreen {
   private left = false;
 
   constructor(private readonly renderer: Renderer, archive: Archive) {
+    this.words = new TextDecoder().decode(archive.files.get('arc/words.txt'));
     this.instance = archive.instance('it_Has_a');
     // The layout holds every language's pictures; the screen shows one, and the last line only later.
     for (const [name, pane] of this.instance.panes) {
