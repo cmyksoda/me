@@ -12,7 +12,12 @@ export type SdFooterTarget = 'menu' | 'help' | 'left' | 'right';
 type Side = 'left' | 'right';
 
 // smButtonName's order, which is also the order the GUI resolves overlapping hits in.
-const BUTTONS: [SdFooterTarget, string][] = [['menu', 'B_Wiimenu'], ['help', 'B_Help'], ['right', 'B_ArwR'], ['left', 'B_ArwL']];
+const BUTTONS: [SdFooterTarget, string][] = [
+  ['menu', 'B_Wiimenu'],
+  ['help', 'B_Help'],
+  ['right', 'B_ArwR'],
+  ['left', 'B_ArwL'],
+];
 const BALLOON_DELAY = 16;
 const ARROWS = ['N_ArwL', 'N_ArwR'];
 
@@ -176,7 +181,9 @@ export class SdFooter {
     const camera = this.renderer.camera;
     this.renderer.camera = null;
     this.layout.update(identity(), screen);
-    this.renderer.within(screen.contained, () => this.renderer.drawLayout(this.layout, (pane) => isUnder(pane, ARROWS)));
+    this.renderer.within(screen.contained, () =>
+      this.renderer.drawLayout(this.layout, (pane) => isUnder(pane, ARROWS)),
+    );
     this.renderer.camera = camera;
     const margin = perMode(screen, 30, 120);
     for (const [target, pane] of [['menu', 'B_Wiimenu'], ['help', 'B_Help']] as const) {

@@ -158,7 +158,8 @@ export class Menu {
   private updateBoardFooter(pointer: MenuPointer): void {
     const footer = this.grid.footer;
     if (this.board.bScrolling || this.board.pinching) return;
-    const target = this.board.state === 'normal' || this.board.state === 'reading' ? footer.hit(pointer.x, pointer.y) : null;
+    const target =
+      this.board.state === 'normal' || this.board.state === 'reading' ? footer.hit(pointer.x, pointer.y) : null;
     if (target !== footer.hovered) {
       if (footer.hovered) footer.leave(footer.hovered);
       if (target) footer.point(target);
@@ -251,14 +252,17 @@ export class Menu {
       renderer.drawCapture(this.slotRect, alpha, screen.projection / screen.window);
       renderer.camera = null;
     }
-    // On a window wider than 16:9 the preview's arrows stay on its 16:9 picture, which hides them past its edges as a TV's would.
+    // On a window wider than 16:9 the preview's arrows stay on its 16:9 picture, which hides them past its edges
+    // as a TV's would.
     const onPicture = (this.state === 'preview' || this.state === 'zoomOut') && screen.window > screen.projection;
-    if (onPicture) renderer.setClip([-screen.projection / 2, SCREEN_HEIGHT / 2, screen.projection / 2, -SCREEN_HEIGHT / 2]);
+    if (onPicture)
+      renderer.setClip([-screen.projection / 2, SCREEN_HEIGHT / 2, screen.projection / 2, -SCREEN_HEIGHT / 2]);
     this.grid.footer.drawArrows(onPicture ? { ...screen, width: screen.projection } : screen);
     if (onPicture) renderer.setClip(null);
     // The B-scroll marker stays where B went down, even with the hand off the TV.
     if (this.board.bScrolling) this.board.drawCursor(screen);
-    else if (pointer.inside) this.cursor.draw(renderer, screen, pointer.x, pointer.y, this.grid.grabbing || this.board.pinching);
+    else if (pointer.inside)
+      this.cursor.draw(renderer, screen, pointer.x, pointer.y, this.grid.grabbing || this.board.pinching);
     if (this.fade < FADE_FRAMES) {
       const alpha = 255 - Math.floor((this.fade * 255) / FADE_FRAMES);
       const half = screen.window / 2;

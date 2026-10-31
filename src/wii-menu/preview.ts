@@ -180,7 +180,16 @@ export class Preview<C extends ChannelBase = Channel> {
 
   update(frames: number): void {
     // Both focus clips sit on one pane; the "on" clip, bound later, wins while it plays.
-    const order = ['dimDownload', 'lightDownload', 'offBack', 'offDownload', 'onBack', 'onDownload', 'pressBack', 'pressDownload'];
+    const order = [
+      'dimDownload',
+      'lightDownload',
+      'offBack',
+      'offDownload',
+      'onBack',
+      'onDownload',
+      'pressBack',
+      'pressDownload',
+    ];
     for (const name of order) this.clips[name].step(frames);
     if (this.starting) this.tryStart(frames);
     const banner = this.banner;

@@ -23,7 +23,14 @@ export interface Layout {
 
 // width and height are the view's size in HBC pixels (the height is 480 unless the window is tall);
 // left and right are where the window's edges fall in them.
-export const screen = { portrait: false, wide: true, width: WIDTH_16_9, height: VIEW_HEIGHT, left: 0, right: WIDTH_16_9 };
+export const screen = {
+  portrait: false,
+  wide: true,
+  width: WIDTH_16_9,
+  height: VIEW_HEIGHT,
+  left: 0,
+  right: WIDTH_16_9,
+};
 
 const canvas = document.querySelector<HTMLCanvasElement>('#tv')!;
 const ctx = canvas.getContext('2d', { alpha: false })!;
@@ -118,7 +125,8 @@ export function drawBackground(image: HTMLImageElement) {
   }
   const first = Math.max(0, Math.floor((image.width - screen.width) / 2));
   if (image.width === screen.width) ctx.drawImage(image, 0, 0);
-  else ctx.drawImage(image, first, 0, Math.min(image.width, screen.width), VIEW_HEIGHT, 0, 0, screen.width, VIEW_HEIGHT);
+  else
+    ctx.drawImage(image, first, 0, Math.min(image.width, screen.width), VIEW_HEIGHT, 0, 0, screen.width, VIEW_HEIGHT);
 }
 
 // The window can show a bit more than the view (more while the page is laid out again). The backdrop's
@@ -149,7 +157,15 @@ export type Insets = readonly [left: number, top: number, right: number, bottom:
 
 // Resizes an image by stretching only its middle. The pieces meet on whole device pixels, so no seam
 // shows between them at a fractional scale.
-export function drawSliced(image: HTMLImageElement, x: number, y: number, width: number, height: number, insets: Insets, alpha = 1) {
+export function drawSliced(
+  image: HTMLImageElement,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  insets: Insets,
+  alpha = 1,
+) {
   const [l, t, r, b] = insets;
   const sx = [0, l, image.width - r, image.width];
   const sy = [0, t, image.height - b, image.height];
@@ -162,7 +178,8 @@ export function drawSliced(image: HTMLImageElement, x: number, y: number, width:
     for (let column = 0; column < 3; column++) {
       const [sw, sh] = [sx[column + 1] - sx[column], sy[row + 1] - sy[row]];
       const [dw, dh] = [dx[column + 1] - dx[column], dy[row + 1] - dy[row]];
-      if (sw > 0 && sh > 0 && dw > 0 && dh > 0) ctx.drawImage(image, sx[column], sy[row], sw, sh, dx[column], dy[row], dw, dh);
+      if (sw > 0 && sh > 0 && dw > 0 && dh > 0)
+        ctx.drawImage(image, sx[column], sy[row], sw, sh, dx[column], dy[row], dw, dh);
     }
   }
   ctx.restore();

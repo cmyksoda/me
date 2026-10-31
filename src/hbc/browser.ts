@@ -39,7 +39,9 @@ let columnsNew = 1;
 
 const controlsY = () => screen.height - theme.logo.height - TALL_LOGO_GAP - theme.apps_previous.height;
 const firstRowY = () => (screen.portrait ? TALL_TOP : 64);
-const plateWidth = () => (screen.portrait ? Math.min(theme.apps_list.width, screen.width - 2 * TALL_MARGIN) : theme.apps_list.width);
+const plateWidth = () => (
+  screen.portrait ? Math.min(theme.apps_list.width, screen.width - 2 * TALL_MARGIN) : theme.apps_list.width
+);
 const rowHeight = (columns: number) => (columns === 1 ? entryHeight(plateWidth()) : theme.apps_grid.height);
 const rows = (columns: number) =>
   screen.portrait ? Math.max(1, Math.trunc((controlsY() - TALL_GAP - TALL_TOP) / rowHeight(columns))) : ROWS;
@@ -49,7 +51,8 @@ const pageSize = (columns: number) => columns * rows(columns);
 // has its arrows below the list, so its columns only keep to the margins.
 const gridColumns = () => screen.portrait
   ? Math.trunc((screen.width - 2 * TALL_MARGIN) / theme.apps_grid.width)
-  : Math.trunc((screen.width - 2 * (ARROW_INSET + theme.apps_previous.width + ARROW_CLEARANCE)) / theme.apps_grid.width);
+  : Math.trunc((screen.width - 2 * (ARROW_INSET + theme.apps_previous.width + ARROW_CLEARANCE))
+    / theme.apps_grid.width);
 const rowStart = (columns: number) =>
   Math.trunc((screen.width - (columns === 1 ? plateWidth() : theme.apps_grid.width * columns)) / 2);
 
@@ -63,7 +66,8 @@ function smallButton(side: -1 | 1, normal: HTMLImageElement, hover: HTMLImageEle
 }
 
 function viewModeButton() {
-  const [normal, hover] = columnsNew === 1 ? [theme.view_grid, theme.view_grid_hover] : [theme.view_list, theme.view_list_hover];
+  const [normal, hover] =
+    columnsNew === 1 ? [theme.view_grid, theme.view_grid_hover] : [theme.view_list, theme.view_list_hover];
   return smallButton(1, normal, hover);
 }
 
@@ -80,7 +84,13 @@ function browserLayout() {
   const w = (browser.widgets = Array(FIRST_ENTRY + setSize * 2).fill(null));
   const arrowsY = screen.portrait ? controlsY() : 192;
   w[0] = image(ARROW_INSET, arrowsY, theme.apps_previous, undefined, theme.apps_previous_hover);
-  w[1] = image(screen.width - ARROW_INSET - theme.apps_next.width, arrowsY, theme.apps_next, undefined, theme.apps_next_hover);
+  w[1] = image(
+    screen.width - ARROW_INSET - theme.apps_next.width,
+    arrowsY,
+    theme.apps_next,
+    undefined,
+    theme.apps_next_hover,
+  );
   w[INFO] = smallButton(-1, theme.info, theme.info_hover);
   w[VIEW_MODE] = viewModeButton();
   setFlag(w[0]!, VISIBLE, false);

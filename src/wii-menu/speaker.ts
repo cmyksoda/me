@@ -58,7 +58,8 @@ function speakerCoverage(width: number, height: number, on: boolean): Float32Arr
   const cover = new Float32Array(width * height);
   for (let y = 0; y < canvas.height; y++) {
     for (let x = 0; x < canvas.width; x++) {
-      cover[Math.floor(y / SUPERSAMPLE) * width + Math.floor(x / SUPERSAMPLE)] += pixels[(y * canvas.width + x) * 4 + 3] / 255;
+      cover[Math.floor(y / SUPERSAMPLE) * width + Math.floor(x / SUPERSAMPLE)] +=
+        pixels[(y * canvas.width + x) * 4 + 3] / 255;
     }
   }
   return cover.map((sum) => sum / SUPERSAMPLE ** 2);

@@ -120,7 +120,8 @@ export class Balloon {
     }
     const half = base.size[0] / 2;
     const edge = (this.reverses ? screen.projection : screen.width) / 2 - margin;
-    // Footer balloons (TextBalloon) clamp in 4:3 units, then the root's 16:9 stretch carries them out; past 16:9 they ride out with the pods.
+    // Footer balloons (TextBalloon) clamp in 4:3 units, then the root's 16:9 stretch carries them out;
+    // past 16:9 they ride out with the pods.
     const stretch = this.reverses ? screen.projection / 608 : 1;
     const shift = this.reverses ? podShift(screen, x) : 0;
     const shifted = shift + stretch * Math.min(edge - half, Math.max(-edge + half, (x - shift) / stretch));

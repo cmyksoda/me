@@ -142,14 +142,16 @@ export class Board {
 
     this.cards = letterList.map((letter) => {
       const instance = board.instance('LetterS_b');
-      const clip = (name: string, loop = false) => new AnimationPlayer(board.animation(`LetterS_b_${name}`)!, instance, { loop });
+      const clip = (name: string, loop = false) =>
+        new AnimationPlayer(board.animation(`LetterS_b_${name}`)!, instance, { loop });
       for (const hidden of ['Nigaoe', 'N_Pic', 'PinSD0', 'PinSD1']) instance.pane(hidden).visible = false;
       // The card shows six characters of the title, then "..." if there's more.
       instance.pane('T_Letter').text = letter.title.length > 6 ? `${letter.title.slice(0, 6)}...` : letter.title;
       const saved = places[letter.title];
       const card: Card = {
         letter,
-        position: Array.isArray(saved) && saved.every(Number.isFinite) ? clampPlace(saved[0], saved[1]) : [...letter.position],
+        position:
+          Array.isArray(saved) && saved.every(Number.isFinite) ? clampPlace(saved[0], saved[1]) : [...letter.position],
         instance,
         clips: {
           paste: clip('PasteLetter'),
@@ -171,7 +173,17 @@ export class Board {
     this.maskOut = new AnimationPlayer(board.animation('my_BbsMask_a_MaskOut')!, this.mask);
 
     this.reader = board.instance('my_LetterL');
-    for (const hidden of ['SendPic', 'Nigaoe', 'B_Nigaoe', 'T_Nigaoe', 'T_TouchLetter', 'PicMask', 'N_Pic', 'B_Pic', 'ReplyMask']) {
+    for (const hidden of [
+      'SendPic',
+      'Nigaoe',
+      'B_Nigaoe',
+      'T_Nigaoe',
+      'T_TouchLetter',
+      'PicMask',
+      'N_Pic',
+      'B_Pic',
+      'ReplyMask',
+    ]) {
       this.reader.pane(hidden).visible = false;
     }
     const groups = this.reader.layout.groups;
@@ -335,7 +347,12 @@ export class Board {
    * stt_pinch: the card follows the hand, unclamped, while B is held. Letting go pins it inside the
    * board's bounds; pointing off the TV first drops it back where it was, as an invalid pointer does.
    */
-  private updatePinch(pointer: { x: number; y: number; b: boolean }, frames: number, screen: Screen, active: boolean): void {
+  private updatePinch(
+    pointer: { x: number; y: number; b: boolean },
+    frames: number,
+    screen: Screen,
+    active: boolean,
+  ): void {
     const pinched = this.pinched!;
     const { card } = pinched;
     if (pointer.b && active) {
@@ -343,7 +360,10 @@ export class Board {
       const offset: [number, number] = [x - pinched.from[0], y - pinched.from[1]];
       const speed = Math.hypot(offset[0] - pinched.offset[0], offset[1] - pinched.offset[1]) / Math.max(frames, 1e-3);
       pinched.offset = offset;
-      this.sound.hold('WIPL_SE_BOARD_DRAG', { pan: (card.position[0] + offset[0]) / 304, volume: Math.min(1, (2 * speed) / 304) });
+      this.sound.hold('WIPL_SE_BOARD_DRAG', {
+        pan: (card.position[0] + offset[0]) / 304,
+        volume: Math.min(1, (2 * speed) / 304),
+      });
       return;
     }
     if (active) {
@@ -356,7 +376,10 @@ export class Board {
 
   private savePlaces(): void {
     try {
-      localStorage.setItem(PLACES_KEY, JSON.stringify(Object.fromEntries(this.cards.map((c) => [c.letter.title, c.position]))));
+      localStorage.setItem(
+        PLACES_KEY,
+        JSON.stringify(Object.fromEntries(this.cards.map((c) => [c.letter.title, c.position]))),
+      );
     } catch {}
   }
 
@@ -415,8 +438,15 @@ export class Board {
     return this.bOrigin !== null;
   }
 
-  update(frames: number, pointer: { x: number; y: number; a: boolean; b: boolean; aPressed: boolean; bPressed: boolean; sincePress: number | null; touch: boolean },
-    active: boolean, screen: Screen): void {
+  update(
+    frames: number,
+    pointer: {
+      x: number; y: number; a: boolean; b: boolean; aPressed: boolean; bPressed: boolean;
+      sincePress: number | null; touch: boolean
+    },
+    active: boolean,
+    screen: Screen,
+  ): void {
     for (const card of this.cards) for (const clip of Object.values(card.clips)) clip.step(frames);
     this.maskIn.step(frames);
     this.maskOut.step(frames);
@@ -462,11 +492,15 @@ export class Board {
       return;
     }
     const since = pointer.sincePress;
-    if (hit && since !== null && since >= DECIDE_AFTER && since - frames < DECIDE_AFTER && !pointer.b) this.openLetter(hit);
+    if (hit && since !== null && since >= DECIDE_AFTER && since - frames < DECIDE_AFTER && !pointer.b)
+      this.openLetter(hit);
   }
 
-  private updateReader(frames: number, pointer: { x: number; y: number; a: boolean; b: boolean; aPressed: boolean; touch: boolean },
-    active: boolean): void {
+  private updateReader(
+    frames: number,
+    pointer: { x: number; y: number; a: boolean; b: boolean; aPressed: boolean; touch: boolean },
+    active: boolean,
+  ): void {
     const start = this.scroll;
     // A finger drags the letter itself, as phones scroll, and lets it glide on when it lifts.
     if (pointer.touch && pointer.a && active) {
@@ -474,7 +508,11 @@ export class Board {
       // Until it moves, a finger is a tap, which the arrows and links answer.
       if (!this.finger.moving && Math.abs(pointer.y - this.finger.y) > TOUCH_SLOP) {
         // The letter then follows from the edge of that slack, so it neither jumps nor trails the finger.
-        this.finger = { y: this.finger.y + Math.sign(pointer.y - this.finger.y) * TOUCH_SLOP, scroll: this.scroll, moving: true };
+        this.finger = {
+          y: this.finger.y + Math.sign(pointer.y - this.finger.y) * TOUCH_SLOP,
+          scroll: this.scroll,
+          moving: true,
+        };
       }
       if (this.finger.moving) {
         const to = Math.min(this.scrollMax, Math.max(0, this.finger.scroll + pointer.y - this.finger.y));

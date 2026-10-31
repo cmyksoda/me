@@ -224,7 +224,8 @@ export class AnimationPlayer {
     this.to = options.to ?? (this.loop ? animation.frameSize : animation.frameSize - 1);
     this.frame = this.from;
     const scope = options.panes ? this.scope(options.panes, options.recursive ?? false) : null;
-    const keyed = (tracks: Track[]) => tracks.some((t) => t.keys.some((k) => k.frame >= this.from && k.frame <= this.to));
+    const keyed = (tracks: Track[]) =>
+      tracks.some((t) => t.keys.some((k) => k.frame >= this.from && k.frame <= this.to));
     for (const target of animation.targets) {
       // EqualsPaneName compares 16 characters, all a layout keeps, so longer clip targets still bind.
       const pane = target.isMaterial ? undefined : instance.panes.get(target.name.slice(0, 16));

@@ -114,7 +114,9 @@ export class ChannelGrid {
       const instance = channel.icon.instance('icon');
       const animation = channel.icon.animation('icon');
       // Forwarder icons have no module, so the clip's own loop flag decides (createWadThumbnail).
-      const clip = animation ? new AnimationPlayer(animation, instance, { loop: animation.loop, wholeFrames: true }).play() : null;
+      const clip = animation
+        ? new AnimationPlayer(animation, instance, { loop: animation.loop, wholeFrames: true }).play()
+        : null;
       // Every icon starts somewhere random in its clip.
       if (clip) clip.frame = clip.from + Math.floor(Math.random() * (clip.to - clip.from));
       for (const language of OTHER_LANGUAGES) {
@@ -230,7 +232,9 @@ export class ChannelGrid {
   private emptyStatic(key: number): { instance: LayoutInstance; clip: AnimationPlayer } {
     while (this.statics.length <= key) {
       const instance = this.assets.menu.chanSel.instance('my_IplTop_b');
-      const clip = new AnimationPlayer(this.assets.menu.chanSel.animation('my_IplTop_b')!, instance, { loop: true }).play();
+      const clip = new AnimationPlayer(this.assets.menu.chanSel.animation('my_IplTop_b')!, instance, {
+        loop: true,
+      }).play();
       clip.frame = Math.floor(Math.random() * 2000) % clip.to;
       this.statics.push({ instance, clip });
     }
@@ -366,7 +370,11 @@ export class ChannelGrid {
     const moved = Math.hypot(pointer.x - x, pointer.y - y) / Math.max(frames, 1e-3);
     if (moved > 30) this.dragPitch = moved / 30;
     // holdSEwithPosDis divides by the 4:3 half-width even on a widescreen TV.
-    this.sound.hold('WIPL_SE_CH_DRAG', { pan: pointer.x / 304, volume: Math.min(1, (2 * moved) / 304), pitch: this.dragPitch });
+    this.sound.hold('WIPL_SE_CH_DRAG', {
+      pan: pointer.x / 304,
+      volume: Math.min(1, (2 * moved) / 304),
+      pitch: this.dragPitch,
+    });
   }
 
   /** A drop is legal on an empty slot or back on its own slot; there is no swapping. */
@@ -418,7 +426,8 @@ export class ChannelGrid {
     if (!arrow) {
       index = this.slots.findIndex((slot) => contains(slot.pane, pointer.x, pointer.y));
       const absolute = this.page * SLOTS_PER_PAGE + index;
-      const legal = index >= 0 && (absolute === this.carry.source || (this.order[absolute] === null && !this.pinned(absolute)));
+      const legal =
+        index >= 0 && (absolute === this.carry.source || (this.order[absolute] === null && !this.pinned(absolute)));
       if (!legal) index = -1;
     }
     if (index !== this.hoveredSlot) {

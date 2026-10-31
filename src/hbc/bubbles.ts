@@ -70,7 +70,8 @@ function updateCount() {
 // bubbles.c tests a square around the middle, after truncating the distance to whole pixels.
 function touches(b: Bubble, x: number, y: number) {
   const radius = (b.scale * SIZE) / 2 * 0.8;
-  return Math.abs(Math.trunc(x - (b.left + SIZE / 2))) < radius && Math.abs(Math.trunc(y - (b.bottom - SIZE / 2))) < radius;
+  return Math.abs(Math.trunc(x - (b.left + SIZE / 2))) < radius
+    && Math.abs(Math.trunc(y - (b.bottom - SIZE / 2))) < radius;
 }
 
 function pop(b: Group) {

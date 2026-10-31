@@ -37,7 +37,12 @@ export function spreadPages(instance: LayoutInstance, names: string[], screen: S
  * Contained, draws some of a layout's panes over the window either side of the console picture: each one
  * crossing the picture's edge is drawn out along its own length from there, as if it ran on to the window's edge.
  */
-export function drawWings(renderer: Renderer, screen: Screen, instance: LayoutInstance, only: (pane: PaneNode) => boolean): void {
+export function drawWings(
+  renderer: Renderer,
+  screen: Screen,
+  instance: LayoutInstance,
+  only: (pane: PaneNode) => boolean,
+): void {
   for (const side of wings(screen)) {
     const edge = side[0] < 0 ? side[2] : side[0];
     const worlds = new Map<PaneNode, Float32Array>();
@@ -109,7 +114,9 @@ export class WideGrid {
     }
     const all = top.pane('N_ChAll');
     for (const kind of BAR) {
-      const pieces = [0, 1, 2, 3, 4].map((i) => top.pane(`${kind}${i}`)).sort((a, b) => a.translate[0] - b.translate[0]);
+      const pieces = [0, 1, 2, 3, 4]
+        .map((i) => top.pane(`${kind}${i}`))
+        .sort((a, b) => a.translate[0] - b.translate[0]);
       for (const pane of pieces) this.bar.push({ pane, x: pane.translate[0] });
       // Fillers draw right after the last piece of their kind, so the bar keeps its layering.
       let after = top.pane(`${kind}0`);
@@ -127,7 +134,11 @@ export class WideGrid {
     const state = this.top.materials[piece.source.picture!.material];
     const flat: MaterialState = {
       ...state,
-      texSRTs: state.texSRTs.map((srt) => ({ translate: [-0.5, srt.translate[1]], rotate: srt.rotate, scale: [0, srt.scale[1]] })),
+      texSRTs: state.texSRTs.map((srt) => ({
+        translate: [-0.5, srt.translate[1]],
+        rotate: srt.rotate,
+        scale: [0, srt.scale[1]],
+      })),
     };
     this.top.materials.push(flat);
     return {

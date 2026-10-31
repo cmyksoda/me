@@ -14,20 +14,25 @@ const diagnostics = (window as {
 }).__debug;
 diagnostics?.log('module running');
 // The channels as plain links: for screen readers, and the whole page if WebGL is missing.
-void fetch(new URL('channels.json', root)).then((r) => (r.ok ? r.json() : [])).catch(() => []).then((list: { name: string; repo: string }[]) => {
-  for (const channel of list) {
-    const link = document.createElement('a');
-    link.href = channel.repo;
-    link.textContent = channel.name || 'Empty Slot';
-    links.append(link);
-  }
-});
+void fetch(new URL('channels.json', root))
+  .then((r) => (r.ok ? r.json() : []))
+  .catch(() => [])
+  .then((list: { name: string; repo: string }[]) => {
+    for (const channel of list) {
+      const link = document.createElement('a');
+      link.href = channel.repo;
+      link.textContent = channel.name || 'Empty Slot';
+      links.append(link);
+    }
+  });
 /** When the menu can't run here, the channel links become the page, saying why. */
 function fallBack(message: string): void {
   if (!canvas.isConnected) return;
   canvas.remove();
   links.className = 'fallback';
-  links.prepend(Object.assign(document.createElement('p'), { textContent: `${message} Here are my forwarder channels:` }));
+  links.prepend(
+    Object.assign(document.createElement('p'), { textContent: `${message} Here are my forwarder channels:` }),
+  );
 }
 
 // A black screen tells a visitor nothing, so a failure names its first line instead.
@@ -76,7 +81,8 @@ function track(event: PointerEvent) {
   [pointer.x, pointer.y] = toScreen(screen, canvas, event.clientX, event.clientY);
   pointer.touch = event.pointerType === 'touch';
   // Past the TV's edges the hand is gone, as when a Wii Remote points away, so the system cursor returns.
-  pointer.inside = !scenes.rotating && Math.abs(pointer.x) <= screen.window / 2 && Math.abs(pointer.y) <= SCREEN_HEIGHT / 2;
+  pointer.inside =
+    !scenes.rotating && Math.abs(pointer.x) <= screen.window / 2 && Math.abs(pointer.y) <= SCREEN_HEIGHT / 2;
   canvas.style.cursor = pointer.inside ? 'none' : 'auto';
 }
 canvas.addEventListener('pointermove', track);
@@ -109,7 +115,8 @@ canvas.addEventListener('pointerup', (event) => {
   if (event.button === 0) pointer.a = false;
   else if (event.button === 2) pointer.b = false;
   // A finger may be starting a drag, so it opens a link only when it lifts where it went down.
-  if (event.pointerType === 'touch' && Math.hypot(event.clientX - tapFrom[0], event.clientY - tapFrom[1]) < 10) openLink();
+  if (event.pointerType === 'touch' && Math.hypot(event.clientX - tapFrom[0], event.clientY - tapFrom[1]) < 10)
+    openLink();
 });
 let tapFrom: [number, number] = [0, 0];
 /** Links open inside the click or tap itself, or browsers block the new tab. */

@@ -80,7 +80,13 @@ const laidOut = new WeakMap<TextContent, Map<string, GlyphQuad[]>>();
  * Lays out a text box's string into glyph quads, following lyt::TextBox::DrawSelf and
  * ut::TextWriterBase: text position anchors the block and aligns each line inside it.
  */
-export function layoutText(font: FontMetrics, content: TextContent, text: string, origin: number, size: Vec2): GlyphQuad[] {
+export function layoutText(
+  font: FontMetrics,
+  content: TextContent,
+  text: string,
+  origin: number,
+  size: Vec2,
+): GlyphQuad[] {
   const key = `${origin} ${size[0]} ${size[1]} ${text}`;
   let memo = laidOut.get(content);
   if (!memo) laidOut.set(content, (memo = new Map()));

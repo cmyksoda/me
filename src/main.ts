@@ -151,7 +151,8 @@ function applyTheme(theme: 'light' | 'dark') {
   document.documentElement.dataset.theme = theme;
   toggle.setAttribute('aria-label', `switch to ${theme === 'dark' ? 'light' : 'dark'} mode`);
   toggle.setAttribute('aria-pressed', String(theme === 'dark'));
-  document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')!.content = theme === 'dark' ? '#14151b' : '#ffffff';
+  document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')!.content =
+    theme === 'dark' ? '#14151b' : '#ffffff';
 }
 
 applyTheme(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');

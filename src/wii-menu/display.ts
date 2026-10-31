@@ -33,9 +33,9 @@ export interface Screen extends Display {
 }
 
 /**
- * Fills any landscape window from 4:3 to 32:9, or any width when contained. Up to 16:9 the projection widens with the window, as
- * the console's location adjust would; past it, the 16:9 picture stays and the window shows more around it
- * (or, contained, only the menu's backdrops).
+ * Fills any landscape window from 4:3 to 32:9, or any width when contained. Up to 16:9 the projection widens
+ * with the window, as the console's location adjust would; past it, the 16:9 picture stays and the window shows
+ * more around it (or, contained, only the menu's backdrops).
  */
 export function measureScreen(canvas: HTMLCanvasElement): Screen {
   const width = Math.round(canvas.clientWidth * devicePixelRatio);
@@ -88,7 +88,8 @@ export function wings(screen: Screen): Rect[] {
 
 /** A constant the console keeps per TV mode, followed across the projections between them. */
 export function perMode(screen: Display, standard: number, wide: number): number {
-  return standard + ((wide - standard) * (screen.projection - PROJECTION_STANDARD)) / (PROJECTION_WIDE - PROJECTION_STANDARD);
+  return standard
+    + ((wide - standard) * (screen.projection - PROJECTION_STANDARD)) / (PROJECTION_WIDE - PROJECTION_STANDARD);
 }
 
 /** How far the footer pod on x's side (flagged at x −293 or 294) moves out on a window wider than the projection. */
@@ -97,7 +98,12 @@ export function podShift(screen: Display, x: number): number {
 }
 
 /** Converts a mouse position (CSS pixels) to logical screen space: origin at the center, y up. */
-export function toScreen(screen: Screen, canvas: HTMLCanvasElement, clientX: number, clientY: number): [number, number] {
+export function toScreen(
+  screen: Screen,
+  canvas: HTMLCanvasElement,
+  clientX: number,
+  clientY: number,
+): [number, number] {
   const rect = canvas.getBoundingClientRect();
   const [vx, vy, vw, vh] = screen.viewport;
   const px = (clientX - rect.left) * devicePixelRatio - vx;

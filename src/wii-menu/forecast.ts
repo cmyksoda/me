@@ -53,7 +53,13 @@ function latestForecast(now = Date.now()): { fahrenheit: number; stamp: string }
 
 /** The date and hour on Redmond's clock, daylight saving and all. */
 function redmondClock(time: number): { month: number; day: number; hour: number } {
-  const format = new Intl.DateTimeFormat('en-US', { timeZone: TIME_ZONE, month: 'numeric', day: 'numeric', hour: 'numeric', hourCycle: 'h23' });
+  const format = new Intl.DateTimeFormat('en-US', {
+    timeZone: TIME_ZONE,
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    hourCycle: 'h23',
+  });
   const parts = Object.fromEntries(format.formatToParts(time).map((part) => [part.type, Number(part.value)]));
   return { month: parts.month, day: parts.day, hour: parts.hour };
 }

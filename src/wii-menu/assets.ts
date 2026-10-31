@@ -6,7 +6,10 @@ import type { Renderer } from './lyt/renderer';
 import { parseU8 } from './lyt/u8';
 
 /** The page's folder, so assets resolve the same at /wii-forwarders and /wii-forwarders/. */
-export const root = new URL(location.pathname.endsWith('/') || location.pathname.endsWith('.html') ? '.' : `${location.pathname}/`, location.href);
+export const root = new URL(
+  location.pathname.endsWith('/') || location.pathname.endsWith('.html') ? '.' : `${location.pathname}/`,
+  location.href,
+);
 
 const MENU_ARCHIVES = ['chanSel', 'chanTtl', 'cmnBtn', 'cursor', 'balloon', 'board', 'letter', 'dlgWdw'] as const;
 // Read only when the SD Card Menu opens, in the black between the menus, as the console reads them.

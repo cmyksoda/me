@@ -68,7 +68,13 @@ const ratio = (pan: number) => Math.sqrt((1 - clamp(pan)) / 2);
  * Pans a baked two-channel cue as the console pans its notes. Mono-wave notes were baked centered,
  * so each side just scales; stereo-wave notes keep a voice per side, which the pan mixes across.
  */
-function panner(context: AudioContext, cue: Cue, input: AudioNode, output: AudioNode, pan: number): (pan: number) => void {
+function panner(
+  context: AudioContext,
+  cue: Cue,
+  input: AudioNode,
+  output: AudioNode,
+  pan: number,
+): (pan: number) => void {
   const split = context.createChannelSplitter(2);
   const merge = context.createChannelMerger(2);
   const gains = [0, 1].map((from) => [0, 1].map((to) => {
@@ -352,7 +358,8 @@ export class Sound {
       const loop = info.loop ? { start: info.loopStart ?? 0, end: info.loopEnd ?? buffer.duration } : undefined;
       // A sound that arrives after its banner began joins in where the picture is, so the two stay together.
       let offset = Math.max(0, now - startAt);
-      if (loop && offset > loop.end && loop.end > loop.start) offset = loop.start + ((offset - loop.start) % (loop.end - loop.start));
+      if (loop && offset > loop.end && loop.end > loop.start)
+        offset = loop.start + ((offset - loop.start) % (loop.end - loop.start));
       if (!loop && offset >= buffer.duration) return;
       this.banner = this.start(buffer, info.gain ?? 1, { loop, delay: Math.max(0, startAt - now), offset });
     });

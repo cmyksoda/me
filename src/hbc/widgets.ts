@@ -26,7 +26,8 @@ export type Cursor = 'standard' | 'drag';
 
 export type Item =
   | { kind: 'image'; image: HTMLImageElement; x: number; y: number; alpha: number }
-  | { kind: 'sliced'; image: HTMLImageElement; x: number; y: number; width: number; height: number; insets: Insets; alpha: number }
+  | { kind: 'sliced'; image: HTMLImageElement; x: number; y: number;
+      width: number; height: number; insets: Insets; alpha: number }
   | { kind: 'text'; run: TextRun }
   | { kind: 'fill'; width: number; height: number; color: number }
   | { kind: 'clip'; x: number; y: number; width: number; height: number }
@@ -77,7 +78,13 @@ export function setFlag(w: Widget, flag: number, on: boolean) {
 }
 
 // Normal when idle, faded when disabled, the focus image when focused.
-function focusLayers(normal: HTMLImageElement, focused: HTMLImageElement, width = normal.width, height = normal.height, insets: Insets = [0, 0, 0, 0]) {
+function focusLayers(
+  normal: HTMLImageElement,
+  focused: HTMLImageElement,
+  width = normal.width,
+  height = normal.height,
+  insets: Insets = [0, 0, 0, 0],
+) {
   const at = (image: HTMLImageElement, alpha?: number) => plate(image, width, height, insets, alpha);
   return [
     layer(FOCUSED | AND | ENABLED, FOCUSED, at(normal)),
@@ -87,7 +94,14 @@ function focusLayers(normal: HTMLImageElement, focused: HTMLImageElement, width 
 }
 
 // `reach` widens what answers to the pointer past the picture, for buttons a finger has to hit.
-export function image(x: number, y: number, normal: HTMLImageElement, disabled?: HTMLImageElement, hover?: HTMLImageElement, reach = 0) {
+export function image(
+  x: number,
+  y: number,
+  normal: HTMLImageElement,
+  disabled?: HTMLImageElement,
+  hover?: HTMLImageElement,
+  reach = 0,
+) {
   const at = (image: HTMLImageElement, alpha = 1) => picture(image, reach, reach, alpha);
   const layers = [hover ? layer(ENABLED | AND | CURSOR, CURSOR, at(normal)) : layer(ENABLED, 0, at(normal))];
   if (disabled) layers.push(layer(ENABLED, ENABLED, at(disabled)));
@@ -96,10 +110,20 @@ export function image(x: number, y: number, normal: HTMLImageElement, disabled?:
 }
 
 export function panel(width: number, height: number) {
-  return widget(0, 0, width, height, false, [layer(ENABLED, 0, plate(theme.dialog_background, width, height, DIALOG_INSETS))]);
+  return widget(0, 0, width, height, false, [
+    layer(ENABLED, 0, plate(theme.dialog_background, width, height, DIALOG_INSETS)),
+  ]);
 }
 
-export function label(x: number, y: number, caption: string, width: number, xalign: XAlign, yalign: YAlign, font: FontId) {
+export function label(
+  x: number,
+  y: number,
+  caption: string,
+  width: number,
+  xalign: XAlign,
+  yalign: YAlign,
+  font: FontId,
+) {
   const run = plotString(font, caption, 0, 0, width, xalign, yalign, charCount(font, caption, width));
   return widget(x, y, 0, 0, false, [layer(0, 0, text(run))]);
 }
@@ -111,7 +135,10 @@ export function button(x: number, y: number, caption: string, plateWidth = theme
   const width = plateWidth - 2 * inset;
   const count = charCount(font, caption, width);
   const run = plotString(font, caption, inset, normal.height / 2, width, 'center', 'emCenter', count);
-  const layers = [...focusLayers(normal, theme.button_tiny_focus, plateWidth, normal.height, BUTTON_INSETS), layer(0, 0, text(run))];
+  const layers = [
+    ...focusLayers(normal, theme.button_tiny_focus, plateWidth, normal.height, BUTTON_INSETS),
+    layer(0, 0, text(run)),
+  ];
   return widget(x, y, plateWidth, normal.height, true, layers);
 }
 
@@ -131,12 +158,17 @@ export function appEntry(x: number, y: number, app: App, plateWidth = theme.apps
   // The text stays in the middle of the plate, so a single line sits half a line lower than two would.
   const shift = Math.trunc((grown - (lines.length - 1) * spacing) / 2);
   const items = [
-    text(plotString('appname', app.name, 156, 8 + shift, width, 'left', 'ascender', charCount('appname', app.name, width))),
+    text(plotString('appname', app.name, 156, 8 + shift, width, 'left', 'ascender',
+      charCount('appname', app.name, width))),
     ...lines.map((line, i) =>
-      text(plotString('appdesc', line, 156, 54 + shift + i * spacing, width, 'left', 'descender', charCount('appdesc', line, width)))),
+      text(plotString('appdesc', line, 156, 54 + shift + i * spacing, width, 'left', 'descender',
+        charCount('appdesc', line, width)))),
   ];
   if (app.icon) items.push(picture(app.icon, 8, 8 + Math.trunc(grown / 2)));
-  const layers = [...focusLayers(background, theme.apps_list_hover, plateWidth, height, LIST_INSETS), layer(0, 0, ...items)];
+  const layers = [
+    ...focusLayers(background, theme.apps_list_hover, plateWidth, height, LIST_INSETS),
+    layer(0, 0, ...items),
+  ];
   return widget(x, y, plateWidth, height, true, layers);
 }
 
@@ -161,7 +193,8 @@ export function memo(x: number, y: number, width: number, height: number, conten
   const items: Item[] = [{ kind: 'clip', x, y, width, height }];
   let lineY = 0;
   for (const line of lines) {
-    if (line) items.push(text(plotString('memo', line, 0, lineY, width, align, 'ascender', charCount('memo', line, 0))));
+    if (line)
+      items.push(text(plotString('memo', line, 0, lineY, width, align, 'ascender', charCount('memo', line, 0))));
     lineY += spacing;
   }
   items.push({ kind: 'unclip' });

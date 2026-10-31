@@ -39,7 +39,12 @@ export interface Camera {
 
 export type Rect = [left: number, top: number, right: number, bottom: number];
 
-const intersect = (a: Rect, b: Rect): Rect => [Math.max(a[0], b[0]), Math.min(a[1], b[1]), Math.min(a[2], b[2]), Math.max(a[3], b[3])];
+const intersect = (a: Rect, b: Rect): Rect => [
+  Math.max(a[0], b[0]),
+  Math.min(a[1], b[1]),
+  Math.min(a[2], b[2]),
+  Math.max(a[3], b[3]),
+];
 
 export interface LoadedFont {
   metrics: FontMetrics;
@@ -193,7 +198,8 @@ export class Renderer {
   settle(): void {
     while (this.unchecked.length && !this.unchecked[0].unchecked) this.unchecked.shift();
     const next = this.unchecked[0];
-    if (!next || (this.parallel && !this.gl.getProgramParameter(next.program, this.parallel.COMPLETION_STATUS_KHR))) return;
+    if (!next || (this.parallel && !this.gl.getProgramParameter(next.program, this.parallel.COMPLETION_STATUS_KHR)))
+      return;
     this.check(next);
   }
 
@@ -325,7 +331,12 @@ export class Renderer {
     const [left, top, right, bottom] = rect;
     const out = this.vertices;
     const [u0, u1] = [(1 - share) / 2, (1 + share) / 2];
-    [[left, top, u0, 1], [right, top, u1, 1], [left, bottom, u0, 0], [right, bottom, u1, 0]].forEach(([x, y, u, v], i) => {
+    [
+      [left, top, u0, 1],
+      [right, top, u1, 1],
+      [left, bottom, u0, 0],
+      [right, bottom, u1, 0],
+    ].forEach(([x, y, u, v], i) => {
       const o = i * FLOATS_PER_VERTEX;
       out[o] = this.cameraX(x);
       out[o + 1] = this.cameraY(y);
@@ -676,7 +687,13 @@ export class Renderer {
     const texture = gl.createTexture()!;
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, image.width, image.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, image.rgba);
-    return { texture, width: image.width, height: image.height, minFilter: image.minFilter, magFilter: image.magFilter };
+    return {
+      texture,
+      width: image.width,
+      height: image.height,
+      minFilter: image.minFilter,
+      magFilter: image.magFilter,
+    };
   }
 
   private sampler(wrapS: number, wrapT: number, minFilter: number, magFilter: number): WebGLSampler {

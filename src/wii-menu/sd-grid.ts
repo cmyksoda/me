@@ -87,7 +87,9 @@ export class SdGrid {
     for (const channel of assets.sdChannels) {
       const instance = channel.icon.instance('icon');
       const animation = channel.icon.animation('icon') ?? channel.icon.animation('icon_Whole');
-      const clip = animation ? new AnimationPlayer(animation, instance, { loop: animation.loop, wholeFrames: true }).play() : null;
+      const clip = animation
+        ? new AnimationPlayer(animation, instance, { loop: animation.loop, wholeFrames: true }).play()
+        : null;
       if (clip) clip.frame = clip.from + Math.floor(Math.random() * (clip.to - clip.from));
       for (const language of OTHER_LANGUAGES) {
         for (const pane of channel.icon.layout('icon').groups.get(language) ?? []) {
@@ -346,7 +348,12 @@ export class SdGrid {
     const before = this.page > 0;
     const after = this.page < SD_PAGES - 1;
     // A window wider than 16:9 can see two pages over, so those edges need a page of their own.
-    for (const [index, shown] of [[0, this.page > 1], [1, before], [3, after], [4, this.page < SD_PAGES - 2]] as const) {
+    for (const [index, shown] of [
+      [0, this.page > 1],
+      [1, before],
+      [3, after],
+      [4, this.page < SD_PAGES - 2],
+    ] as const) {
       this.top.pane(`Edge${index}`).visible = shown;
     }
     const view = identity();
@@ -389,7 +396,9 @@ export class SdGrid {
     for (const [donor, targets] of WIDE_DONORS) {
       for (const target of targets) {
         const state = material(target);
-        state.textures[0] = wide ? material(donor).textures[0] : this.top.layout.textures[state.source.texMaps[0].texture];
+        state.textures[0] = wide
+          ? material(donor).textures[0]
+          : this.top.layout.textures[state.source.texMaps[0].texture];
       }
     }
   }

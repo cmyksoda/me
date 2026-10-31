@@ -241,7 +241,13 @@ function splitLink(w: Widget, url: string): Link | null {
     const run: TextRun = { css: item.run.css, y: item.run.y, glyphs, color: LINK };
     items.splice(i + 1, 0, { kind: 'text', run } satisfies Item);
     const top = run.y - ascender('memo');
-    return { run, left: glyphs[0].x, right: glyphs[0].x + textWidth('memo', url), top, bottom: top + lineSpacing('memo') };
+    return {
+      run,
+      left: glyphs[0].x,
+      right: glyphs[0].x + textWidth('memo', url),
+      top,
+      bottom: top + lineSpacing('memo'),
+    };
   }
   return null;
 }

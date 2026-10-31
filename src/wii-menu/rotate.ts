@@ -9,7 +9,9 @@ import { parseU8 } from './lyt/u8';
 const LAST_LINE_WAIT = 60;
 
 async function decode(png: Uint8Array): Promise<Texture> {
-  const bitmap = await createImageBitmap(new Blob([png.slice()], { type: 'image/png' }), { colorSpaceConversion: 'none' });
+  const bitmap = await createImageBitmap(new Blob([png.slice()], { type: 'image/png' }), {
+    colorSpaceConversion: 'none',
+  });
   const canvas = document.createElement('canvas');
   canvas.width = bitmap.width;
   canvas.height = bitmap.height;
@@ -61,7 +63,11 @@ export class RotateScreen {
       if (/^(Has|Push)_/.test(name)) pane.visible = name === 'Has_US_ENG';
     }
     const bind = (clip: string, pane: string, loop = false) => (
-      new AnimationPlayer(archive.animation(`it_Has_a_${clip}`)!, this.instance, { panes: [pane], recursive: true, loop })
+      new AnimationPlayer(archive.animation(`it_Has_a_${clip}`)!, this.instance, {
+        panes: [pane],
+        recursive: true,
+        loop,
+      })
     );
     this.seenIn = bind('SeenIn', 'N_All');
     this.pulse = bind('Push', 'N_Push', true);

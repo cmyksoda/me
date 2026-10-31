@@ -70,7 +70,10 @@ export class Dialog {
         archive.animation(`${name}_${file}`)!, instance, { panes: instance.layout.groups.get(group) },
       );
       // Bind order decides which clip wins a shared pane; update steps them in this order.
-      const clips: Record<string, AnimationPlayer> = { in: clip('DialogIn', 'G_InOut'), out: clip('DialogOut', 'G_InOut') };
+      const clips: Record<string, AnimationPlayer> = {
+        in: clip('DialogIn', 'G_InOut'),
+        out: clip('DialogOut', 'G_InOut'),
+      };
       const panes: Partial<Record<DialogResult, PaneNode>> = {};
       for (const button of buttons) {
         const side = button === 'right' ? 'B' : 'A';
@@ -219,7 +222,8 @@ export class Dialog {
     if (this.state === 'prepare' && !clips.rightSelect.playing && !clips.leftSelect?.playing) {
       // The select flash ends small, so a button still under the pointer grows back.
       if (this.result === 'right' && this.hovered.has('right')) clips.rightOn.play();
-      if (this.result === 'left' && this.hovered.has('left') && this.pages[this.page].left !== null) clips.leftOn.play();
+      if (this.result === 'left' && this.hovered.has('left') && this.pages[this.page].left !== null)
+        clips.leftOn.play();
       this.state = 'fade';
     } else if (this.state === 'fade') {
       this.turnPage(frames);

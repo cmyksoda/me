@@ -2,9 +2,35 @@
 
 import { drawBubbles, updateBubbles } from './bubbles';
 import { A, pointer, scanPad, type Pad } from './controls';
-import { beginFrame, beginView, clip, drawBackground, drawEdges, drawImage, drawSliced, drawText, drawTurned, endFrame, fill, screen, unclip } from './gfx';
+import {
+  beginFrame,
+  beginView,
+  clip,
+  drawBackground,
+  drawEdges,
+  drawImage,
+  drawSliced,
+  drawText,
+  drawTurned,
+  endFrame,
+  fill,
+  screen,
+  unclip,
+} from './gfx';
 import { theme } from './theme';
-import { CURSOR, ENABLED, FOCUSABLE, FOCUSED, setFlag, shows, VISIBLE, fill as fillWidget, type Cursor, type Item, type Widget } from './widgets';
+import {
+  CURSOR,
+  ENABLED,
+  FOCUSABLE,
+  FOCUSED,
+  setFlag,
+  shows,
+  VISIBLE,
+  fill as fillWidget,
+  type Cursor,
+  type Item,
+  type Widget,
+} from './widgets';
 
 export interface View {
   x: number;
@@ -170,7 +196,8 @@ export function* viewFade(v: View, color: number, steps: number, change: number)
 function drawItem(item: Item, v: View, x: number, y: number) {
   switch (item.kind) {
     case 'image': return drawImage(item.image, x + item.x, y + item.y, item.alpha);
-    case 'sliced': return drawSliced(item.image, x + item.x, y + item.y, item.width, item.height, item.insets, item.alpha);
+    case 'sliced':
+      return drawSliced(item.image, x + item.x, y + item.y, item.width, item.height, item.insets, item.alpha);
     case 'text': return drawText(item.run, x, y);
     case 'fill': return fill(x, y, item.width, item.height, item.color);
     case 'clip': return clip(v.x + item.x, v.y + item.y, item.width, item.height);
@@ -203,12 +230,19 @@ export function render() {
   drawBackground(backdrop);
   drawBubbles();
   // The wordmark sits at the bottom left, or centered at the bottom when the view is tall.
-  if (screen.portrait) drawImage(theme.logo, Math.round(screen.width / 2 - LOGO_CENTER), screen.height - theme.logo.height);
+  if (screen.portrait)
+    drawImage(theme.logo, Math.round(screen.width / 2 - LOGO_CENTER), screen.height - theme.logo.height);
   else drawImage(theme.logo, 0, 416);
   drawView(view, alpha);
   if (throbber !== null) {
     const { throbber: image } = theme;
-    drawTurned(image, Math.trunc((screen.width - image.width) / 2), Math.trunc((screen.height - image.height) / 2), 1, throbber);
+    drawTurned(
+      image,
+      Math.trunc((screen.width - image.width) / 2),
+      Math.trunc((screen.height - image.height) / 2),
+      1,
+      throbber,
+    );
   }
   // A finger is its own pointer.
   if (cursor && !pointer.touch) {

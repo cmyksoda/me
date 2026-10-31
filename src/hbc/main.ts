@@ -1,13 +1,45 @@
 // The Homebrew Channel 1.1.3, its main loop ported from main.c with one generator step per frame.
 
 import { apps, loadApps, type App } from './apps';
-import { browser, browserGenView, browserInit, browserRelayout, browserSelection, browserSetFocus, browserSwitchMode, INFO, VIEW_MODE } from './browser';
+import {
+  browser,
+  browserGenView,
+  browserInit,
+  browserRelayout,
+  browserSelection,
+  browserSetFocus,
+  browserSwitchMode,
+  INFO,
+  VIEW_MODE,
+} from './browser';
 import { A, B, DOWN, DPAD, LEFT, listen, MINUS, PLUS, RIGHT, TWO, UP } from './controls';
-import { aboutStep, DIALOG_MASK_COLOR, dialogAbout, dialogApp, dialogFade, dialogX, restingY, SOURCE_URL } from './dialogs';
+import {
+  aboutStep,
+  DIALOG_MASK_COLOR,
+  dialogAbout,
+  dialogApp,
+  dialogFade,
+  dialogX,
+  restingY,
+  SOURCE_URL,
+} from './dialogs';
 import { lineSpacing } from './font';
 import { screen, setLayout, windowLayout } from './gfx';
 import { loadTheme } from './theme';
-import { enableCursor, focusNext, focusPrevious, grabButtonAt, plot, pointing, render, showThrobber, tickleThrobber, viewFade, widgetAtPointer, type View } from './view';
+import {
+  enableCursor,
+  focusNext,
+  focusPrevious,
+  grabButtonAt,
+  plot,
+  pointing,
+  render,
+  showThrobber,
+  tickleThrobber,
+  viewFade,
+  widgetAtPointer,
+  type View,
+} from './view';
 import { scrollMemoDeco } from './widgets';
 
 const FRAME = 1000 / 60;

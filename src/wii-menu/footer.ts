@@ -9,13 +9,20 @@ import type { Sound } from './sound';
 import { speakerButton } from './speaker';
 import { drawWings } from './wide';
 
-export type FooterTarget = 'options' | 'board' | 'left' | 'right' | 'sd' | 'calendar' | 'create' | 'menu' | 'back' | 'trash';
+export type FooterTarget =
+  'options' | 'board' | 'left' | 'right' | 'sd' | 'calendar' | 'create' | 'menu' | 'back' | 'trash';
 
 type Mode = 'grid' | 'board' | 'reader';
 
 // Footer buttons with a text balloon, and the bounding pane that is each one's hit area.
 const BUTTONS: Partial<Record<FooterTarget, string>> = {
-  options: 'B_Set', board: 'B_Bbs', calendar: 'B_Cal', create: 'B_Add', menu: 'B_Ch', back: 'B_CalExit', trash: 'B_Dust',
+  options: 'B_Set',
+  board: 'B_Bbs',
+  calendar: 'B_Cal',
+  create: 'B_Add',
+  menu: 'B_Ch',
+  back: 'B_CalExit',
+  trash: 'B_Dust',
 };
 const TARGETS: Record<Mode, FooterTarget[]> = {
   grid: ['sd', 'options', 'board', 'left', 'right'],
@@ -122,7 +129,13 @@ export class Footer {
     renderer.addTexture(this.layout, SPEAKER.off, speakerButton(face, art, false));
     this.setSound(false);
 
-    const labels: [FooterTarget, string][] = [['board', '15'], ['sd', '161'], ['calendar', '17'], ['create', '18'], ['menu', '16']];
+    const labels: [FooterTarget, string][] = [
+      ['board', '15'],
+      ['sd', '161'],
+      ['calendar', '17'],
+      ['create', '18'],
+      ['menu', '16'],
+    ];
     // The Wii button turns the page's sound on and off instead of opening Wii Options.
     this.balloons = { options: new Balloon(balloon, sound, BALLOON_DELAY, true) };
     this.balloons.options!.setText(renderer, 'Toggle Sound On/Off');
@@ -177,7 +190,8 @@ export class Footer {
 
   setSound(on: boolean): void {
     for (const pane of ['BtnL_a1_Set', 'BtnL_a0_Set_00', 'BtnL_a0_Set', 'BtnL_a0_Set_Ac']) {
-      this.layout.materials[this.layout.pane(pane).source.picture!.material].textures[0] = on ? SPEAKER.on : SPEAKER.off;
+      this.layout.materials[this.layout.pane(pane).source.picture!.material].textures[0] =
+        on ? SPEAKER.on : SPEAKER.off;
     }
   }
 
@@ -321,7 +335,9 @@ export class Footer {
     const camera = this.renderer.camera;
     this.renderer.camera = null;
     this.layout.update(identity(), screen);
-    this.renderer.within(screen.contained, () => this.renderer.drawLayout(this.layout, (pane) => isUnder(pane, ['N_ArwL', 'N_ArwR'])));
+    this.renderer.within(screen.contained, () =>
+      this.renderer.drawLayout(this.layout, (pane) => isUnder(pane, ['N_ArwL', 'N_ArwR'])),
+    );
     this.renderer.camera = camera;
     const margin = perMode(screen, 30, 120);
     for (const [target, pane] of Object.entries(BUTTONS) as [FooterTarget, string][]) {

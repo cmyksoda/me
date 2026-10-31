@@ -70,13 +70,17 @@ export class Scenes {
     if (next === 'sd') {
       const assets = this.assets!;
       this.sdFiles = 'loading';
-      loadSdAssets(assets).then(() => {
-        this.sdFiles = 'ready';
-        const { sdChanTtl } = assets.menu;
-        this.renderer.prepare(sdChanTtl.layout('mn_SdcardMenuBanner_bc'), sdChanTtl.files);
-        for (const channel of assets.sdChannels) this.renderer.prepare(channel.banner.layout('banner'), channel.banner.files);
-        this.sound.preloadBanners(assets.sdChannels.map((channel) => `sd-channels/${channel.id}`));
-      }, () => (this.sdFiles = 'failed'));
+      loadSdAssets(assets).then(
+        () => {
+          this.sdFiles = 'ready';
+          const { sdChanTtl } = assets.menu;
+          this.renderer.prepare(sdChanTtl.layout('mn_SdcardMenuBanner_bc'), sdChanTtl.files);
+          for (const channel of assets.sdChannels)
+            this.renderer.prepare(channel.banner.layout('banner'), channel.banner.files);
+          this.sound.preloadBanners(assets.sdChannels.map((channel) => `sd-channels/${channel.id}`));
+        },
+        () => (this.sdFiles = 'failed'),
+      );
     }
   }
 
@@ -108,7 +112,10 @@ export class Scenes {
     if (this.rotate || this.next === 'rotate') return;
     if (this.rotateFiles === 'idle') {
       this.rotateFiles = 'loading';
-      loadRotateFiles(this.renderer).then((archive) => (this.rotateArchive = archive), () => (this.rotateFiles = 'failed'));
+      loadRotateFiles(this.renderer).then(
+        (archive) => (this.rotateArchive = archive),
+        () => (this.rotateFiles = 'failed'),
+      );
     }
     this.sound.stopMusic();
     this.sound.stopBanner();

@@ -112,7 +112,8 @@ export function sampleHermite(keys: Key[], frame: number): number {
   const b = a * t2;
   const c = t1 * b;
   const d = c * t2;
-  return k0.value * (2 * d - 3 * b + 1) + k1.value * (-2 * d + 3 * b) + k0.slope * (c - 2 * a + t1) + k1.slope * (c - a);
+  return k0.value * (2 * d - 3 * b + 1) + k1.value * (-2 * d + 3 * b)
+    + k0.slope * (c - 2 * a + t1) + k1.slope * (c - a);
 }
 
 export function sampleTrack(track: Track, frame: number): number {
