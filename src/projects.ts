@@ -55,6 +55,20 @@ export const projects: Project[] = [
     url: 'https://github.com/cmyksoda/Tanka',
   },
   {
+    title: 'Animal Crossing Desktop Clock Plasmoid',
+    description: 'I brought the [original Animal Crossing desktop clock](https://archive.org/details/AnimalCrossingDesktopClock), rediscovered by [@MrTalida](https://x.com/MrTalida), to Linux as a KDE Plasma widget. Includes a replica of its network test page, plus 24-hour time, the option to turn off the blinking colon, and other new features and settings.',
+    color: 'lilac', art: 'disc',
+    image: 'projects/animal-crossing-clock.png', imageAlt: 'Animal Crossing desktop clock with circular date and time digits', imageScale: 1.17, imageOffset: [-6, -2],
+    url: 'https://github.com/cmyksoda/AC-Desktop-Clock-Plasmoid',
+  },
+  {
+    title: 'RiiTube at Home',
+    description: 'Inspired by the official RiiTube service, this is a LAN version for WiiMC-SS. Search YouTube, prepare a video on your server, and watch a complete, seekable copy on the Wii. Videos are saved on your home server/computer and are able to be rewatched or deleted at any time.',
+    color: 'cyan', art: 'window',
+    image: 'projects/riitube-at-home.svg', imageDark: 'projects/riitube-at-home-dark.svg', imageAlt: 'RiiTube logo', imageWidth: 180,
+    url: 'https://github.com/cmyksoda/RiiTube-at-Home',
+  },
+  {
     title: 'Sump.Stream',
     description: '24/7 synchronous broadcast of (almost) every sump on YouTube. Why? Sump.\nVideos collected through extensive sump-related YouTube searches are shuffled daily using a shared seed. The current time determines where everyone tunes into the broadcast. The site is fully static, with no broadcast server to run.',
     color: 'cyan', art: 'orbit',
@@ -74,19 +88,5 @@ export const projects: Project[] = [
     color: 'pink', art: 'sparkles',
     image: 'projects/coaster-ranker.png', imageAlt: 'Coaster Ranker C/R logo',
     url: 'https://coasters.cmyksoda.cc/',
-  },
-  {
-    title: 'Animal Crossing Desktop Clock Plasmoid',
-    description: 'I brought the [original Animal Crossing desktop clock](https://archive.org/details/AnimalCrossingDesktopClock), rediscovered by [@MrTalida](https://x.com/MrTalida), to Linux as a KDE Plasma widget. Includes a replica of its network test page, plus 24-hour time, the option to turn off the blinking colon, and other new features and settings.',
-    color: 'lilac', art: 'disc',
-    image: 'projects/animal-crossing-clock.png', imageAlt: 'Animal Crossing desktop clock with circular date and time digits', imageScale: 1.17, imageOffset: [-6, -2],
-    url: 'https://github.com/cmyksoda/AC-Desktop-Clock-Plasmoid',
-  },
-  {
-    title: 'RiiTube at Home',
-    description: 'Inspired by the official RiiTube service, this is a LAN version for WiiMC-SS. Search YouTube, prepare a video on your server, and watch a complete, seekable copy on the Wii. Videos are saved on your home server/computer and are able to be rewatched or deleted at any time.',
-    color: 'cyan', art: 'window',
-    image: 'projects/riitube-at-home.svg', imageDark: 'projects/riitube-at-home-dark.svg', imageAlt: 'RiiTube logo', imageWidth: 180,
-    url: 'https://github.com/cmyksoda/RiiTube-at-Home',
   },
 ];
