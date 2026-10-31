@@ -57,7 +57,7 @@ export class Footer {
   private mailCount = 0;
   private newMailSince: number | null = null;
 
-  constructor(private readonly assets: Assets, private readonly renderer: Renderer, private readonly sound: Sound) {
+  constructor(assets: Assets, private readonly renderer: Renderer, private readonly sound: Sound) {
     const { cmnBtn, balloon } = assets.menu;
     this.layout = cmnBtn.instance('my_IplTop_e');
     this.sd = cmnBtn.instance('mn_Sdcard_Btn');

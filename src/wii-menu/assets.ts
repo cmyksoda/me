@@ -55,6 +55,8 @@ async function fetchBytes(path: string): Promise<Uint8Array> {
   return new Uint8Array(await response.arrayBuffer());
 }
 
+export const OTHER_LANGUAGES = ['JPN', 'GER', 'FRA', 'SPA', 'ITA', 'NED', 'CHN', 'KOR'];
+
 /** What every channel carries: its title id, its name and the icon and banner from its WAD. */
 export interface ChannelBase {
   id: string;

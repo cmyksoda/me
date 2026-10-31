@@ -1,4 +1,4 @@
-import type { Archive, Assets, Channel, ChannelBase } from './assets';
+import { OTHER_LANGUAGES, type Archive, type Assets, type Channel, type ChannelBase } from './assets';
 import { SCREEN_HEIGHT, type Screen } from './display';
 import { forecastBanner } from './forecast';
 import { contains } from './lyt/hit';
@@ -9,7 +9,6 @@ import { useWideTextures } from './wide';
 
 export type PreviewButton = 'back' | 'download';
 
-const OTHER_LANGUAGES = ['JPN', 'GER', 'FRA', 'SPA', 'ITA', 'NED', 'CHN', 'KOR'];
 const CHANGE_FRAMES = 10;
 // A banner waits for its sound so the two start together, but never longer than a second.
 const SOUND_WAIT_FRAMES = 60;
@@ -49,7 +48,7 @@ export class Preview<C extends ChannelBase = Channel> {
   private wide = false;
 
   constructor(
-    private readonly assets: Assets,
+    assets: Assets,
     private readonly renderer: Renderer,
     private readonly sound: Sound,
     channel: C,

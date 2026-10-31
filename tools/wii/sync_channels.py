@@ -16,7 +16,6 @@ usage: python3 tools/wii/sync_channels.py
 """
 
 import hashlib
-import io
 import json
 import struct
 import subprocess

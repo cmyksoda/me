@@ -23,10 +23,6 @@ export function multiply(a: Mtx34, b: Mtx34, out: Mtx34 = new Float32Array(12)):
   return out;
 }
 
-export function transformPoint(m: Mtx34, x: number, y: number): [number, number] {
-  return [m[0] * x + m[1] * y + m[3], m[4] * x + m[5] * y + m[7]];
-}
-
 /** Pane::CalculateMtx: T * Rz * Ry * Rx * S. */
 function paneMatrix(pane: PaneNode, x: number, scaleX: number, out: Mtx34): void {
   const [rx, ry, rz] = pane.rotate;

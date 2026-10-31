@@ -1,4 +1,4 @@
-import type { Assets, SdChannel } from './assets';
+import { OTHER_LANGUAGES, type Assets, type SdChannel } from './assets';
 import { Balloon } from './balloon';
 import { CardPanel } from './card-panel';
 import { perMode, type Screen } from './display';
@@ -20,7 +20,6 @@ const CHANNEL_BALLOON_DELAY = 20;
 // A card with channels keeps its loading panel up for at least a second (busClock / 4).
 const CARD_GATE = 60;
 const PAGE_KEY = 'wii-forwarders.sd-page';
-const OTHER_LANGUAGES = ['JPN', 'GER', 'FRA', 'SPA', 'ITA', 'NED', 'CHN', 'KOR'];
 // In 16:9 the tile frames and the page edges take their wide textures from these off-screen panes.
 const WIDE_DONORS: [string, string[]][] = [
   ['ChangeTex16x9', ['Picture_00', 'Picture_01', 'Picture_02', 'Picture_03', 'Picture_04']],

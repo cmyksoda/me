@@ -164,7 +164,6 @@ export class Renderer {
   private clip: Rect | null = null;
   private bounds: Rect | null = null;
   private target: { framebuffer: WebGLFramebuffer; texture: WebGLTexture; width: number; height: number } | null = null;
-  private outerViewport: [number, number, number, number] | null = null;
   /** The zoom camera (setOrthoTransAndScale): screen = (world − center) × scale; null is the default camera. */
   camera: Camera | null = null;
 

@@ -188,8 +188,3 @@ export function parseTPL(bytes: Uint8Array): Texture[] {
   }
   return textures;
 }
-
-/** Decodes a raw GX image (as in font glyph sheets) without a TPL header. */
-export function decodeGX(bytes: Uint8Array, width: number, height: number, format: number): Uint8Array {
-  return decodeImage(new Reader(bytes), 0, width, height, format, null);
-}

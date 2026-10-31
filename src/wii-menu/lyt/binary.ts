@@ -10,10 +10,6 @@ export class Reader {
     return this.view.getUint8(offset);
   }
 
-  s8(offset: number): number {
-    return this.view.getInt8(offset);
-  }
-
   u16(offset: number): number {
     return this.view.getUint16(offset);
   }

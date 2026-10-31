@@ -1,4 +1,4 @@
-import type { Assets, Channel } from './assets';
+import { OTHER_LANGUAGES, type Assets, type Channel } from './assets';
 import { Balloon } from './balloon';
 import { Carry } from './carry';
 import { Clock } from './clock';
@@ -22,7 +22,6 @@ const WIDE_MASKS: [string, string[]][] = [
 const CHANNEL_BALLOON_DELAY = 20;
 const ORDER_KEY = 'wii-forwarders.order';
 const PAGE_KEY = 'wii-forwarders.page';
-const OTHER_LANGUAGES = ['JPN', 'GER', 'FRA', 'SPA', 'ITA', 'NED', 'CHN', 'KOR'];
 
 export interface Pointer {
   x: number;
