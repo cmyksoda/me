@@ -173,8 +173,8 @@ function* channel(): Generator<void, void, void> {
       if (pad.down & UP) scroll += lineHeight;
       if (pad.down & DOWN) scroll -= lineHeight;
 
-      // Held B on a long description grabs it, so the text follows the hand. HBC pulls it along like a
-      // joystick instead, which a mouse makes feel dead. B anywhere else backs out, as does a click outside.
+      // Holding A or B on a long description grabs it, so the text moves with the hand. HBC pulls it along like
+      // a joystick instead, which a mouse makes feel dead. B anywhere else backs out, as does a click outside.
       const dragging = detail.drag && detail.dragWidget === 6;
       const clickedOutside = (pad.down & A) !== 0 && pointing() && widgetAtPointer(detail) === -1;
       const text = detail.widgets[6]!;

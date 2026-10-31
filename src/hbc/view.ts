@@ -143,7 +143,8 @@ export function* plot(v: View, alpha: number): Generator<void, Pad, void> {
 
   if (v.dragButton) {
     if (pad.up & v.dragButton) v.drag = false;
-    if (over !== -1 && pad.down & v.dragButton) {
+    // The second drag button pressed mid-drag keeps the grab instead of starting a new one from here.
+    if (!v.drag && over !== -1 && pad.down & v.dragButton) {
       v.drag = true;
       v.dragWidget = over;
       v.dragStartX = x;

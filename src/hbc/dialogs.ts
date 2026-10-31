@@ -127,7 +127,8 @@ export function dialogApp(app: App, subView: View) {
   const extra = authorLines.length > 1 ? lineSpacing('label') : 0;
   const height = cardHeight(description, extra);
   const { x, y } = cardOrigin(height);
-  const v = newView(extra ? 12 : 11, subView, x, y, B);
+  // HBC drags the description with B only; A drags it too here, as it does the credits.
+  const v = newView(extra ? 12 : 11, subView, x, y, A | B);
   const w = v.widgets;
 
   w[0] = panel(width, height);
