@@ -1,4 +1,5 @@
 import type { Display } from './lyt/layout';
+import type { Rect } from './lyt/renderer';
 
 export const SCREEN_HEIGHT = 456;
 const STANDARD = 4 / 3;
@@ -12,8 +13,15 @@ const PROJECTION_WIDE = 832;
 const WIDE_UNITS_PER_HEIGHT = (PROJECTION_WIDE * 9) / 16;
 // The 16:9 textures misshape their corners less than the 4:3 ones past the projections' geometric mean.
 const WIDE_TEXTURES_FROM = Math.sqrt(PROJECTION_STANDARD * PROJECTION_WIDE);
+// A prototype to compare with filling: with ?wide=fill, past 16:9 the menu stays in the console picture
+// and its backdrops fill the sides.
+const CONTAIN = new URLSearchParams(location.search).get('wide') === 'fill';
 
 export interface Screen extends Display {
+  /** The window's logical width, which backdrops, shades and fades cover. */
+  window: number;
+  /** The console picture, when the menu stays inside it on a wider window (?wide=fill); everything else is backdrop. */
+  contained: Rect | null;
   /** The 16:9 donor textures replace the 4:3 ones. */
   wide: boolean;
   /** The console's own picture, centered in the window: banners, icons and the grid stay inside its stretch. */
@@ -26,7 +34,8 @@ export interface Screen extends Display {
 
 /**
  * Fills any landscape window from 4:3 to 32:9. Up to 16:9 the projection widens with the window, as
- * the console's location adjust would; past it, the 16:9 picture stays and the window shows more around it.
+ * the console's location adjust would; past it, the 16:9 picture stays and the window shows more around it
+ * (or, contained, only the menu's backdrops).
  */
 export function measureScreen(canvas: HTMLCanvasElement): Screen {
   const width = Math.round(canvas.clientWidth * devicePixelRatio);
@@ -54,15 +63,27 @@ export function measureScreen(canvas: HTMLCanvasElement): Screen {
     viewport = [0, 0, width, height];
   }
   const projection = Math.min(logical, PROJECTION_WIDE);
+  const contained = CONTAIN && logical > projection;
+  const half = projection / 2;
   return {
     wide: projection >= WIDE_TEXTURES_FROM,
-    width: logical,
+    width: contained ? projection : logical,
+    window: logical,
+    contained: contained ? [-half, SCREEN_HEIGHT / 2, half, -SCREEN_HEIGHT / 2] : null,
     projection,
     adjustLocation: true,
     tv: { width: projection, projection, adjustLocation: true },
     viewport,
     portrait: height > width,
   };
+}
+
+/** The window either side of the console picture the menu is contained in, as [left, top, right, bottom] rectangles. */
+export function wings(screen: Screen): Rect[] {
+  if (!screen.contained) return [];
+  const [left, top, right, bottom] = screen.contained;
+  const half = screen.window / 2;
+  return [[-half, top, left, bottom], [right, top, half, bottom]];
 }
 
 /** A constant the console keeps per TV mode, followed across the projections between them. */
@@ -81,5 +102,5 @@ export function toScreen(screen: Screen, canvas: HTMLCanvasElement, clientX: num
   const [vx, vy, vw, vh] = screen.viewport;
   const px = (clientX - rect.left) * devicePixelRatio - vx;
   const py = canvas.height - (clientY - rect.top) * devicePixelRatio - vy;
-  return [(px / vw - 0.5) * screen.width, (py / vh - 0.5) * SCREEN_HEIGHT];
+  return [(px / vw - 0.5) * screen.window, (py / vh - 0.5) * SCREEN_HEIGHT];
 }

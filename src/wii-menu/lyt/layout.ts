@@ -84,7 +84,7 @@ export interface MaterialState {
 }
 
 export interface Display {
-  /** Logical screen width: 608 for 4:3, 832 for 16:9, more on a wider window. Height is always 456. */
+  /** Logical width that flagged panes spread to: 608 for 4:3, 832 for 16:9, more on a wider window. Height is always 456. */
   width: number;
   /** The console projection's width (608 to 832), the one layouts stretch their root to. */
   projection: number;

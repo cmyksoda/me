@@ -594,9 +594,11 @@ export class ChannelGrid {
     this.wideGrid.place(screen);
     this.top.update(view, screen.tv);
     const isMask = (pane: PaneNode) => pane.name.startsWith('BaseMask');
-    this.renderer.drawLayout(this.top, (pane) => pane.source.kind !== 'pic1' || isMask(pane));
-    this.renderer.drawLayout(this.top, (pane) => pane.source.kind === 'pic1' && !isMask(pane));
-    this.clock.draw(this.renderer, screen, ['N_Clock0', 'N_Clock1', 'N_Clock2'].map((n) => this.top.pane(n)));
+    this.wideGrid.draw(this.renderer, screen, () => {
+      this.renderer.drawLayout(this.top, (pane) => pane.source.kind !== 'pic1' || isMask(pane));
+      this.renderer.drawLayout(this.top, (pane) => pane.source.kind === 'pic1' && !isMask(pane));
+      this.clock.draw(this.renderer, screen, ['N_Clock0', 'N_Clock1', 'N_Clock2'].map((n) => this.top.pane(n)));
+    });
 
     for (const slot of this.slots) {
       if (slot.state === 'hidden') continue;

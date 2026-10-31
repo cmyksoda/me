@@ -236,11 +236,11 @@ export class SdMenu {
       renderer.fill([-far, sb, far, -far], black);
       renderer.fill([-far, st, sl, sb], black);
       renderer.fill([sr, st, far, sb], black);
-      renderer.drawCapture(this.slotRect, alpha, screen.projection / screen.width);
+      renderer.drawCapture(this.slotRect, alpha, screen.projection / screen.window);
       renderer.camera = null;
     }
     // On a window wider than 16:9 the preview's arrows stay on its 16:9 picture, which hides them past its edges as a TV's would.
-    const onPicture = (this.state === 'preview' || this.state === 'zoomOut') && screen.width > screen.projection;
+    const onPicture = (this.state === 'preview' || this.state === 'zoomOut') && screen.window > screen.projection;
     if (onPicture) renderer.setClip([-screen.projection / 2, SCREEN_HEIGHT / 2, screen.projection / 2, -SCREEN_HEIGHT / 2]);
     this.grid.footer.drawArrows(onPicture ? { ...screen, width: screen.projection } : screen);
     if (onPicture) renderer.setClip(null);

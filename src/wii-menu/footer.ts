@@ -7,6 +7,7 @@ import type { Renderer } from './lyt/renderer';
 import { parseTPL } from './lyt/tpl';
 import type { Sound } from './sound';
 import { speakerButton } from './speaker';
+import { drawWings } from './wide';
 
 export type FooterTarget = 'options' | 'board' | 'left' | 'right' | 'sd' | 'calendar' | 'create' | 'menu' | 'back' | 'trash';
 
@@ -23,6 +24,8 @@ const TARGETS: Record<Mode, FooterTarget[]> = {
 };
 
 const SPEAKER = { on: 'web_speaker_on.tpl', off: 'web_speaker_off.tpl' };
+// The rails each pod sits in: end caps and the middle stretch.
+const RAIL = /^Btn[LR]_a\d_[012]$/;
 const BALLOON_DELAY = 16;
 const NEW_MAIL_EVERY = 3000;
 
@@ -299,13 +302,17 @@ export class Footer {
 
   /** Button scene: the SD icon, then the pods; the arrows wait for the Arrow scene. */
   drawPods(screen: Screen): void {
-    const view = identity();
-    view[3] = perMode(screen, -152, -245) + podShift(screen, -1);
-    view[7] = -172;
-    this.sd.update(view, screen);
-    this.renderer.drawLayout(this.sd);
-    this.layout.update(identity(), screen);
-    this.renderer.drawLayout(this.layout, (pane) => !isUnder(pane, ['N_ArwL', 'N_ArwR']));
+    this.renderer.within(screen.contained, () => {
+      const view = identity();
+      view[3] = perMode(screen, -152, -245) + podShift(screen, -1);
+      view[7] = -172;
+      this.sd.update(view, screen);
+      this.renderer.drawLayout(this.sd);
+      this.layout.update(identity(), screen);
+      this.renderer.drawLayout(this.layout, (pane) => !isUnder(pane, ['N_ArwL', 'N_ArwR']));
+    });
+    // Contained, the rails run on to the window's edges.
+    drawWings(this.renderer, screen, this.layout, (pane) => RAIL.test(pane.name));
   }
 
   /** Arrow scene: the page arrows over the grid, then the footer balloons. */
@@ -314,7 +321,7 @@ export class Footer {
     const camera = this.renderer.camera;
     this.renderer.camera = null;
     this.layout.update(identity(), screen);
-    this.renderer.drawLayout(this.layout, (pane) => isUnder(pane, ['N_ArwL', 'N_ArwR']));
+    this.renderer.within(screen.contained, () => this.renderer.drawLayout(this.layout, (pane) => isUnder(pane, ['N_ArwL', 'N_ArwR'])));
     this.renderer.camera = camera;
     const margin = perMode(screen, 30, 120);
     for (const [target, pane] of Object.entries(BUTTONS) as [FooterTarget, string][]) {

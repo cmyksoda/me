@@ -210,7 +210,7 @@ export class Preview<C extends ChannelBase = Channel> {
     }
     const view = identity();
     // A banner never stretches past 16:9: a wider window shows it in a 16:9 picture, cut at its edges as a TV's would.
-    const cut = screen.width > screen.projection;
+    const cut = screen.window > screen.projection;
     const half = screen.projection / 2;
     if (cut) this.renderer.setClip([-half, SCREEN_HEIGHT / 2, half, -SCREEN_HEIGHT / 2]);
     this.banner.instance.update(view, screen.tv);

@@ -354,17 +354,18 @@ export class SdGrid {
     this.top.update(view, screen.tv);
     // SDChannelSelect::draw: slot backdrops and thumbnails, then the frames, strips and bar over them.
     const isMask = (pane: PaneNode) => pane.name.startsWith('BaseMask');
-    this.renderer.drawLayout(this.top, (pane) => pane.source.kind !== 'pic1' || isMask(pane));
-    this.renderer.drawLayout(this.top, (pane) => pane.source.kind === 'pic1' && !isMask(pane));
-
-    // One page number layout, drawn at each N_Clock anchor so a copy rides in with the next page.
-    for (let i = 0; i < 3; i++) {
-      const anchor = this.top.pane(`N_Clock${i}`);
-      this.counter.pane('TextBox_00').text = String(this.page + i);
-      // Each number rides with its page's dip in the bar, which spreads with a window wider than 16:9.
-      this.counter.update(translation((screen.width / screen.projection) * anchor.world[3], anchor.world[7]), screen);
-      this.renderer.drawLayout(this.counter);
-    }
+    this.wideGrid.draw(this.renderer, screen, () => {
+      this.renderer.drawLayout(this.top, (pane) => pane.source.kind !== 'pic1' || isMask(pane));
+      this.renderer.drawLayout(this.top, (pane) => pane.source.kind === 'pic1' && !isMask(pane));
+      // One page number layout, drawn at each N_Clock anchor so a copy rides in with the next page.
+      for (let i = 0; i < 3; i++) {
+        const anchor = this.top.pane(`N_Clock${i}`);
+        this.counter.pane('TextBox_00').text = String(this.page + i);
+        // Each number rides with its page's dip in the bar, which spreads with a window wider than 16:9.
+        this.counter.update(translation((screen.width / screen.projection) * anchor.world[3], anchor.world[7]), screen);
+        this.renderer.drawLayout(this.counter);
+      }
+    });
 
     for (const slot of this.slots) slot.focus.draw(this.renderer, screen, ...center(slot.pane));
     for (const slot of this.slots) {

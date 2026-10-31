@@ -248,11 +248,11 @@ export class Menu {
       renderer.fill([-far, sb, far, -far], black);
       renderer.fill([-far, st, sl, sb], black);
       renderer.fill([sr, st, far, sb], black);
-      renderer.drawCapture(this.slotRect, alpha, screen.projection / screen.width);
+      renderer.drawCapture(this.slotRect, alpha, screen.projection / screen.window);
       renderer.camera = null;
     }
     // On a window wider than 16:9 the preview's arrows stay on its 16:9 picture, which hides them past its edges as a TV's would.
-    const onPicture = (this.state === 'preview' || this.state === 'zoomOut') && screen.width > screen.projection;
+    const onPicture = (this.state === 'preview' || this.state === 'zoomOut') && screen.window > screen.projection;
     if (onPicture) renderer.setClip([-screen.projection / 2, SCREEN_HEIGHT / 2, screen.projection / 2, -SCREEN_HEIGHT / 2]);
     this.grid.footer.drawArrows(onPicture ? { ...screen, width: screen.projection } : screen);
     if (onPicture) renderer.setClip(null);
@@ -261,7 +261,7 @@ export class Menu {
     else if (pointer.inside) this.cursor.draw(renderer, screen, pointer.x, pointer.y, this.grid.grabbing || this.board.pinching);
     if (this.fade < FADE_FRAMES) {
       const alpha = 255 - Math.floor((this.fade * 255) / FADE_FRAMES);
-      const half = screen.width / 2;
+      const half = screen.window / 2;
       renderer.fill([-half, SCREEN_HEIGHT / 2, half, -SCREEN_HEIGHT / 2], [0, 0, 0, alpha]);
     }
   }
