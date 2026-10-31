@@ -82,7 +82,7 @@ main { max-width: 1280px; margin: 0 auto; padding: 1.5rem clamp(1rem, 3vw, 2rem)
 .lead p { margin: 0 0 0.8rem; }
 a { color: var(--label); text-underline-offset: 0.18em; }
 a:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
-.links { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; margin: 0.4rem 0 1.6rem; }
+.links { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.6rem; margin: 0.4rem 0 1.6rem; }
 .pill { display: inline-flex; align-items: center; min-height: 44px; padding: 0 1.2rem; border-radius: 999px;
   font-family: var(--display); text-decoration: none; background: var(--raised); color: var(--label);
   border: 2px solid var(--outline-strong); transition: border-color 120ms ease-out; }
@@ -159,8 +159,10 @@ table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nu
   color: var(--label); font-size: 1.02rem; text-align: left; cursor: pointer; }
 .games .group { margin: 0.9rem 0 0.3rem 0.7rem; color: var(--muted); font-size: 0.9rem; }
 .game[aria-current="true"] { border-color: var(--accent); background: var(--raised); color: var(--ink); }
-.game .st { font-family: var(--body); font-size: 0.82rem; color: var(--muted); white-space: nowrap; }
-.game .st.over { color: var(--ink); }
+.game .st { display: inline-flex; align-items: center; gap: 0.35rem; font-family: var(--body); font-size: 0.82rem;
+  color: var(--muted); white-space: nowrap; }
+.game .st.over, .game .st.ok { color: var(--ink); }
+.game .st .sw { width: 10px; height: 10px; border-radius: 3px; }
 .detail { padding: 1.2rem 1.3rem 1.4rem; min-height: 60dvh; }
 .detail h2 { font-size: clamp(1.4rem, 2.6vw, 1.9rem); }
 .facts { color: var(--muted); margin: 0.3rem 0 1rem; }
@@ -330,10 +332,11 @@ function devInfo(id) { return D.devices.find(d => d.id === id); }
 
 function gameStatus(g) {
   const rs = g.scenes.filter(s => s.played).map(s => s.r[dev]).filter(Boolean);
-  if (!rs.length) return {text: g.scenes.some(s => s.r[dev]) ? 'needs play' : 'not timed', over: false};
-  const worst = Math.max(...rs.map(r => r.worst));
-  const over = rs.filter(r => r.over > 0).length;
-  return {text: over ? `${over} over` : `worst ${worst.toFixed(1)}`, over: over > 0};
+  if (!rs.length) return {text: g.scenes.some(s => s.r[dev]) ? 'Needs play' : 'Not timed', cls: ''};
+  const slow = rs.filter(r => r.over > 0).length, cls = slow ? 'over' : 'ok';
+  // (sorted slowest first, the list shows the number it's sorted by)
+  if (sortBy === 'slow') return {text: `worst ${Math.max(...rs.map(r => r.worst)).toFixed(1)} ms`, cls};
+  return {text: slow ? `${slow} slow scene${slow > 1 ? 's' : ''}` : 'Full speed', cls};
 }
 
 function chart(r, muted) {
@@ -385,7 +388,7 @@ function render() {
   $('games').innerHTML = games.map((g, i) => {
     const st = gameStatus(g);
     const head = sortBy === 'order' && g.group === 'prototype' && (i === 0 || games[i - 1].group !== 'prototype') ? '<li class="group">Unreleased</li>' : '';
-    return `${head}<li><button class="game" data-game="${g.slug}" aria-current="${g.slug === game}">${esc(g.title)}<span class="st${st.over ? ' over' : ''}">${st.text}</span></button></li>`;
+    return `${head}<li><button class="game" data-game="${g.slug}" aria-current="${g.slug === game}">${esc(g.title)}<span class="st ${st.cls}">${st.cls ? `<i class="sw ${st.cls}"></i>` : ''}${st.text}</span></button></li>`;
   }).join('');
   const g = D.games.find(x => x.slug === game);
   if (!g) { $('detail').innerHTML = '<p class="facts">No games recorded yet.</p>'; return; }
