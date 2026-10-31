@@ -1,12 +1,12 @@
 // The app details and About dialogs, and their slide up from the bottom (dialogs.c).
 
 import type { App } from './apps';
-import { A, B, pointer, type Pad } from './controls';
-import { ascender, lineSpacing, textWidth, type TextRun } from './font';
-import { screen, VIEW_HEIGHT } from './gfx';
+import { A, B, pointer, TAP_SLOP, type Pad } from './controls';
+import { ascender, lineSpacing, textWidth, wrap, type TextRun } from './font';
+import { screen, viewPixels } from './gfx';
 import { theme } from './theme';
 import { newView, plot, pointing, setFocus, type View } from './view';
-import { button, image, label, memo, memoDeco, scrollMemo, type Item, type Widget } from './widgets';
+import { button, image, label, memo, memoDeco, panel, scrollMemo, type Item, type Widget } from './widgets';
 
 export const DIALOG_MASK_COLOR = 0x101010a0;
 const TRANS_STEPS = 15;
@@ -72,16 +72,42 @@ const roundf = (value: number) => Math.sign(value) * Math.round(Math.abs(value))
 
 export const dialogX = () => Math.trunc((screen.width - theme.dialog_background.width) / 2);
 
+// HBC's dialogs are 520 x 360, at the top middle. In a tall view they are cards as wide as the view, centered,
+// and only as tall as their text asks, with the credits taking all the height they can.
+const CARD_MARGIN = 12;
+const CARD_PADDING = 24;
+const CARD_MIN_HEIGHT = 320;
+const MIN_BUTTON_GAP = 8;
+const MEMO_LINES = 8;
+
+const cardWidth = () => (screen.portrait ? screen.width - 2 * CARD_MARGIN : theme.dialog_background.width);
+const cardPadding = () => (screen.portrait ? CARD_PADDING : 32);
+
+// `text` is what the card shows to read; without any, the card is as tall as it can be.
+function cardHeight(text?: string) {
+  if (!screen.portrait) return theme.dialog_background.height;
+  const lines = text === undefined ? Infinity : wrap('memo', text, cardWidth() - 2 * cardPadding()).length;
+  const chrome = theme.dialog_background.height - MEMO_LINES * lineSpacing('memo');
+  return Math.min(Math.max(chrome + lines * lineSpacing('memo'), CARD_MIN_HEIGHT), screen.height - 2 * CARD_MARGIN);
+}
+
+const cardOrigin = (height: number) =>
+  screen.portrait ? { x: CARD_MARGIN, y: Math.round((screen.height - height) / 2) } : { x: dialogX(), y: 44 };
+
+// A dialog that has slid up stops a step short of where it started, which is also where a rebuilt one goes.
+const lastAngle = ((TRANS_STEPS - 1) * Math.PI) / (2 * TRANS_STEPS);
+export const restingY = (y: number) => y + screen.height - roundf(screen.height * Math.sin(lastAngle));
+
 // The mask color is stepped as one 32-bit number, so fading out also carries into its blue byte.
 // The slide stops a step short of sin(pi/2), which leaves dialogs resting at y 47, not 44.
 export function* dialogFade(v: View, fadeIn: boolean) {
   const step = Math.PI / (2 * TRANS_STEPS);
   const alphaStep = Math.trunc((DIALOG_MASK_COLOR & 0xff) / TRANS_STEPS);
-  const y = fadeIn ? v.y + VIEW_HEIGHT : v.y;
+  const y = fadeIn ? v.y + screen.height : v.y;
   let angle = fadeIn ? 0 : Math.PI;
   let color = fadeIn ? (DIALOG_MASK_COLOR & 0xffffff00) >>> 0 : DIALOG_MASK_COLOR;
   for (let i = 0; i < TRANS_STEPS; i++) {
-    v.y = y - roundf(VIEW_HEIGHT * Math.sin(angle));
+    v.y = y - roundf(screen.height * Math.sin(angle));
     angle += step;
     color = (color + (fadeIn ? alphaStep : -alphaStep & 0xff)) >>> 0;
     yield* plot(v, color);
@@ -89,52 +115,59 @@ export function* dialogFade(v: View, fadeIn: boolean) {
 }
 
 export function dialogApp(app: App, subView: View) {
-  const background = theme.dialog_background;
   const tiny = theme.button_tiny;
-  const v = newView(11, subView, dialogX(), 44, B);
+  const width = cardWidth();
+  const pad = cardPadding();
+  const description = app.longDescription ?? 'no description available';
+  const height = cardHeight(description);
+  const { x, y } = cardOrigin(height);
+  const v = newView(11, subView, x, y, B);
   const w = v.widgets;
-  const textX = 48 + 128;
-  const textWidth = background.width - 72 - 128;
+  const textX = pad + 16 + 128;
+  const textWidth = width - textX - 24;
 
-  w[0] = image(0, 0, background);
-  w[1] = label(32, 16, app.name, background.width - 64, 'center', 'ascender', 'dlgtitle');
-  if (app.icon) w[2] = image(32, 48, app.icon);
+  w[0] = panel(width, height);
+  w[1] = label(pad, 16, app.name, width - 2 * pad, 'center', 'ascender', 'dlgtitle');
+  if (app.icon) w[2] = image(pad, 48, app.icon);
   w[3] = label(textX, 72, app.version ? `Version: ${app.version}` : '', textWidth, 'left', 'descender', 'label');
   w[4] = label(textX, 72, app.coder ? `Author: ${app.coder}` : '', textWidth, 'left', 'ascender', 'label');
 
-  const buttonsY = background.height - tiny.height - 16;
+  const buttonsY = height - tiny.height - 16;
   const memoY = 48 + 48 + 8;
-  const description = app.longDescription ?? 'no description available';
-  [w[5], w[6], w[7]] = memoDeco(32, memoY, background.width - 64, buttonsY - memoY - 8, description, 'left');
+  [w[5], w[6], w[7]] = memoDeco(pad, memoY, width - 2 * pad, buttonsY - memoY - 8, description, 'left');
 
-  // Delete and Load become Source and Download.
-  const gap = Math.trunc((background.width - tiny.width * 3) / 4);
-  w[8] = button(gap, buttonsY, 'Source');
-  w[9] = button(gap * 2 + tiny.width, buttonsY, 'Download');
-  w[10] = button(gap * 3 + tiny.width * 2, buttonsY, 'Back');
+  // Delete and Load become Source and Download. A narrow card has narrower plates.
+  const plate = Math.min(tiny.width, Math.trunc((width - 4 * MIN_BUTTON_GAP) / 3));
+  const gap = Math.trunc((width - plate * 3) / 4);
+  w[8] = button(gap, buttonsY, 'Source', plate);
+  w[9] = button(gap * 2 + plate, buttonsY, 'Download', plate);
+  w[10] = button(gap * 3 + plate * 2, buttonsY, 'Back', plate);
   // As upstream 1.1.3 (dialogs.c:241); hbc-reborn later moved the focus to Load.
   setFocus(v, 10);
   return v;
 }
 
 export function dialogAbout(subView: View) {
-  const background = theme.dialog_background;
   const logo = theme.about;
-  const v = newView(3, subView, dialogX(), 44, A | B);
+  const width = cardWidth();
+  const pad = cardPadding();
+  const height = cardHeight();
+  const { x, y } = cardOrigin(height);
+  const v = newView(3, subView, x, y, A | B);
   hold = null;
-  v.widgets[0] = image(0, 0, background);
-  v.widgets[1] = image(Math.trunc((background.width - logo.width) / 2), 16, logo);
+  v.widgets[0] = panel(width, height);
+  v.widgets[1] = image(Math.trunc((width - logo.width) / 2), 16, logo);
 
   // The memo is trimmed to whole lines and centered in the space left.
   const spacing = lineSpacing('memo');
   let top = 16 + logo.height + 8;
-  let height = background.height - 16 - top - 8;
-  const whole = Math.trunc(height / spacing) * spacing;
-  if (whole < height) {
-    top += Math.trunc((height - whole) / 2);
-    height = whole;
+  let memoHeight = height - 16 - top - 8;
+  const whole = Math.trunc(memoHeight / spacing) * spacing;
+  if (whole < memoHeight) {
+    top += Math.trunc((memoHeight - whole) / 2);
+    memoHeight = whole;
   }
-  const credits = memo(32, top, background.width - 64, height, aboutText, 'center');
+  const credits = memo(pad, top, width - 2 * pad, memoHeight, aboutText, 'center');
   v.widgets[2] = credits;
   sourceLink = splitLink(credits, SOURCE_URL);
   return v;
@@ -169,7 +202,8 @@ export function aboutStep(v: View, pad: Pad, frame: number): 'close' | 'link' | 
     hold.travel = Math.max(hold.travel, Math.hypot(v.dragX, v.dragY));
     scrollMemo(credits, hold.text + v.dragY - credits.y);
     if (pad.up & hold.button) {
-      const click = hold.frames <= CLICK_FRAMES && hold.travel <= CLICK_TRAVEL;
+      // A finger can't hold as still as a mouse.
+      const click = hold.frames <= CLICK_FRAMES && hold.travel <= (pointer.touch ? viewPixels(TAP_SLOP) : CLICK_TRAVEL);
       const result = click ? (hold.link && hold.button === A ? 'link' : 'close') : null;
       hold = null;
       if (result) return result;
