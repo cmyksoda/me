@@ -27,12 +27,14 @@ try {
   throw new Error('WebGL 2 is unavailable');
 }
 const sound = new Sound();
-const assets = await loadAssets(renderer);
-const scenes = new Scenes(assets, renderer, sound);
-// The previews' banners get ready in the background, so opening or switching one never pauses.
-renderer.prepare(assets.menu.chanTtl.layout('my_ChTop_a'), assets.menu.chanTtl.files);
-for (const channel of assets.channels) renderer.prepare(channel.banner.layout('banner'), channel.banner.files);
-
+const scenes = new Scenes(renderer, sound);
+// The loop runs while the files load, so a phone held upright is asked to turn it at once.
+void loadAssets(renderer).then((assets) => {
+  scenes.start(assets, screen.portrait);
+  // The previews' banners get ready in the background, so opening or switching one never pauses.
+  renderer.prepare(assets.menu.chanTtl.layout('my_ChTop_a'), assets.menu.chanTtl.files);
+  for (const channel of assets.channels) renderer.prepare(channel.banner.layout('banner'), channel.banner.files);
+});
 
 const pointer: MenuPointer = {
   x: 0, y: 0, a: false, b: false, aPressed: false, bPressed: false, sincePress: null, inside: false,
@@ -44,7 +46,7 @@ let pressedB = false;
 function track(event: PointerEvent) {
   [pointer.x, pointer.y] = toScreen(screen, canvas, event.clientX, event.clientY);
   // Past the TV's edges the hand is gone, as when a Wii Remote points away, so the system cursor returns.
-  pointer.inside = Math.abs(pointer.x) <= screen.width / 2 && Math.abs(pointer.y) <= SCREEN_HEIGHT / 2;
+  pointer.inside = !screen.portrait && Math.abs(pointer.x) <= screen.width / 2 && Math.abs(pointer.y) <= SCREEN_HEIGHT / 2;
   canvas.style.cursor = pointer.inside ? 'none' : 'auto';
 }
 canvas.addEventListener('pointermove', track);
@@ -93,7 +95,7 @@ function frame(now: number) {
   if (pressed) pointer.sincePress = 0;
   else if (pointer.sincePress !== null) pointer.sincePress += frames;
   pressed = false;
-  scenes.update(frames, pointer);
+  scenes.update(frames, pointer, screen.portrait);
   sound.endUpdate();
 
   renderer.beginFrame([screen.width, SCREEN_HEIGHT], screen.viewport);
