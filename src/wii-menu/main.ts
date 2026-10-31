@@ -65,7 +65,7 @@ void loadAssets(renderer).then((assets) => {
 }).catch(stop);
 
 const pointer: MenuPointer = {
-  x: 0, y: 0, a: false, b: false, aPressed: false, bPressed: false, sincePress: null, inside: false,
+  x: 0, y: 0, a: false, b: false, aPressed: false, bPressed: false, sincePress: null, inside: false, touch: false,
 };
 let screen: Screen = measureScreen(canvas);
 let pressed = false;
@@ -74,6 +74,7 @@ let frameCount = 0;
 
 function track(event: PointerEvent) {
   [pointer.x, pointer.y] = toScreen(screen, canvas, event.clientX, event.clientY);
+  pointer.touch = event.pointerType === 'touch';
   // Past the TV's edges the hand is gone, as when a Wii Remote points away, so the system cursor returns.
   pointer.inside = !scenes.rotating && Math.abs(pointer.x) <= screen.width / 2 && Math.abs(pointer.y) <= SCREEN_HEIGHT / 2;
   canvas.style.cursor = pointer.inside ? 'none' : 'auto';
@@ -96,8 +97,8 @@ canvas.addEventListener('pointerdown', (event) => {
   if (event.button === 0) {
     pointer.a = true;
     pressed = true;
-    const link = scenes.linkAt(pointer.x, pointer.y);
-    if (link) window.open(link, '_blank', 'noopener');
+    tapFrom = [event.clientX, event.clientY];
+    if (!pointer.touch) openLink();
   } else if (event.button === 2) {
     pointer.b = true;
     pressedB = true;
@@ -107,7 +108,15 @@ canvas.addEventListener('pointerdown', (event) => {
 canvas.addEventListener('pointerup', (event) => {
   if (event.button === 0) pointer.a = false;
   else if (event.button === 2) pointer.b = false;
+  // A finger may be starting a drag, so it opens a link only when it lifts where it went down.
+  if (event.pointerType === 'touch' && Math.hypot(event.clientX - tapFrom[0], event.clientY - tapFrom[1]) < 10) openLink();
 });
+let tapFrom: [number, number] = [0, 0];
+/** Links open inside the click or tap itself, or browsers block the new tab. */
+function openLink(): void {
+  const link = scenes.linkAt(pointer.x, pointer.y);
+  if (link) window.open(link, '_blank', 'noopener');
+}
 // A button released while the page can't see it (another window took focus) must not stay held.
 const releaseAll = () => (pointer.a = pointer.b = false);
 canvas.addEventListener('lostpointercapture', releaseAll);

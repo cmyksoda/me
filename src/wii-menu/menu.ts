@@ -18,7 +18,7 @@ const READ_KEY = 'wii-forwarders.read';
 
 type State = 'grid' | 'opening' | 'zoomIn' | 'preview' | 'zoomOut' | 'board';
 
-export type MenuPointer = Pointer & { inside: boolean };
+export type MenuPointer = Pointer & { inside: boolean; touch: boolean };
 
 /** Smoothstep, as the menu's zero-tangent HermiteIntp. */
 const ease = (t: number) => t * t * (3 - 2 * t);

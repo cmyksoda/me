@@ -21,6 +21,10 @@ const ARROW_STEP = 300;
 const ARROW_FRAMES = 20;
 const DECIDE_AFTER = 5;
 const PLACES_KEY = 'wii-forwarders.letter-places';
+// How much of a fling's speed is left after each update.
+const GLIDE_KEEP = 0.95;
+// Units a finger can wander and still be a tap.
+const TOUCH_SLOP = 4;
 // RBRGetPosRect: where a letter can be pinned, in the board's 4:3 units.
 const BOUNDS = { left: -230, right: 230, top: 180, bottom: -80 };
 const FONT = 'RevoIpl_UtrilloProGrecoStd_M_32_I4';
@@ -113,6 +117,10 @@ export class Board {
   private bSpeed = 0;
   /** How far the pointer is from where B went down, in the remote's −1…1 units. */
   private bDelta = 0;
+  /** Where a finger went down on the letter, and the letter's scroll then. */
+  private finger: { y: number; scroll: number; moving: boolean } | null = null;
+  /** Units an update the letter keeps moving after a finger lets go. */
+  private glide = 0;
   private scrolled = 0;
   private arrowsShown = { up: false, down: false };
   private links: Link[] = [];
@@ -279,6 +287,7 @@ export class Board {
     this.sections = reading.sections;
     this.scrollMax = reading.scrollMax;
     this.scroll = 0;
+    this.glide = 0;
     this.wheelTo = null;
     this.target = null;
     this.readerClips.upLoop.play();
@@ -383,6 +392,7 @@ export class Board {
 
   /** Scrolls by a button press: ±300 over 20 updates, eased from wherever the letter is. */
   private scrollBy(amount: number): void {
+    this.glide = 0;
     const to = Math.min(this.scrollMax, Math.max(0, this.scroll + amount));
     this.target = { from: this.scroll, to, frame: 0 };
     this.wheelTo = null;
@@ -391,6 +401,7 @@ export class Board {
   /** The wheel glides toward where its notches point, damped like the D-pad's scroll (Scroller::calc). */
   wheel(delta: number): void {
     if (this.state !== 'reading' || this.bOrigin) return;
+    this.glide = 0;
     this.target = null;
     this.wheelTo = Math.min(this.scrollMax, Math.max(0, (this.wheelTo ?? this.scroll) + delta));
   }
@@ -404,7 +415,7 @@ export class Board {
     return this.bOrigin !== null;
   }
 
-  update(frames: number, pointer: { x: number; y: number; a: boolean; b: boolean; aPressed: boolean; bPressed: boolean; sincePress: number | null },
+  update(frames: number, pointer: { x: number; y: number; a: boolean; b: boolean; aPressed: boolean; bPressed: boolean; sincePress: number | null; touch: boolean },
     active: boolean, screen: Screen): void {
     for (const card of this.cards) for (const clip of Object.values(card.clips)) clip.step(frames);
     this.maskIn.step(frames);
@@ -454,9 +465,31 @@ export class Board {
     if (hit && since !== null && since >= DECIDE_AFTER && since - frames < DECIDE_AFTER && !pointer.b) this.openLetter(hit);
   }
 
-  private updateReader(frames: number, pointer: { x: number; y: number; b: boolean; aPressed: boolean },
+  private updateReader(frames: number, pointer: { x: number; y: number; a: boolean; b: boolean; aPressed: boolean; touch: boolean },
     active: boolean): void {
     const start = this.scroll;
+    // A finger drags the letter itself, as phones scroll, and lets it glide on when it lifts.
+    if (pointer.touch && pointer.a && active) {
+      this.finger ??= { y: pointer.y, scroll: this.scroll, moving: false };
+      // Until it moves, a finger is a tap, which the arrows and links answer.
+      if (!this.finger.moving && Math.abs(pointer.y - this.finger.y) > TOUCH_SLOP) {
+        // The letter then follows from the edge of that slack, so it neither jumps nor trails the finger.
+        this.finger = { y: this.finger.y + Math.sign(pointer.y - this.finger.y) * TOUCH_SLOP, scroll: this.scroll, moving: true };
+      }
+      if (this.finger.moving) {
+        const to = Math.min(this.scrollMax, Math.max(0, this.finger.scroll + pointer.y - this.finger.y));
+        this.glide = this.glide * 0.5 + ((to - this.scroll) / Math.max(frames, 1e-3)) * 0.5;
+        this.scroll = to;
+        this.target = null;
+        this.wheelTo = null;
+      }
+    } else {
+      this.finger = null;
+      if (Math.abs(this.glide) < 0.1) this.glide = 0;
+      this.glide *= GLIDE_KEEP ** frames;
+      this.scroll = Math.min(this.scrollMax, Math.max(0, this.scroll + this.glide * frames));
+      if (this.scroll === 0 || this.scroll === this.scrollMax) this.glide = 0;
+    }
     // B is a rate control: the farther from where it went down, the faster the letter keeps moving.
     // Once started it outlives the pointer leaving the TV (BScroller::calc). Full speed comes at the picture's
     // edge rather than the remote's slightly farther reach, so the mouse never needs to leave the page.
@@ -466,6 +499,7 @@ export class Board {
       this.bOrigin ??= [pointer.x, y];
       this.bDelta = (this.bOrigin[1] - y) / edge;
       this.bSpeed = Math.abs(this.bDelta) < 0.01 ? 0 : Math.sign(this.bDelta) * 10 * this.bDelta * this.bDelta;
+      this.glide = 0;
       this.target = null;
       this.wheelTo = null;
       const before = this.scroll;
