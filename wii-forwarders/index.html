@@ -7,6 +7,20 @@
     <meta name="theme-color" content="#000000" />
     <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
     <title>Wii Menu · cmyksoda's forwarder channels</title>
+    <script>
+      // ?debug shows what the page is doing, for phones without a console. It starts before the module so it sees that fail too.
+      if (/[?&]debug\b/.test(location.search)) {
+        const box = document.createElement('pre');
+        box.style.cssText = 'position:fixed;inset:0 0 auto 0;z-index:9;margin:0;padding:8px;font:12px/1.4 monospace;color:#7f7;background:#000c;white-space:pre-wrap;pointer-events:none';
+        const status = document.createTextNode('');
+        const log = document.createTextNode('page script ran\n');
+        box.append(status, '\n', log);
+        addEventListener('DOMContentLoaded', () => document.body.append(box));
+        addEventListener('error', (e) => (log.data += `error: ${e.message || e.target?.src || e.target?.href || e.type}\n`), true);
+        addEventListener('unhandledrejection', (e) => (log.data += `rejection: ${e.reason?.stack || e.reason}\n`));
+        window.__debug = { log: (line) => (log.data += `${line}\n`), status: (text) => (status.data = text) };
+      }
+    </script>
     <style>
       html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
       canvas { display: block; width: 100vw; height: 100vh; cursor: none; touch-action: none; }

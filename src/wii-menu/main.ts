@@ -8,6 +8,9 @@ import { Sound } from './sound';
 const canvas = document.querySelector<HTMLCanvasElement>('#screen')!;
 const links = document.querySelector<HTMLElement>('#channel-links')!;
 const notice = document.querySelector<HTMLElement>('#notice')!;
+// Set by the page's inline script when the address has ?debug.
+const diagnostics = (window as { __debug?: { log: (line: string) => void; status: (text: string) => void } }).__debug;
+diagnostics?.log('module running');
 // The channels as plain links: for screen readers, and the whole page if WebGL is missing.
 void fetch(new URL('channels.json', root)).then((r) => (r.ok ? r.json() : [])).catch(() => []).then((list: { name: string; repo: string }[]) => {
   for (const channel of list) {
@@ -28,6 +31,7 @@ function fallBack(message: string): void {
 // A black screen tells a visitor nothing, so a failure names its first line instead.
 function stop(error: unknown): void {
   const reason = error instanceof Error ? error.message.split('\n')[0] : String(error);
+  diagnostics?.log(`stopped: ${error instanceof Error ? error.stack ?? error.message : reason}`);
   fallBack(`This Wii Menu stopped on this device (${reason}).`);
 }
 
@@ -39,10 +43,15 @@ try {
   throw new Error('WebGL 2 is unavailable');
 }
 canvas.addEventListener('webglcontextlost', () => stop(new Error('the graphics context was lost')));
+if (diagnostics) {
+  const info = renderer.gl.getExtension('WEBGL_debug_renderer_info');
+  diagnostics.log(`gpu: ${renderer.gl.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : renderer.gl.RENDERER)}`);
+}
 const sound = new Sound();
 const scenes = new Scenes(renderer, sound);
 // The loop runs while the files load, so a phone held upright is asked to turn it at once.
 void loadAssets(renderer).then((assets) => {
+  diagnostics?.log('files loaded');
   scenes.start(assets, screen.portrait);
   // The previews' banners get ready in the background, so opening or switching one never pauses.
   renderer.prepare(assets.menu.chanTtl.layout('my_ChTop_a'), assets.menu.chanTtl.files);
@@ -55,6 +64,7 @@ const pointer: MenuPointer = {
 let screen: Screen = measureScreen(canvas);
 let pressed = false;
 let pressedB = false;
+let frameCount = 0;
 
 function track(event: PointerEvent) {
   [pointer.x, pointer.y] = toScreen(screen, canvas, event.clientX, event.clientY);
@@ -117,6 +127,12 @@ function frame(now: number) {
     scenes.draw(screen, pointer);
     renderer.settle();
     if (notice.textContent !== scenes.notice) notice.textContent = scenes.notice;
+    if (diagnostics && ++frameCount % 30 === 1) {
+      const gl = renderer.gl;
+      diagnostics.status(`frame ${frameCount}  css ${canvas.clientWidth}x${canvas.clientHeight}  canvas ${canvas.width}x${canvas.height}  dpr ${devicePixelRatio}
+viewport ${screen.viewport.join(' ')}  units ${Math.round(screen.width)}  portrait ${screen.portrait}
+menu ${!!scenes.menu}  sd ${!!scenes.sd}  rotating ${scenes.rotating}  gl error 0x${gl.getError().toString(16)}  lost ${gl.isContextLost()}`);
+    }
     if (import.meta.env.DEV && debug.capture) {
       debug.png = canvas.toDataURL('image/png');
       debug.capture = false;
