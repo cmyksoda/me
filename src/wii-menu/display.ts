@@ -20,6 +20,8 @@ export interface Screen extends Display {
   tv: Display;
   /** Where the TV picture sits in the canvas, in device pixels: x, y (from the bottom), width, height. */
   viewport: [number, number, number, number];
+  /** Taller than wide: no room for the menu, so the rotate screen shows instead. */
+  portrait: boolean;
 }
 
 /**
@@ -59,6 +61,7 @@ export function measureScreen(canvas: HTMLCanvasElement): Screen {
     adjustLocation: true,
     tv: { width: projection, projection, adjustLocation: true },
     viewport,
+    portrait: height > width,
   };
 }
 
