@@ -62,11 +62,9 @@ svg { display: block; }
 :focus-visible { outline: 0.1875rem solid var(--pink); outline-offset: 0.3125rem; }
 .site-shell { max-width: 66.25rem; margin-inline: auto; padding-inline: 2.25rem; }
 .site-header { height: 6.1875rem; display: flex; align-items: center; justify-content: space-between; position: relative; }
-.blog-link { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9375rem; font-weight: 500; padding: 0.625rem 0; }
-.blog-link svg { width: 1.1875rem; height: 1.1875rem; color: var(--pink); }
-.blog-link .small-arrow { margin-left: 0.125rem; color: var(--faint); font-size: 1rem; transition: transform 160ms; }
+.blog-link { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; font-weight: 500; padding: 0.625rem 0; }
+.blog-link svg { width: 1.125rem; height: 1.125rem; color: var(--pink); }
 .blog-link:hover { color: var(--pink-ink); }
-.blog-link:hover .small-arrow { transform: translate(0.125rem, -0.125rem); }
 .header-colors { display: flex; gap: 0.3125rem; position: absolute; left: 50%; transform: translateX(-50%); }
 .header-colors i { width: 0.4375rem; height: 0.4375rem; border-radius: 50%; background: var(--cyan); }
 .header-colors i:nth-child(2) { background: var(--pink); }
@@ -204,7 +202,7 @@ h2 { display: flex; align-items: center; gap: 0.6875rem; margin: 0; font-size: 1
 .room-card { flex-basis: calc((100% - var(--project-gap)) / 2); padding: 0.875em 0.875em 1.25em; }
 .room-card .project-heading { gap: 0.875em; }
 .room-shot { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 0.625em; background: var(--surface); }
-.site-footer { border-top: 0.0625rem solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; padding: 1.5625rem 0 1.875rem; margin-top: 3.0625rem; color: var(--muted); font-size: 0.6875rem; font-weight: 350; }
+.site-footer { border-top: 0.0625rem solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; padding: 1.5625rem 0 1.875rem; margin-top: 3.0625rem; color: var(--muted); font-size: 0.875rem; font-weight: 350; }
 .footer-signature { display: flex; align-items: center; gap: 0.5625rem; }
 .footer-source { text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
 .footer-source:hover { color: var(--pink-ink); text-decoration-color: var(--pink); }
@@ -243,7 +241,7 @@ h2 { display: flex; align-items: center; gap: 0.6875rem; margin: 0; font-size: 1
 @media (max-width: 36.25em) {
   .site-shell { padding-inline: 1.4375rem; }
   .site-header { height: 4.9375rem; }
-  .blog-link { font-size: 0.875rem; }
+  .blog-link, .site-footer { font-size: 0.8125rem; }
   .profile { padding-top: 1.6875rem; }
   h1 { font-size: 3.0625rem; }
   .profile-bio { font-size: 0.875rem; }
