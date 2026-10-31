@@ -4,7 +4,7 @@ import type { Rect } from './lyt/renderer';
 export const SCREEN_HEIGHT = 456;
 const STANDARD = 4 / 3;
 const WIDE = 16 / 9;
-// Past 32:9 the menu is pillarboxed, unless it is contained (?wide=fill) and its backdrops can run on.
+// Past 32:9 the peeking menu (?wide=peek) is pillarboxed; a contained one's backdrops run on.
 const WIDEST = 32 / 9;
 // The console's two projections, 608 and 832 units wide; between them, a window gets one of its own.
 const PROJECTION_STANDARD = 608;
@@ -13,14 +13,14 @@ const PROJECTION_WIDE = 832;
 const WIDE_UNITS_PER_HEIGHT = (PROJECTION_WIDE * 9) / 16;
 // The 16:9 textures misshape their corners less than the 4:3 ones past the projections' geometric mean.
 const WIDE_TEXTURES_FROM = Math.sqrt(PROJECTION_STANDARD * PROJECTION_WIDE);
-// A prototype to compare with filling: with ?wide=fill, past 16:9 the menu stays in the console picture
-// and its backdrops fill the sides.
-const CONTAIN = new URLSearchParams(location.search).get('wide') === 'fill';
+// Past 16:9 the menu stays in the console picture and its backdrops fill the sides; ?wide=peek shows the
+// neighbor pages and spread pods instead.
+const CONTAIN = new URLSearchParams(location.search).get('wide') !== 'peek';
 
 export interface Screen extends Display {
   /** The window's logical width, which backdrops, shades and fades cover. */
   window: number;
-  /** The console picture, when the menu stays inside it on a wider window (?wide=fill); everything else is backdrop. */
+  /** The console picture, when the menu stays inside it on a wider window; everything else is backdrop. */
   contained: Rect | null;
   /** The 16:9 donor textures replace the 4:3 ones. */
   wide: boolean;
@@ -33,9 +33,9 @@ export interface Screen extends Display {
 }
 
 /**
- * Fills any landscape window from 4:3 to 32:9, or any width when contained. Up to 16:9 the projection widens
- * with the window, as the console's location adjust would; past it, the 16:9 picture stays and the window shows
- * more around it (or, contained, only the menu's backdrops).
+ * Fills any landscape window. Up to 16:9 the projection widens with the window, as the console's location
+ * adjust would; past it, the 16:9 picture stays and the menu's backdrops fill the rest (with ?wide=peek, the
+ * window shows more of the menu around it, up to 32:9).
  */
 export function measureScreen(canvas: HTMLCanvasElement): Screen {
   const width = Math.round(canvas.clientWidth * devicePixelRatio);
