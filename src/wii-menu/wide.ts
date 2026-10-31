@@ -84,6 +84,11 @@ const PAGE_ONLY = /^(N_Ch_[a-e]\d\d|Edge\d)$/;
 const PAGE_BACKDROP = /^(BaseMask|Picture_0)\d$/;
 // An empty rectangle, for panes already drawn another way.
 const DRAWN: Rect = [0, 0, 0, 0];
+// From this shape (sideways phones, ultrawide monitors; not a desktop browser window) pages fade out at the picture's
+// edges instead of stopping at a hard line.
+const FADE_FROM = 2.1;
+// The share of each strip beside the pages' window that the fade spans; past it only the backdrop shows.
+const FADE_SHARE = 0.5;
 // The far pages' slots the grid layouts leave out: x of each missing column, and the slot numbers per row.
 const FAR_SLOTS: [string, [number, number[]][]][] = [
   ['a', [[-192, [1, 5, 9]], [-64, [2, 6, 10]], [64, [3, 7, 11]]]],
@@ -183,6 +188,8 @@ export class WideGrid {
     const contained = screen.contained;
     const half = (this.top.pane('N_Ch_d').world[3] - this.top.pane('N_Ch_c').world[3]) / 2;
     const window: Rect | null = contained && [-half, contained[1], half, contained[3]];
+    const fade = contained && (16 / 9) * (screen.window / screen.projection) >= FADE_FROM;
+    const strips = fade ? this.strips(contained, half) : [];
     if (contained) {
       // Contained, the backdrop rests while the pages slide: each page's is lit in its middle, and that light moving
       // against the still sides would show.
@@ -195,12 +202,35 @@ export class WideGrid {
       drawWings(renderer, screen, this.top, (pane) => !PAGE_ONLY.test(pane.name) && !this.isBar(pane));
       all.translate[0] = slide;
       this.top.update(identity(), screen.tv);
+      if (fade) renderer.keep(strips);
     }
-    // Contained, the pages stay within half a page of the middle, so no sliver of the next shows.
-    for (const pane of this.pagePanes) pane.bounds = window;
+    // Contained, the pages stay within half a page of the middle, so no sliver of the next shows, or fade out past it.
+    for (const pane of this.pagePanes) pane.bounds = fade ? contained : window;
     for (const pane of this.backdrop) pane.bounds = contained && DRAWN;
     renderer.within(contained, drawPages);
+    if (fade) this.fadeStrips(renderer, strips);
     if (contained) drawWings(renderer, screen, this.top, (pane) => this.isBar(pane));
+  }
+
+  /** Between the pages' window and the picture's edges, from the top down to the page frames' foot (the bar stays live). */
+  private strips(contained: Rect, half: number): [Rect, Rect] {
+    const frame = this.top.pane('Edge2');
+    const m = frame.world;
+    const bottom = m[7] + m[5] * (Math.floor(frame.source.origin / 3) / 2 - 1) * frame.size[1];
+    const top = contained[1];
+    return [[contained[0], top, -half, bottom], [half, top, contained[2], bottom]];
+  }
+
+  /** Lays the kept backdrop back over the strips: clear at the pages' window, opaque once the fade has run. */
+  private fadeStrips(renderer: Renderer, [left, right]: Rect[]): void {
+    const [outerLeft, top, innerLeft, bottom] = left;
+    const [innerRight, , outerRight] = right;
+    const fadeLeft = innerLeft + (outerLeft - innerLeft) * FADE_SHARE;
+    const fadeRight = innerRight + (outerRight - innerRight) * FADE_SHARE;
+    renderer.fadeBack([outerLeft, top, fadeLeft, bottom], 1, 1);
+    renderer.fadeBack([fadeLeft, top, innerLeft, bottom], 1, 0);
+    renderer.fadeBack([innerRight, top, fadeRight, bottom], 0, 1);
+    renderer.fadeBack([fadeRight, top, outerRight, bottom], 1, 1);
   }
 
   private isBar(pane: PaneNode): boolean {

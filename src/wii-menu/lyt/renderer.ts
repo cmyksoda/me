@@ -164,6 +164,7 @@ export class Renderer {
   private clip: Rect | null = null;
   private bounds: Rect | null = null;
   private target: { framebuffer: WebGLFramebuffer; texture: WebGLTexture; width: number; height: number } | null = null;
+  private kept: { texture: WebGLTexture; width: number; height: number } | null = null;
   /** The zoom camera (setOrthoTransAndScale): screen = (world − center) × scale; null is the default camera. */
   camera: Camera | null = null;
 
@@ -275,13 +276,51 @@ export class Renderer {
       gl.disable(gl.SCISSOR_TEST);
       return;
     }
-    const [vx, vy, vw, vh] = this.viewport;
-    const toX = (x: number) => vx + ((this.cameraX(x) / this.screenHalf[0] + 1) / 2) * vw;
-    const toY = (y: number) => vy + ((this.cameraY(y) / this.screenHalf[1] + 1) / 2) * vh;
-    const x0 = Math.round(toX(rect[0]));
-    const y0 = Math.round(toY(rect[3]));
+    const x0 = Math.round(this.deviceX(rect[0]));
+    const y0 = Math.round(this.deviceY(rect[3]));
     gl.enable(gl.SCISSOR_TEST);
-    gl.scissor(x0, y0, Math.max(0, Math.round(toX(rect[2])) - x0), Math.max(0, Math.round(toY(rect[1])) - y0));
+    gl.scissor(x0, y0, Math.max(0, Math.round(this.deviceX(rect[2])) - x0), Math.max(0, Math.round(this.deviceY(rect[1])) - y0));
+  }
+
+  private deviceX(x: number): number {
+    const [vx, , vw] = this.viewport;
+    return vx + ((this.cameraX(x) / this.screenHalf[0] + 1) / 2) * vw;
+  }
+
+  private deviceY(y: number): number {
+    const [, vy, , vh] = this.viewport;
+    return vy + ((this.cameraY(y) / this.screenHalf[1] + 1) / 2) * vh;
+  }
+
+  /** Copies what is on screen inside rectangles, so fadeBack can lay it over what is drawn there next. */
+  keep(rects: Rect[]): void {
+    const gl = this.gl;
+    const [vx, vy, width, height] = this.viewport;
+    if (!this.kept || this.kept.width !== width || this.kept.height !== height) {
+      const texture = this.kept?.texture ?? gl.createTexture()!;
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      // The canvas has no alpha channel, so the copy has none either.
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, width, height, 0, gl.RGB, gl.UNSIGNED_BYTE, null);
+      this.kept = { texture, width, height };
+    }
+    gl.bindTexture(gl.TEXTURE_2D, this.kept.texture);
+    const clamp = (value: number, low: number, size: number) => Math.min(low + size, Math.max(low, Math.round(value)));
+    for (const [left, top, right, bottom] of rects) {
+      const x0 = clamp(this.deviceX(left), vx, width);
+      const y0 = clamp(this.deviceY(bottom), vy, height);
+      const x1 = clamp(this.deviceX(right), vx, width);
+      const y1 = clamp(this.deviceY(top), vy, height);
+      if (x1 > x0 && y1 > y0) gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, x0 - vx, y0 - vy, x0, y0, x1 - x0, y1 - y0);
+    }
+  }
+
+  /** Lays the kept copy back over a rectangle, its opacity going from `left` at the left edge to `right` at the right. */
+  fadeBack(rect: Rect, left: number, right: number): void {
+    if (!this.kept) return;
+    const u = (x: number) => (this.cameraX(x) / this.screenHalf[0] + 1) / 2;
+    const v = (y: number) => (this.cameraY(y) / this.screenHalf[1] + 1) / 2;
+    const texture = this.kept.texture;
+    this.drawRect(CAPTURE_SHADER, rect, [255, 255, 255, 255], texture, [u(rect[0]), u(rect[2])], [v(rect[1]), v(rect[3])], [left, right]);
   }
 
   /** Fills a logical-screen rectangle (y up) with a flat color, for faders and the zoom surround. */
@@ -320,26 +359,38 @@ export class Renderer {
 
   /** Draws the middle `share` of the last capture's width into a rectangle (through the camera) at the given opacity. */
   drawCapture(rect: Rect, alpha: number, share = 1): void {
-    if (this.target) this.drawRect(CAPTURE_SHADER, rect, [255, 255, 255, alpha * 255], this.target.texture, share);
+    if (!this.target) return;
+    const texture = this.target.texture;
+    this.drawRect(CAPTURE_SHADER, rect, [255, 255, 255, alpha * 255], texture, [(1 - share) / 2, (1 + share) / 2]);
   }
 
-  private drawRect(shader: ShaderSource, rect: Rect, color: RGBA, texture: WebGLTexture | null, share = 1): void {
+  /** Texture coordinates run `us` left to right and `vs` top to bottom; `alphas` overrides the opacity at each side. */
+  private drawRect(
+    shader: ShaderSource,
+    rect: Rect,
+    color: RGBA,
+    texture: WebGLTexture | null,
+    us: [number, number] = [0, 1],
+    vs: [number, number] = [1, 0],
+    alphas?: [number, number],
+  ): void {
     const gl = this.gl;
     const program = this.program(shader);
     gl.useProgram(program.program);
     const [left, top, right, bottom] = rect;
     const out = this.vertices;
-    const [u0, u1] = [(1 - share) / 2, (1 + share) / 2];
-    [
-      [left, top, u0, 1],
-      [right, top, u1, 1],
-      [left, bottom, u0, 0],
-      [right, bottom, u1, 0],
-    ].forEach(([x, y, u, v], i) => {
+    const corners: [number, number, number, number, number | undefined][] = [
+      [left, top, us[0], vs[0], alphas?.[0]],
+      [right, top, us[1], vs[0], alphas?.[1]],
+      [left, bottom, us[0], vs[1], alphas?.[0]],
+      [right, bottom, us[1], vs[1], alphas?.[1]],
+    ];
+    corners.forEach(([x, y, u, v, alpha], i) => {
       const o = i * FLOATS_PER_VERTEX;
       out[o] = this.cameraX(x);
       out[o + 1] = this.cameraY(y);
       out.set(color.map((c) => c / 255), o + 2);
+      if (alpha !== undefined) out[o + 5] = alpha;
       out[o + 6] = u;
       out[o + 7] = v;
     });
