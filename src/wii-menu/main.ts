@@ -46,6 +46,7 @@ canvas.addEventListener('webglcontextlost', () => stop(new Error('the graphics c
 if (diagnostics) {
   const info = renderer.gl.getExtension('WEBGL_debug_renderer_info');
   diagnostics.log(`gpu: ${renderer.gl.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : renderer.gl.RENDERER)}`);
+  void import('./gl-test').then(({ testGraphics }) => testGraphics()).then((lines) => lines.forEach(diagnostics.log));
 }
 const sound = new Sound();
 const scenes = new Scenes(renderer, sound);
@@ -129,7 +130,12 @@ function frame(now: number) {
     if (notice.textContent !== scenes.notice) notice.textContent = scenes.notice;
     if (diagnostics && ++frameCount % 30 === 1) {
       const gl = renderer.gl;
-      diagnostics.status(`frame ${frameCount}  css ${canvas.clientWidth}x${canvas.clientHeight}  canvas ${canvas.width}x${canvas.height}  dpr ${devicePixelRatio}
+      // What the menu really drew in the middle of its picture, before the page shows it.
+      const [x, y, w, h] = screen.viewport;
+      const middle = new Uint8Array(4);
+      gl.readPixels(Math.floor(x + w / 2), Math.floor(y + h / 2), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, middle);
+      diagnostics.status(`frame ${frameCount}  drawn middle ${[...middle].join(',')}
+css ${canvas.clientWidth}x${canvas.clientHeight}  canvas ${canvas.width}x${canvas.height}  dpr ${devicePixelRatio}
 viewport ${screen.viewport.join(' ')}  units ${Math.round(screen.width)}  portrait ${screen.portrait}
 menu ${!!scenes.menu}  sd ${!!scenes.sd}  rotating ${scenes.rotating}  gl error 0x${gl.getError().toString(16)}  lost ${gl.isContextLost()}`);
     }
