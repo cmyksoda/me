@@ -160,9 +160,9 @@ export class Renderer {
   camera: Camera | null = null;
 
   constructor(readonly canvas: HTMLCanvasElement) {
-    // An opaque canvas can go straight to a phone's display hardware, which some GPUs show as black, so it
-    // keeps an alpha channel (held at 1) and goes through the browser's own compositing.
-    const gl = canvas.getContext('webgl2', { alpha: true, antialias: true, premultipliedAlpha: false });
+    // Some phones never show an antialiased WebGL canvas (a PowerVR through ANGLE on Vulkan),
+    // and the Wii didn't antialias its menu either.
+    const gl = canvas.getContext('webgl2', { alpha: false, antialias: false, premultipliedAlpha: false });
     if (!gl) throw new Error('This page needs WebGL 2.');
     this.gl = gl;
     this.buffer = gl.createBuffer()!;
@@ -236,16 +236,8 @@ export class Renderer {
     this.viewport = viewport;
     gl.viewport(...viewport);
     gl.disable(gl.SCISSOR_TEST);
-    this.clearOpaque();
-  }
-
-  /** Clears to opaque black, then leaves alpha alone, so blending never lets the page behind show through. */
-  private clearOpaque(): void {
-    const gl = this.gl;
-    gl.colorMask(true, true, true, true);
     gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.colorMask(true, true, true, false);
   }
 
   /** Limits drawing to a logical-screen rectangle [left, top, right, bottom] (y up), or lifts the limit. */
@@ -287,7 +279,8 @@ export class Renderer {
     this.viewport = [0, 0, width, height];
     gl.viewport(0, 0, width, height);
     gl.disable(gl.SCISSOR_TEST);
-    this.clearOpaque();
+    gl.clearColor(0, 0, 0, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
     const camera = this.camera;
     this.camera = null;
     draw();
