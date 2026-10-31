@@ -16,16 +16,28 @@ void fetch(new URL('channels.json', root)).then((r) => (r.ok ? r.json() : [])).c
     links.append(link);
   }
 });
+/** When the menu can't run here, the channel links become the page, saying why. */
+function fallBack(message: string): void {
+  if (!canvas.isConnected) return;
+  canvas.remove();
+  links.className = 'fallback';
+  links.prepend(Object.assign(document.createElement('p'), { textContent: `${message} Here are my forwarder channels:` }));
+}
+
+// A black screen tells a visitor nothing, so a failure names its first line instead.
+function stop(error: unknown): void {
+  const reason = error instanceof Error ? error.message.split('\n')[0] : String(error);
+  fallBack(`This Wii Menu stopped on this device (${reason}).`);
+}
+
 let renderer: Renderer;
 try {
   renderer = new Renderer(canvas);
 } catch {
-  // Without WebGL 2 the menu can't be drawn, so the channel links become the page.
-  canvas.remove();
-  links.className = 'fallback';
-  links.prepend(Object.assign(document.createElement('p'), { textContent: 'This Wii Menu needs WebGL 2. Here are my forwarder channels:' }));
+  fallBack('This Wii Menu needs WebGL 2.');
   throw new Error('WebGL 2 is unavailable');
 }
+canvas.addEventListener('webglcontextlost', () => stop(new Error('the graphics context was lost')));
 const sound = new Sound();
 const scenes = new Scenes(renderer, sound);
 // The loop runs while the files load, so a phone held upright is asked to turn it at once.
@@ -34,7 +46,7 @@ void loadAssets(renderer).then((assets) => {
   // The previews' banners get ready in the background, so opening or switching one never pauses.
   renderer.prepare(assets.menu.chanTtl.layout('my_ChTop_a'), assets.menu.chanTtl.files);
   for (const channel of assets.channels) renderer.prepare(channel.banner.layout('banner'), channel.banner.files);
-});
+}).catch(stop);
 
 const pointer: MenuPointer = {
   x: 0, y: 0, a: false, b: false, aPressed: false, bPressed: false, sincePress: null, inside: false,
@@ -84,26 +96,31 @@ canvas.addEventListener('contextmenu', (event) => event.preventDefault());
 const debug = { capture: false, png: '', scenes, get menu() { return scenes.menu; }, renderer, pointer, sound };
 let last = performance.now();
 function frame(now: number) {
-  // The menu runs at 60 updates per second whatever the display's refresh rate.
-  const frames = Math.min(10, (now - last) * 0.06);
-  last = now;
-  screen = measureScreen(canvas);
+  try {
+    // The menu runs at 60 updates per second whatever the display's refresh rate.
+    const frames = Math.min(10, (now - last) * 0.06);
+    last = now;
+    screen = measureScreen(canvas);
 
-  pointer.aPressed = pressed;
-  pointer.bPressed = pressedB;
-  pressedB = false;
-  if (pressed) pointer.sincePress = 0;
-  else if (pointer.sincePress !== null) pointer.sincePress += frames;
-  pressed = false;
-  scenes.update(frames, pointer, screen.portrait);
-  sound.endUpdate();
+    pointer.aPressed = pressed;
+    pointer.bPressed = pressedB;
+    pressedB = false;
+    if (pressed) pointer.sincePress = 0;
+    else if (pointer.sincePress !== null) pointer.sincePress += frames;
+    pressed = false;
+    scenes.update(frames, pointer, screen.portrait);
+    sound.endUpdate();
 
-  renderer.beginFrame([screen.width, SCREEN_HEIGHT], screen.viewport);
-  scenes.draw(screen, pointer);
-  renderer.settle();
-  if (import.meta.env.DEV && debug.capture) {
-    debug.png = canvas.toDataURL('image/png');
-    debug.capture = false;
+    renderer.beginFrame([screen.width, SCREEN_HEIGHT], screen.viewport);
+    scenes.draw(screen, pointer);
+    renderer.settle();
+    if (import.meta.env.DEV && debug.capture) {
+      debug.png = canvas.toDataURL('image/png');
+      debug.capture = false;
+    }
+  } catch (error) {
+    stop(error);
+    return;
   }
   requestAnimationFrame(frame);
 }
