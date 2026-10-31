@@ -34,7 +34,7 @@ export class SdMenu {
   private state: State = 'fadingIn';
   private preview: Preview<SdChannel> | null = null;
   private shownChannel: SdChannel | null = null;
-  /** Updates the preview has taken input for; Start (Download here) answers from the second. */
+  /** Updates since the preview last became ready for input; Start (Download here) answers from the second. */
   private live = 0;
   private zoom = 0;
   private slotRect: Rect = [0, 0, 0, 0];
@@ -169,14 +169,19 @@ export class SdMenu {
       this.shownChannel = preview.channel;
       preview.setDownload(preview.channel.download !== null);
     }
-    if (preview.busy || !pointer.inside) {
+    if (preview.busy) {
       this.live = 0;
       preview.release();
-      if (!pointer.inside && footer.hovered) footer.leave(footer.hovered);
       return;
     }
+    // Counted with no pointer too: a finger only points while it touches, and its tap is its first update.
     const ready = this.live > 0;
     this.live += frames;
+    if (!pointer.inside) {
+      preview.release();
+      if (footer.hovered) footer.leave(footer.hovered);
+      return;
+    }
     const side = footer.hit(pointer.x, pointer.y);
     if (side !== footer.hovered) {
       if (footer.hovered) footer.leave(footer.hovered);
