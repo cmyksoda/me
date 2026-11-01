@@ -12,6 +12,35 @@
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <title>cmyksoda's site</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://cmyksoda.cc/#website",
+            "url": "https://cmyksoda.cc/",
+            "name": "cmyksoda's site",
+            "alternateName": "cmyksoda",
+            "author": { "@id": "https://cmyksoda.cc/#person" }
+          },
+          {
+            "@type": "Person",
+            "@id": "https://cmyksoda.cc/#person",
+            "name": "cmyksoda",
+            "alternateName": "jaxi",
+            "url": "https://cmyksoda.cc/",
+            "sameAs": [
+              "https://blog.cmyksoda.cc/",
+              "https://github.com/cmyksoda",
+              "https://serifmusic.bandcamp.com/",
+              "https://x.com/cmyksoda",
+              "https://www.youtube.com/@cmyksoda"
+            ]
+          }
+        ]
+      }
+    </script>
     <script>
       let savedTheme;
       try { savedTheme = localStorage.getItem('cmyksoda-theme'); } catch {}
