@@ -75,7 +75,7 @@ svg { display: block; }
   justify-content: space-between;
   position: relative;
 }
-.blog-link {
+.header-link {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -83,8 +83,9 @@ svg { display: block; }
   font-weight: 500;
   padding: 0.625rem 0;
 }
-.blog-link svg { width: 1.125rem; height: 1.125rem; color: var(--pink); }
-.blog-link:hover { color: var(--pink-ink); }
+.header-link svg { width: 1.125rem; height: 1.125rem; color: var(--pink); }
+.header-link:hover { color: var(--pink-ink); }
+.header-end { display: flex; align-items: center; gap: 1.125rem; }
 .header-colors {
   display: flex;
   gap: 0.3125rem;
@@ -533,7 +534,7 @@ h2 {
 @media (max-width: 36.25em) {
   .site-shell { padding-inline: 1.4375rem; }
   .site-header { height: 4.9375rem; }
-  .blog-link, .site-footer { font-size: 0.8125rem; }
+  .header-link, .site-footer { font-size: 0.8125rem; }
   .profile { padding-top: 1.6875rem; }
   h1 { font-size: 3.0625rem; }
   .profile-bio { font-size: 0.875rem; }
@@ -552,6 +553,10 @@ h2 {
   .project-grid { --project-gap: 23px; max-width: 360px; }
   .project-card, .room-card { flex-basis: 100%; }
   .site-footer { margin-top: 2.25rem; padding-block: 1.5rem; gap: 0.875rem; }
+}
+
+@media (max-width: 22.4375em) {
+  .header-colors { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
