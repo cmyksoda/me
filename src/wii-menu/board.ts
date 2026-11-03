@@ -284,6 +284,8 @@ export class Board {
     if (card.hovered) return;
     card.hovered = true;
     card.clips.focusOut.playing = false;
+    // The looping DefAnim would reset the scale FocusIn holds the moment FocusIn ends.
+    card.clips.idle.playing = false;
     card.clips.focusIn.play();
     this.sound.play('WIPL_SE_BOARD_FOCUS');
     // A hovered card is drawn last, on top of the others.
@@ -295,6 +297,7 @@ export class Board {
     if (!card.hovered) return;
     card.hovered = false;
     card.clips.focusIn.playing = false;
+    card.clips.idle.play();
     card.clips.focusOut.play();
   }
 
