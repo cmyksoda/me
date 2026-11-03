@@ -58,6 +58,58 @@ export function drawWings(
   }
 }
 
+const subtree = (pane: PaneNode): PaneNode[] => [pane, ...pane.children.flatMap(subtree)];
+
+/** Panes that move together, and how far past the picture's edge their middle is when the layout parks them. */
+export type Slide = [names: string[], parkedPast: number];
+
+/** The page arrows of the footer layouts, which hide and show by sliding out past the picture's edge. */
+export const PAGE_ARROWS: Slide[] = [[['N_ArwL_End'], 160], [['N_ArwR__End'], 160]];
+
+/**
+ * Panes that slide in from past the console picture's edge (footer pods, page arrows). Contained, the rest of the
+ * layout is cut at the picture's edge as a TV's would be, but these draw whole over the window beside it.
+ */
+export class Sliders {
+  private readonly units: { panes: PaneNode[]; parkedPast: number }[];
+  private readonly panes = new Set<PaneNode>();
+
+  /** `rail` names the sliders' panes that stay cut at the picture's edge, because `drawWings` runs them on. */
+  constructor(
+    private readonly instance: LayoutInstance,
+    slides: Slide[],
+    private readonly rail?: RegExp,
+  ) {
+    this.units = slides.map(([names, parkedPast]) => ({ panes: names.map((name) => instance.pane(name)), parkedPast }));
+    for (const pane of this.units.flatMap((unit) => unit.panes).flatMap(subtree)) this.panes.add(pane);
+  }
+
+  /**
+   * Runs `inPicture` with the sliders whole and the rest of the layout cut at the picture's edge, then `beyond` with
+   * no cut. A unit speeds on out of the window as it nears its parking place, as spreading the layout would, so it
+   * never rests in view where the console has it off screen.
+   */
+  draw(screen: Screen, inPicture: () => void, beyond?: () => void): void {
+    const moved: [PaneNode, number][] = [];
+    if (screen.contained) {
+      const spread = screen.window / screen.projection;
+      for (const { panes, parkedPast } of this.units) {
+        const x = panes[0].world[3];
+        const toPark = Math.min(1, Math.max(0, (Math.abs(x) - screen.projection / 2) / parkedPast));
+        const shift = Math.sign(x) * (spread - 1) * Math.abs(x) * toPark;
+        for (const pane of panes.flatMap(subtree)) moved.push([pane, shift]);
+      }
+    }
+    for (const [pane, shift] of moved) pane.world[3] += shift;
+    const all = subtree(this.instance.root);
+    for (const pane of all) pane.bounds = this.panes.has(pane) && !this.rail?.test(pane.name) ? null : screen.contained;
+    inPicture();
+    for (const pane of all) pane.bounds = null;
+    beyond?.();
+    for (const [pane, shift] of moved) pane.world[3] -= shift;
+  }
+}
+
 /** Where a pane's middle line meets x = edge, in its own units along it. */
 const crossing = (pane: PaneNode, edge: number) => (edge - pane.world[3]) / pane.world[0];
 

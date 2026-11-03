@@ -7,7 +7,7 @@ import type { Renderer } from './lyt/renderer';
 import { parseTPL } from './lyt/tpl';
 import type { Sound } from './sound';
 import { speakerButton } from './speaker';
-import { drawWings } from './wide';
+import { drawWings, PAGE_ARROWS, Sliders, type Slide } from './wide';
 
 export type FooterTarget =
   'options' | 'board' | 'left' | 'right' | 'sd' | 'calendar' | 'create' | 'menu' | 'back' | 'trash';
@@ -33,6 +33,12 @@ const TARGETS: Record<Mode, FooterTarget[]> = {
 const SPEAKER = { on: 'web_speaker_on.tpl', off: 'web_speaker_off.tpl' };
 // The rails each pod sits in: end caps and the middle stretch.
 const RAIL = /^Btn[LR]_a\d_[012]$/;
+// What slides in over a window wider than the console's picture, with how far past its edge each is parked.
+const POD_SLIDES: Slide[] = [
+  [['N_BtnL_a3', 'N_BtnL_a4'], 207], [['N_Dust'], 185],
+  [['N_BtnL_a0_Set'], 46], [['N_BtnL_a0_Add'], 46], [['N_BtnL_a0_Cal'], 46],
+  [['N_BtnR_a0_Bbs'], 46], [['N_BtnR_a0_Ch'], 46],
+];
 const BALLOON_DELAY = 16;
 const NEW_MAIL_EVERY = 3000;
 
@@ -50,6 +56,8 @@ export class Footer {
   private readonly layout: LayoutInstance;
   private readonly sd: LayoutInstance;
   private readonly clips = new Map<string, AnimationPlayer>();
+  private readonly pods: Sliders;
+  private readonly arrows: Sliders;
   private readonly balloons: Partial<Record<FooterTarget, Balloon>>;
   private mode: Mode = 'grid';
   private queue: AnimationPlayer[] = [];
@@ -61,6 +69,8 @@ export class Footer {
     const { cmnBtn, balloon } = assets.menu;
     this.layout = cmnBtn.instance('my_IplTop_e');
     this.sd = cmnBtn.instance('mn_Sdcard_Btn');
+    this.pods = new Sliders(this.layout, POD_SLIDES, RAIL);
+    this.arrows = new Sliders(this.layout, PAGE_ARROWS);
     const footer = cmnBtn.animation('my_IplTop_e')!;
     const range = (name: string, panes: string[], from: number, to: number, loop = false) => {
       this.clips.set(name, new AnimationPlayer(footer, this.layout, { panes, from, to, loop }));
@@ -322,11 +332,14 @@ export class Footer {
       view[7] = -172;
       this.sd.update(view, screen);
       this.renderer.drawLayout(this.sd);
-      this.layout.update(identity(), screen);
-      this.renderer.drawLayout(this.layout, (pane) => !isUnder(pane, ['N_ArwL', 'N_ArwR']));
     });
-    // Contained, the rails run on to the window's edges.
-    drawWings(this.renderer, screen, this.layout, (pane) => RAIL.test(pane.name));
+    this.layout.update(identity(), screen);
+    this.pods.draw(
+      screen,
+      () => this.renderer.drawLayout(this.layout, (pane) => !isUnder(pane, ['N_ArwL', 'N_ArwR'])),
+      // Contained, the rails run on to the window's edges.
+      () => drawWings(this.renderer, screen, this.layout, (pane) => RAIL.test(pane.name)),
+    );
   }
 
   /** Arrow scene: the page arrows over the grid, then the footer balloons. */
@@ -335,7 +348,7 @@ export class Footer {
     const camera = this.renderer.camera;
     this.renderer.camera = null;
     this.layout.update(identity(), screen);
-    this.renderer.within(screen.contained, () =>
+    this.arrows.draw(screen, () =>
       this.renderer.drawLayout(this.layout, (pane) => isUnder(pane, ['N_ArwL', 'N_ArwR'])),
     );
     this.renderer.camera = camera;

@@ -252,9 +252,10 @@ export class Menu {
       renderer.drawCapture(this.slotRect, alpha, screen.projection / screen.window);
       renderer.camera = null;
     }
-    // On a window wider than 16:9 the preview's arrows stay on its 16:9 picture, which hides them past its edges
-    // as a TV's would.
-    const onPicture = (this.state === 'preview' || this.state === 'zoomOut') && screen.window > screen.projection;
+    // Peeking past 16:9, the preview's arrows stay on its picture, which hides them past its edges as a TV's would;
+    // contained, they slide whole over the sides.
+    const onPicture =
+      (this.state === 'preview' || this.state === 'zoomOut') && screen.window > screen.projection && !screen.contained;
     if (onPicture)
       renderer.setClip([-screen.projection / 2, SCREEN_HEIGHT / 2, screen.projection / 2, -SCREEN_HEIGHT / 2]);
     this.grid.footer.drawArrows(onPicture ? { ...screen, width: screen.projection } : screen);

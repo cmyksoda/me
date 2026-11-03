@@ -5,7 +5,7 @@ import { center, contains } from './lyt/hit';
 import { AnimationPlayer, identity, type LayoutInstance, type PaneNode } from './lyt/layout';
 import type { Renderer } from './lyt/renderer';
 import type { Sound } from './sound';
-import { cover } from './wide';
+import { cover, PAGE_ARROWS, Sliders } from './wide';
 
 export type SdFooterTarget = 'menu' | 'help' | 'left' | 'right';
 
@@ -33,6 +33,7 @@ function isUnder(pane: PaneNode, names: string[]): boolean {
 export class SdFooter {
   hovered: SdFooterTarget | null = null;
   private readonly layout: LayoutInstance;
+  private readonly arrows: Sliders;
   private readonly clips: Record<string, AnimationPlayer>;
   private readonly balloons: Record<'menu' | 'help', Balloon>;
   private readonly arrowShown = { left: false, right: false };
@@ -42,6 +43,7 @@ export class SdFooter {
   constructor(assets: Assets, private readonly renderer: Renderer, private readonly sound: Sound) {
     const { sdButton, balloon } = assets.menu;
     this.layout = sdButton.instance('mn_SdcardMenu_b');
+    this.arrows = new Sliders(this.layout, PAGE_ARROWS);
     const groups = this.layout.layout.groups;
     const clip = (file: string, group: string, loop = false) => new AnimationPlayer(
       sdButton.animation(`mn_SdcardMenu_b_${file}`)!, this.layout, { panes: groups.get(group), loop },
@@ -181,9 +183,7 @@ export class SdFooter {
     const camera = this.renderer.camera;
     this.renderer.camera = null;
     this.layout.update(identity(), screen);
-    this.renderer.within(screen.contained, () =>
-      this.renderer.drawLayout(this.layout, (pane) => isUnder(pane, ARROWS)),
-    );
+    this.arrows.draw(screen, () => this.renderer.drawLayout(this.layout, (pane) => isUnder(pane, ARROWS)));
     this.renderer.camera = camera;
     const margin = perMode(screen, 30, 120);
     for (const [target, pane] of [['menu', 'B_Wiimenu'], ['help', 'B_Help']] as const) {
