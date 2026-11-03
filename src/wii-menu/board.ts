@@ -2,7 +2,8 @@ import type { Assets } from './assets';
 import { SCREEN_HEIGHT, type Screen } from './display';
 import { layoutText, measureText, type FontMetrics } from './lyt/font';
 import { center, contains, toLocal } from './lyt/hit';
-import { AnimationPlayer, identity, type LayoutInstance, type PaneNode } from './lyt/layout';
+import { AnimationPlayer, identity, type LayoutInstance, type MaterialState, type PaneNode } from './lyt/layout';
+import { parseTPL } from './lyt/tpl';
 import type { Renderer } from './lyt/renderer';
 import type { Letter } from './letters';
 import type { Sound } from './sound';
@@ -44,6 +45,7 @@ interface Link {
 interface Reading {
   text: string;
   links: Link[];
+  lines: number;
   sections: number;
   scrollMax: number;
 }
@@ -102,6 +104,8 @@ export class Board {
   private readonly maskOut: AnimationPlayer;
   private masked = false;
   private readonly reader: LayoutInstance;
+  /** The reader's nine paper pieces and their shadows, which a letterhead swaps as change_ltrtex does. */
+  private readonly paper: { file: string; material: MaterialState; plain: string }[];
   private readonly readerClips: Record<string, AnimationPlayer>;
   private readonly readings = new Map<Letter, Reading>();
   private readonly bScroll: LayoutInstance;
@@ -111,6 +115,7 @@ export class Board {
   private scroll = 0;
   private wheelTo: number | null = null;
   private scrollMax = 0;
+  private lines = 1;
   private sections = 1;
   private target: { from: number; to: number; frame: number } | null = null;
   private bOrigin: [number, number] | null = null;
@@ -145,6 +150,12 @@ export class Board {
       const clip = (name: string, loop = false) =>
         new AnimationPlayer(board.animation(`LetterS_b_${name}`)!, instance, { loop });
       for (const hidden of ['Nigaoe', 'N_Pic', 'PinSD0', 'PinSD1']) instance.pane(hidden).visible = false;
+      if (letter.letterhead) {
+        for (const pane of ['Letter0_s', 'Letter0']) {
+          instance.materials[instance.pane(pane).source.picture!.material].textures[0] =
+            `${letter.letterhead}/my_LetterS_b.tpl`;
+        }
+      }
       // The card shows six characters of the title, then "..." if there's more.
       instance.pane('T_Letter').text = letter.title.length > 6 ? `${letter.title.slice(0, 6)}...` : letter.title;
       const saved = places[letter.title];
@@ -173,6 +184,15 @@ export class Board {
     this.maskOut = new AnimationPlayer(board.animation('my_BbsMask_a_MaskOut')!, this.mask);
 
     this.reader = board.instance('my_LetterL');
+    // The cards and the reader read textures from the same board archive, so a letterhead's are added once.
+    for (const [name, letterhead] of assets.letterheads) {
+      renderer.addTexture(this.reader, `${name}/my_LetterS_b.tpl`, parseTPL(letterhead.envelope)[0]);
+      for (const [file, tpl] of letterhead.paper) renderer.addTexture(this.reader, `${name}/${file}`, parseTPL(tpl)[0]);
+    }
+    this.paper = [...'ABCDEFGHI'].flatMap((piece) => [`Letter${piece}_s`, `Letter${piece}`].map((pane) => {
+      const material = this.reader.materials[this.reader.pane(pane).source.picture!.material];
+      return { file: `my_Letter_${piece.toLowerCase()}.tpl`, material, plain: material.textures[0] };
+    }));
     for (const hidden of [
       'SendPic',
       'Nigaoe',
@@ -232,8 +252,9 @@ export class Board {
       ];
       return { from, to, href: match[0].startsWith('http') ? match[0] : `https://${match[0]}`, box };
     });
-    const sections = Math.max(1, Math.ceil((text.split('\n').length * LINE) / SECTION));
-    return { text, links, sections, scrollMax: Math.max(0, 160 + sections * SECTION + 144 + 64 - SCREEN_HEIGHT) };
+    const lines = text.split('\n').length;
+    const sections = Math.max(1, Math.ceil((lines * LINE) / SECTION));
+    return { text, links, lines, sections, scrollMax: Math.max(0, 160 + lines * LINE + 144 + 64 - SCREEN_HEIGHT) };
   }
 
   /** "Fri 10/30": yesterday, today and tomorrow sit side by side for the midnight slide. */
@@ -289,6 +310,12 @@ export class Board {
     this.sound.play('WIPL_SE_BOARD_SELECT');
     this.onOpened?.();
 
+    const { letterhead } = card.letter;
+    const paper = letterhead ? this.assets.letterheads.get(letterhead)!.paper : null;
+    for (const { file, material, plain } of this.paper) {
+      material.textures[0] = paper?.has(file) ? `${letterhead}/${file}` : plain;
+    }
+
     const reading = this.readings.get(card.letter)!;
     this.reader.pane('T_Letter').text = reading.text;
     this.reader.pane('T_Header').text = card.letter.title;
@@ -296,6 +323,7 @@ export class Board {
     this.pointedLink = null;
     this.chosenLink = null;
     this.colorLinks();
+    this.lines = reading.lines;
     this.sections = reading.sections;
     this.scrollMax = reading.scrollMax;
     this.scroll = 0;
@@ -629,19 +657,34 @@ export class Board {
     const view = translation(startX * (1 - t), cardY * (1 - t));
     const memo = this.reader.pane('N_Memo');
     memo.translate[1] = this.scroll;
-    const [header, body, footer, text, buttons] = ['N_Header', 'N_Body', 'N_Footer', 'T_Letter', 'N_TopBtn']
-      .map((name) => this.reader.pane(name));
+    const [header, body, footer, text, buttons, paper] = [
+      'N_Header', 'N_Body', 'N_Footer', 'T_Letter', 'N_TopBtn', 'LetterE',
+    ].map((name) => this.reader.pane(name));
     const draw = (part: PaneNode) => this.renderer.drawLayout(this.reader, (pane) => this.under(pane, [part]));
-    this.reader.update(view, screen);
-    draw(header);
-    // focus_object::draw repeats the ruled middle once per 168 units of text, then adds the bottom.
-    for (let k = 0; k < this.sections; k++) {
-      body.translate[1] = -SECTION * k;
+    const place = (offset: number) => {
+      body.translate[1] = offset;
       this.reader.update(view, screen);
+    };
+    place(0);
+    draw(header);
+    // The console adds the bottom after whole 168-unit sections, leaving up to three empty lines. Here the last
+    // section rises to end under the last line, taking over from the one above halfway through their overlap.
+    const last = this.sections - 1;
+    const rise = this.sections * SECTION - this.lines * LINE;
+    place(-SECTION * last + (last > 0 ? rise / 2 : 0));
+    const seam = paper.world[5] * (Math.floor(paper.source.origin / 3) / 2) * paper.size[1] + paper.world[7];
+    const drawSection = (offset: number) => {
+      place(offset);
       const y = center(body)[1];
       if (y > -700 && y < 700) draw(body);
-    }
-    footer.translate[1] = -SECTION * (this.sections - 1);
+    };
+    this.renderer.within(rise ? [-screen.width, SCREEN_HEIGHT, screen.width, seam] : null, () => {
+      for (let k = 0; k < last; k++) drawSection(-SECTION * k);
+    });
+    this.renderer.within(rise ? [-screen.width, seam, screen.width, -SCREEN_HEIGHT] : null, () => {
+      drawSection(-SECTION * last + rise);
+    });
+    footer.translate[1] = -SECTION * last + rise;
     body.translate[1] = 0;
     this.reader.update(view, screen);
     draw(footer);

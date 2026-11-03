@@ -1,6 +1,7 @@
 import { parseBRLAN, type Animation } from './lyt/brlan';
 import { parseBRLYT, type Layout } from './lyt/brlyt';
-import { decompressASH, unwrapChannelFile } from './lyt/compression';
+import { letters } from './letters';
+import { decompressASH, decompressLZ77, unwrapChannelFile } from './lyt/compression';
 import { LayoutInstance } from './lyt/layout';
 import type { Renderer } from './lyt/renderer';
 import { parseU8 } from './lyt/u8';
@@ -79,6 +80,23 @@ export interface Assets {
   messages: Record<string, string>;
   channels: Channel[];
   sdChannels: SdChannel[];
+  letterheads: Map<string, Letterhead>;
+}
+
+/** A channel's stationery: its envelope's TPL, and its paper's TPLs by file name. */
+export interface Letterhead {
+  envelope: Uint8Array;
+  paper: Map<string, Uint8Array>;
+}
+
+/** Reads tools/wii/build_letterheads.py's archive, whose letter_LZ.bin is the channel's own. */
+async function loadLetterhead(name: string): Promise<readonly [string, Letterhead]> {
+  const files = parseU8(await fetchBytes(`menu/letterheads/${name}.u8`));
+  const paper = new Map<string, Uint8Array>();
+  for (const [path, tpl] of parseU8(decompressLZ77(files.get('letter_LZ.bin')!))) {
+    paper.set(path.slice(path.lastIndexOf('/') + 1), tpl);
+  }
+  return [name, { envelope: files.get('img/my_LetterS_b.tpl')!, paper }];
 }
 
 /** Every channel listed in `<folder>.json`, with the icon and banner unpacked into `<folder>/<id>/`. */
@@ -121,5 +139,14 @@ export async function loadAssets(renderer: Renderer): Promise<Assets> {
   await Promise.all(FONTS.map((font) => renderer.loadFont(font, new URL(`menu/fonts/${font}`, root).href)));
   const messages = await (await fetch(new URL('menu/messages.json', root))).json();
   const channels = await loadChannels<Channel>('channels');
-  return { menu: Object.fromEntries(menuEntries) as Record<MenuArchive, Archive>, messages, channels, sdChannels: [] };
+  const letterheads = new Map(
+    await Promise.all([...new Set(letters.flatMap((letter) => letter.letterhead ?? []))].map(loadLetterhead)),
+  );
+  return {
+    menu: Object.fromEntries(menuEntries) as Record<MenuArchive, Archive>,
+    messages,
+    channels,
+    sdChannels: [],
+    letterheads,
+  };
 }
