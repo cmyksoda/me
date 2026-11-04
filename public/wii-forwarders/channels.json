@@ -46,5 +46,13 @@
     "release": "https://github.com/cmyksoda/z-gx-forwarder-channel/releases/tag/v2.0.0",
     "version": "v2.0.0",
     "download": "https://github.com/cmyksoda/z-gx-forwarder-channel/releases/download/v2.0.0/Wii-ONLY-ZGXA-v2.zip"
+  },
+  {
+    "id": "GMWA",
+    "name": "GodModeWii",
+    "repo": "https://github.com/cmyksoda/godmodewii-forwarder-channel",
+    "release": "https://github.com/cmyksoda/godmodewii-forwarder-channel/releases/tag/v1.0.0",
+    "version": "v1.0.0",
+    "download": "https://github.com/cmyksoda/godmodewii-forwarder-channel/releases/download/v1.0.0/Wii-ONLY-GMWA-v1.zip"
   }
 ]
