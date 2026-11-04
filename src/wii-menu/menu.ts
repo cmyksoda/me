@@ -2,6 +2,7 @@ import type { Assets, Channel } from './assets';
 import { Board } from './board';
 import { Cursor } from './cursor';
 import { perMode, SCREEN_HEIGHT, type Screen } from './display';
+import { FADE_STEP_LIMIT } from './fader';
 import type { FooterTarget } from './footer';
 import { ChannelGrid, type Pointer } from './grid';
 import { letters } from './letters';
@@ -110,7 +111,7 @@ export class Menu {
 
   update(frames: number, pointer: MenuPointer): void {
     const ready = this.fade >= FADE_FRAMES;
-    this.fade = Math.min(FADE_FRAMES, this.fade + frames);
+    this.fade = Math.min(FADE_FRAMES, this.fade + Math.min(frames, FADE_STEP_LIMIT));
     const live = ready && pointer.inside;
     this.grid.update(frames, pointer, this.state === 'grid' && live);
     this.board.update(frames, pointer, this.state === 'board' && live, this.screen!);

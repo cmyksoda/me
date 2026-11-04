@@ -2,6 +2,8 @@ import { SCREEN_HEIGHT, type Screen } from './display';
 import type { Renderer } from './lyt/renderer';
 
 const FRAMES = 20;
+// A long update (a scene's first draw compiles and uploads its graphics) moves a fade at most this far, so it's seen.
+export const FADE_STEP_LIMIT = 2;
 // It reports a finished fade two updates after the last step.
 const DONE = FRAMES + 2;
 
@@ -27,7 +29,7 @@ export class Fader {
   }
 
   update(frames: number): void {
-    this.frame = Math.min(DONE, this.frame + frames);
+    this.frame = Math.min(DONE, this.frame + Math.min(frames, FADE_STEP_LIMIT));
   }
 
   /** Faded in and idle (PREPARE_OUT): scenes may take input. */
