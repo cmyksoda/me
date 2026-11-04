@@ -192,6 +192,8 @@ export class Board {
     this.maskOut = new AnimationPlayer(board.animation('my_BbsMask_a_MaskOut')!, this.mask);
 
     this.reader = board.instance('my_LetterL');
+    // Otherwise the plain paper decodes on the main thread when the first letter opens, and the opening pauses.
+    renderer.prepare(this.reader.layout, board.files);
     // The cards and the reader read textures from the same board archive, so a letterhead's are added once.
     for (const [name, letterhead] of assets.letterheads) {
       renderer.addTexture(this.reader, `${name}/my_LetterS_b.tpl`, parseTPL(letterhead.envelope)[0]);
