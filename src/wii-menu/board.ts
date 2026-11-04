@@ -29,6 +29,11 @@ const TOUCH_SLOP = 4;
 // RBRGetPosRect: where a letter can be pinned, in the board's 4:3 units.
 const BOUNDS = { left: -230, right: 230, top: 180, bottom: -80 };
 const FONT = 'RevoIpl_UtrilloProGrecoStd_M_32_I4';
+// Utrillo spaces a straight ' like a letter ("aren 't"), so letters use its curly one, set snug as print sets it.
+const APOSTROPHE = /(?<=\p{L})'/gu;
+const CURLY = 0x2019;
+const CURLY_LEFT = 1;
+const CURLY_ADVANCE = 6;
 // UrlProcessor::parse: links are Wii blue, orange and raised while pointed at, yellow when chosen.
 const LINK: RGBA = [0x34, 0xbe, 0xed, 255];
 const LINK_POINTED: RGBA = [0xf0, 0x6e, 0x28, 255];
@@ -137,6 +142,9 @@ export class Board {
   constructor(private readonly assets: Assets, private readonly renderer: Renderer, private readonly sound: Sound,
     letterList: Letter[]) {
     const { board, cursor } = assets.menu;
+    const glyphs = renderer.fonts.get(FONT)!.metrics.glyphs;
+    const curly = glyphs[CURLY];
+    if (curly) glyphs[CURLY] = [curly[0], curly[1], CURLY_LEFT, curly[3], CURLY_ADVANCE];
     let places: Record<string, [number, number]> = {};
     try {
       places = JSON.parse(localStorage.getItem(PLACES_KEY) ?? '{}') ?? {};
@@ -238,7 +246,7 @@ export class Board {
     const body = this.reader.pane('T_Letter');
     const content = body.source.text!;
     const font = this.renderer.fonts.get(FONT)!.metrics;
-    const text = wrap(font, content, letter.body);
+    const text = wrap(font, content, letter.body.replace(APOSTROPHE, String.fromCharCode(CURLY)));
     // Links found in the text get hit boxes from where their glyphs land.
     const quads = layoutText(font, content, text, body.source.origin, body.size);
     // Links are written without https:// so they fit the paper's width.
