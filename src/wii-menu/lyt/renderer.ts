@@ -696,9 +696,11 @@ export class Renderer {
       gl.uniform3fv(program.uniform('uIndRowT'), this.indRowT);
     }
 
+    // Uploading a texture binds it to the active unit, so every map is decoded before any unit is bound.
+    const entries = material.texMaps.map((_, unit) => this.texture(instance, state, unit));
     const units: number[] = [];
     material.texMaps.forEach((map, unit) => {
-      const entry = this.texture(instance, state, unit);
+      const entry = entries[unit];
       gl.activeTexture(gl.TEXTURE0 + unit);
       gl.bindTexture(gl.TEXTURE_2D, entry?.texture ?? null);
       gl.bindSampler(unit, this.sampler(map.wrapS, map.wrapT, entry?.minFilter ?? 1, entry?.magFilter ?? 1));
