@@ -7,7 +7,8 @@ Usage: tools/hbc/sync_apps.py [--dry-run] [--repo OWNER/NAME ...] [--commit-mess
 Apps are OWNER's repos tagged TOPIC, EXTRA_REPOS and any --repo. Release zips are untrusted:
 each is downloaded into its own empty folder and only meta.xml and icon.png are read, in memory.
 The page shows longDescriptionDraft over longDescription and the script never edits a draft, so
-a longDescription that differs from meta.xml and has no draft is saved as one before it is replaced.
+a hand-edited longDescription (one that differs from the meta.xml of the release apps.json lists)
+with no draft is saved as one before meta.xml's text replaces it.
 """
 
 import argparse
@@ -145,11 +146,30 @@ def read_app(full_name):
     return entry, icon if has_icon else None
 
 
+def is_hand_edit(old, fresh):
+    """Whether old's longDescription differs from the meta.xml of the release it lists.
+
+    An unreadable listed release counts as an edit, since keeping the text is the safe side.
+    """
+    url = old.get("download")
+    if url == fresh["download"]:
+        return old["longDescription"] != fresh["longDescription"]
+    if not url:
+        return True
+    try:
+        release_zip = read_release_zip(url)
+        return release_zip is None or old["longDescription"] != parse_meta(release_zip[1])["longDescription"]
+    except (urllib.error.URLError, zipfile.BadZipFile, ET.ParseError):
+        return True
+
+
 def merge(old, fresh):
     """Applies a release's fields to an entry, keeping the page's text if only apps.json had it."""
     entry = {**old, **fresh}
     old_text = old.get("longDescription")
-    if "longDescriptionDraft" not in old and old_text not in (None, fresh["longDescription"]):
+    if ("longDescriptionDraft" not in old and old_text not in (None, fresh["longDescription"])
+            and is_hand_edit(old, fresh)):
+        print(f"{fresh['repo']}: kept its edited description as longDescriptionDraft")
         entry["longDescriptionDraft"] = old_text
     known = {key: entry[key] for key in FIELD_ORDER if key in entry}
     return known | {key: value for key, value in entry.items() if key not in known}
