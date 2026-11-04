@@ -33,6 +33,10 @@ const TARGETS: Record<Mode, FooterTarget[]> = {
 const SPEAKER = { on: 'web_speaker_on.tpl', off: 'web_speaker_off.tpl' };
 // The rails each pod sits in: end caps and the middle stretch.
 const RAIL = /^Btn[LR]_a\d_[012]$/;
+// The caps facing the middle, and the share of their picture (from its left) that is the tip: run on from there,
+// the edge's column is too short and smears into a thin bar beside the picture.
+const INNER_CAP = /^(BtnL_a\d_2|BtnR_a\d_0)$/;
+const TIP = 0.15;
 // What slides in over a window wider than the console's picture, with how far past its edge each is parked.
 // Each button takes its shadow (the a1 pod's picture of it) along.
 const POD_SLIDES: Slide[] = [
@@ -341,7 +345,10 @@ export class Footer {
       screen,
       () => this.renderer.drawLayout(this.layout, (pane) => !isUnder(pane, ['N_ArwL', 'N_ArwR'])),
       // Contained, the rails run on to the window's edges.
-      () => drawWings(this.renderer, screen, this.layout, (pane) => RAIL.test(pane.name)),
+      () => drawWings(
+        this.renderer, screen, this.layout,
+        (pane, across) => RAIL.test(pane.name) && !(INNER_CAP.test(pane.name) && across < TIP),
+      ),
     );
   }
 

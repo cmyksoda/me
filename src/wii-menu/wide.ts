@@ -36,19 +36,21 @@ export function spreadPages(instance: LayoutInstance, names: string[], screen: S
 /**
  * Contained, draws some of a layout's panes over the window either side of the console picture: each one
  * crossing the picture's edge is drawn out along its own length from there, as if it ran on to the window's edge.
+ * `only` also gets where the edge crosses the pane, as a share of its width from its own left edge.
  */
 export function drawWings(
   renderer: Renderer,
   screen: Screen,
   instance: LayoutInstance,
-  only: (pane: PaneNode) => boolean,
+  only: (pane: PaneNode, across: number) => boolean,
 ): void {
   for (const side of wings(screen)) {
     const edge = side[0] < 0 ? side[2] : side[0];
     const worlds = new Map<PaneNode, Float32Array>();
     const find = (pane: PaneNode) => {
       if (!pane.visible) return;
-      if (only(pane) && crosses(pane, edge)) worlds.set(pane, pane.world.slice());
+      const across = shareAcross(pane, edge);
+      if (across >= 0 && across <= 1 && only(pane, across)) worlds.set(pane, pane.world.slice());
       pane.children.forEach(find);
     };
     find(instance.root);
@@ -113,10 +115,10 @@ export class Sliders {
 /** Where a pane's middle line meets x = edge, in its own units along it. */
 const crossing = (pane: PaneNode, edge: number) => (edge - pane.world[3]) / pane.world[0];
 
-function crosses(pane: PaneNode, edge: number): boolean {
+/** Where x = edge meets a pane, as a share of its width from its own left edge; outside 0 to 1 it misses. */
+function shareAcross(pane: PaneNode, edge: number): number {
   const left = -((pane.source.origin % 3) / 2) * pane.size[0];
-  const at = crossing(pane, edge);
-  return at >= left && at <= left + pane.size[0];
+  return (crossing(pane, edge) - left) / pane.size[0];
 }
 
 /** Stretches a pane's world matrix along its own x axis about where it meets x = edge. */
