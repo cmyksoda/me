@@ -1,4 +1,4 @@
-import type { Material, TevOp } from './brlyt';
+import type { Material, TevIndirect, TevOp } from './brlyt';
 
 /** One GX TEV stage, in the shape GXSetTevOrder/ColorIn/AlphaIn/...Op take. */
 interface Stage {
@@ -11,6 +11,7 @@ interface Stage {
   alpha: TevOp;
   konstColor: number;
   konstAlpha: number;
+  indirect: TevIndirect | null;
 }
 
 const GX_COLOR0A0 = 4;
@@ -27,7 +28,9 @@ const add = (a: number, b: number, c: number, d: number): TevOp => (
 );
 
 function stage(texCoord: number, texMap: number, channel: number, color: TevOp, alpha: TevOp, konst = 0x0c): Stage {
-  return { texCoord, texMap, channel, rasSwap: 0, texSwap: 0, color, alpha, konstColor: konst, konstAlpha: konst };
+  return {
+    texCoord, texMap, channel, rasSwap: 0, texSwap: 0, color, alpha, konstColor: konst, konstAlpha: konst, indirect: null,
+  };
 }
 
 /** The stages lyt::Material::SetupGX builds when a material has none of its own. */
@@ -67,6 +70,10 @@ const ALPHA_INPUTS = ['prev.a', 'c0.a', 'c1.a', 'c2.a', 'tex.a', 'ras.a', 'konst
 const DESTS = ['prev', 'c0', 'c1', 'c2'];
 const SCALES = ['1.0', '2.0', '4.0', '0.5'];
 const BIASES = ['0.0', '0.5', '-0.5', '0.0'];
+// GXIndTexFormat keeps the top 8, 5, 4 or 3 bits of each index component.
+const INDIRECT_DROPPED_BITS = [0, 3, 4, 5];
+// GXIndTexWrap: the stage's texel coordinate repeats every N texels; 0 keeps it as is, -1 pins it to zero.
+const INDIRECT_WRAPS = [0, 256, 128, 64, 32, 16, -1];
 
 /** GX_TEV_KCSEL/KASEL: fixed eighths, a whole konst color, or one channel of one. */
 function konstSelect(selector: number, alpha: boolean): string {
@@ -76,6 +83,41 @@ function konstSelect(selector: number, alpha: boolean): string {
   else if (selector < 16) return alpha ? `uKonst[${selector - 12}].a` : `uKonst[${selector - 12}].rgb`;
   else value = `uKonst[${(selector - 16) % 4}].${'rgba'[(selector - 16) >> 2]}`;
   return alpha ? value : `vec3(${value})`;
+}
+
+/** A stage's indirect settings, unless they name a lookup the material can't make. */
+function usableIndirect(s: Stage, genCount: number): TevIndirect | null {
+  const indirect = s.indirect;
+  const hasTexture = s.texMap < 8 && s.texCoord < genCount;
+  return indirect && hasTexture && indirect.order.texMap < 8 && indirect.order.texCoord < genCount ? indirect : null;
+}
+
+/**
+ * Sets `tex` the way GX's indirect unit does: an index texel (S, T, U from its A, B, G) times an indirect matrix
+ * offsets the stage's wrapped texel coordinate. Wrapping first is what makes a small tile repeat across a pane.
+ */
+function indirectSample(s: Stage, indirect: TevIndirect, swizzle: string): string {
+  const { order } = indirect;
+  const lookup = `vTexCoord${order.texCoord} / vec2(${2 ** order.scaleS}.0, ${2 ** order.scaleT}.0)`;
+  const bytes = `floor(texture(uTexture[${order.texMap}], ${lookup}).abg * 255.0 + 0.5)`;
+  const wrap = (axis: string, mode: number) => {
+    const texels = INDIRECT_WRAPS[mode] ?? 0;
+    return texels === 0 ? `coord.${axis}` : texels < 0 ? '0.0' : `mod(coord.${axis}, ${texels}.0)`;
+  };
+  const row = indirect.matrix - 1;
+  const offset = row >= 0 && row < 3 ? `vec2(dot(uIndRowS[${row}], index), dot(uIndRowT[${row}], index))` : 'vec2(0.0)';
+  const size = `vec2(textureSize(uTexture[${s.texMap}], 0))`;
+  // A biased component is centered: ITF_8 about 0, the narrower formats up by one.
+  const biased = [1, 2, 4].map((bit) => (indirect.bias & bit ? '1.0' : '0.0')).join(', ');
+  const center = indirect.bias ? `\n    index += vec3(${biased}) * ${indirect.format ? '1.0' : '-128.0'};` : '';
+  const previous = indirect.addPrevious ? ' + indirectPrev' : '';
+  return `{
+    vec3 index = floor(${bytes} / ${2 ** INDIRECT_DROPPED_BITS[indirect.format]}.0);${center}
+    vec2 coord = vTexCoord${s.texCoord} * ${size};
+    coord = vec2(${wrap('x', indirect.wrapS)}, ${wrap('y', indirect.wrapT)}) + ${offset}${previous};
+    indirectPrev = coord;
+    tex = texture(uTexture[${s.texMap}], coord / ${size}).${swizzle};
+  }`;
 }
 
 function combine(op: TevOp, alpha: boolean): string {
@@ -136,11 +178,13 @@ function writeMaterialShader(material: Material): ShaderSource {
     const swizzle = (table: number) => swaps[table].map((channel) => 'rgba'[channel]).join('');
     const hasTexture = s.texMap < 8 && s.texCoord < gens.length;
     const texture = hasTexture ? `texture(uTexture[${s.texMap}], vTexCoord${s.texCoord})` : 'vec4(1.0)';
+    const indirect = usableIndirect(s, gens.length);
+    const sample = indirect ? indirectSample(s, indirect, swizzle(s.texSwap)) : `tex = ${texture}.${swizzle(s.texSwap)};`;
     const raster = s.channel === GX_COLOR0A0 || s.channel === 0 || s.channel === 2 ? 'vRaster' : 'vec4(0.0)';
     const color = combine(s.color, false);
     const alpha = combine(s.alpha, true);
     return `// stage ${i}
-  tex = ${texture}.${swizzle(s.texSwap)};
+  ${sample}
   ras = ${raster}.${swizzle(s.rasSwap)};
   konst = vec4(${konstSelect(s.konstColor, false)}, ${konstSelect(s.konstAlpha, true)});
   {
@@ -151,7 +195,10 @@ function writeMaterialShader(material: Material): ShaderSource {
   }`;
   }).join('\n  ');
 
-  const textureCount = Math.max(0, ...stages.filter((s) => s.texMap < 8).map((s) => s.texMap + 1));
+  const indirects = stages.map((s) => usableIndirect(s, gens.length)).filter((i) => i !== null);
+  const textureCount = Math.max(
+    0, ...stages.filter((s) => s.texMap < 8).map((s) => s.texMap + 1), ...indirects.map((i) => i.order.texMap + 1),
+  );
   const genCount = gens.length;
   const vertex = `#version 300 es
 in vec2 aPosition;
@@ -176,11 +223,11 @@ precision highp float;
 uniform sampler2D uTexture[${Math.max(1, textureCount)}];
 uniform vec4 uColor[3];
 uniform vec4 uKonst[4];
-in vec4 vRaster;
+${indirects.length ? 'uniform vec3 uIndRowS[3];\nuniform vec3 uIndRowT[3];\n' : ''}in vec4 vRaster;
 ${Array.from({ length: genCount }, (_, i) => `in vec2 vTexCoord${i};`).join('\n')}
 out vec4 fragColor;
 void main() {
-  vec4 prev = vec4(0.0);
+  ${indirects.length ? 'vec2 indirectPrev = vec2(0.0);\n  ' : ''}vec4 prev = vec4(0.0);
   vec4 c0 = uColor[0];
   vec4 c1 = uColor[1];
   vec4 c2 = uColor[2];

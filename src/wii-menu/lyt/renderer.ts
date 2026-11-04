@@ -156,6 +156,8 @@ export class Renderer {
   private readonly konstData = new Float32Array(16);
   private readonly rowS = new Float32Array(24);
   private readonly rowT = new Float32Array(24);
+  private readonly indRowS = new Float32Array(9);
+  private readonly indRowT = new Float32Array(9);
   private readonly layouts = new WeakMap<PaneNode, { text: string; size: string; quads: GlyphQuad[] }>();
   private readonly buffer: WebGLBuffer;
   private vertices = new Float32Array(FLOATS_PER_VERTEX * 4);
@@ -677,6 +679,21 @@ export class Renderer {
     if (gens.length) {
       gl.uniform3fv(program.uniform('uTexRowS'), rowS, 0, gens.length * 3);
       gl.uniform3fv(program.uniform('uTexRowT'), rowT, 0, gens.length * 3);
+    }
+
+    const indRowS = program.uniform('uIndRowS');
+    if (indRowS) {
+      // lyt CalcIndTexMtx: the matrix is the SRT's own numbers, applied to an index's (S, T, U).
+      this.indRowS.fill(0);
+      this.indRowT.fill(0);
+      material.indSRTs.forEach((srt, i) => {
+        const cos = Math.cos(srt.rotate * Math.PI / 180);
+        const sin = Math.sin(srt.rotate * Math.PI / 180);
+        this.indRowS.set([cos * srt.scale[0], -sin * srt.scale[1], srt.translate[0]], i * 3);
+        this.indRowT.set([sin * srt.scale[0], cos * srt.scale[1], srt.translate[1]], i * 3);
+      });
+      gl.uniform3fv(indRowS, this.indRowS);
+      gl.uniform3fv(program.uniform('uIndRowT'), this.indRowT);
     }
 
     const units: number[] = [];

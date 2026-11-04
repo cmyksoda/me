@@ -33,6 +33,30 @@ export interface TevOp {
   dest: number;
 }
 
+/** The indirect-texture order a TEV stage names (GXSetIndTexOrder and GXSetIndTexCoordScale). */
+export interface IndirectOrder {
+  texCoord: number;
+  texMap: number;
+  /** GXIndTexScale: the lookup coordinate is divided by 2^n. */
+  scaleS: number;
+  scaleT: number;
+}
+
+/** A TEV stage's GXSetTevIndirect settings, with the order it points at. */
+export interface TevIndirect {
+  order: IndirectOrder;
+  /** GXIndTexFormat: 0 ITF_8, 1 ITF_5, 2 ITF_4, 3 ITF_3. */
+  format: number;
+  /** GXIndTexBiasSel bits: 1 S, 2 T, 4 U. */
+  bias: number;
+  /** GXIndTexMtxID: 1 to 3 pick indirect SRT 0 to 2, 0 is off. */
+  matrix: number;
+  /** GXIndTexWrap: 0 off, 1 to 5 are 256 down to 16, 6 zero. */
+  wrapS: number;
+  wrapT: number;
+  addPrevious: boolean;
+}
+
 export interface TevStage {
   texCoord: number;
   channel: number;
@@ -43,6 +67,8 @@ export interface TevStage {
   alpha: TevOp;
   konstColor: number;
   konstAlpha: number;
+  /** Null when the stage leaves its texture coordinate alone. */
+  indirect: TevIndirect | null;
   /** The original 16 bytes, used as part of the shader cache key. */
   key: string;
 }
@@ -157,6 +183,22 @@ function readTevOp(r: Reader, at: number): TevOp {
   };
 }
 
+function readIndirect(r: Reader, at: number, orders: IndirectOrder[]): TevIndirect | null {
+  const order = orders[r.u8(at)];
+  const indirect = {
+    order,
+    bias: r.u8(at + 1) & 7,
+    matrix: (r.u8(at + 1) >> 3) & 15,
+    wrapS: r.u8(at + 2) & 7,
+    wrapT: (r.u8(at + 2) >> 3) & 7,
+    format: r.u8(at + 3) & 3,
+    addPrevious: (r.u8(at + 3) & 4) !== 0,
+  };
+  // A stage whose matrix, wraps and add-previous are all off leaves its coordinate alone.
+  const active = indirect.matrix || indirect.wrapS || indirect.wrapT || indirect.addPrevious;
+  return order && active ? indirect : null;
+}
+
 function readMaterial(r: Reader, at: number): Material {
   const tevColors = [0, 1, 2].map((i) => {
     const c = at + 20 + i * 8;
@@ -199,8 +241,10 @@ function readMaterial(r: Reader, at: number): Material {
   }
   const indSRTs: TexSRT[] = [];
   for (let i = 0; i < ((flags >> 13) & 3); i++, p += 20) indSRTs.push(readSRT(r, p));
-  // Indirect stages are skipped: no System Menu or forwarder material uses indirect texturing.
-  p += ((flags >> 15) & 7) * 4;
+  const indirectOrders: IndirectOrder[] = [];
+  for (let i = 0; i < ((flags >> 15) & 7); i++, p += 4) {
+    indirectOrders.push({ texCoord: r.u8(p), texMap: r.u8(p + 1), scaleS: r.u8(p + 2), scaleT: r.u8(p + 3) });
+  }
 
   const tevStages: TevStage[] = [];
   for (let i = 0; i < ((flags >> 18) & 31); i++, p += 16) {
@@ -215,6 +259,7 @@ function readMaterial(r: Reader, at: number): Material {
       alpha: readTevOp(r, p + 8),
       konstColor: r.u8(p + 7) >> 3,
       konstAlpha: r.u8(p + 11) >> 3,
+      indirect: readIndirect(r, p + 12, indirectOrders),
       key: Array.from(r.slice(p, 16)).join('.'),
     });
   }
