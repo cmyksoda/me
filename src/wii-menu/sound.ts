@@ -139,18 +139,22 @@ export class Sound {
         this.startMusic();
         return;
       }
-      // The first time sound comes on is the menu's first boot: its jingle and the music start together.
+      // The first time sound comes on is the menu's first boot: its jingle and the music start together. The jingle
+      // plays as soon as it's here, and the far bigger music joins in where it would be by the time it arrives.
       this.booted = true;
       this.musicWanted = true;
-      const cues = this.cues;
-      void cues.then(async (all) => {
+      const boot = this.cues.then(async (all) => {
         const jingle = all[JINGLE] && (await this.load(`sound/${all[JINGLE].file}`));
-        await (all[MUSIC] && this.load(`sound/${all[MUSIC].file}`));
-        // A channel opened while these loaded has already asked for silence.
-        if (!this.musicWanted) return;
-        if (jingle && this.enabled) this.track(JINGLE, this.start(jingle, all[JINGLE].gain));
-        this.startMusic();
+        const music = all[MUSIC] && this.load(`sound/${all[MUSIC].file}`);
+        // A channel opened while it loaded has already asked for silence.
+        if (this.musicWanted && this.enabled) {
+          if (jingle) this.track(JINGLE, this.start(jingle, all[JINGLE].gain));
+          this.startMusic(0, this.context!.currentTime);
+        }
+        await music;
       });
+      // Banner sounds wait their turn, so they never slow the jingle's or the music's download.
+      this.preloading = this.preloading.then(() => boot).catch(() => {});
     } else {
       this.musicWanted = false;
       for (const voice of [...this.voices.values(), this.music, this.banner]) this.stopVoice(voice, 0);
@@ -281,15 +285,19 @@ export class Sound {
     }
   }
 
-  /** The menu music; it stops (not pauses) while a preview is open and starts over afterward. */
-  startMusic(delayFrames = 0): void {
+  /**
+   * The menu music; it stops (not pauses) while a preview is open and starts over afterward. Given `since` (a time
+   * on the audio clock), it begins where it would be had it started then.
+   */
+  startMusic(delayFrames = 0, since?: number): void {
     this.musicWanted = true;
     if (!this.enabled || !this.context || !this.cues || this.music) return;
     void this.cues.then(async (cues) => {
       const cue = cues[MUSIC];
       const buffer = cue && (await this.load(`sound/${cue.file}`));
       if (!buffer || !this.enabled || !this.musicWanted || this.music) return;
-      this.music = this.start(buffer, cue.gain, { loop: this.loopOf(cue), delay: delayFrames * UPDATE });
+      const offset = since === undefined ? 0 : Math.max(0, this.context!.currentTime - since);
+      this.music = this.start(buffer, cue.gain, { loop: this.loopOf(cue), delay: delayFrames * UPDATE, offset });
     });
   }
 
