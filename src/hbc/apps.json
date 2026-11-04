@@ -52,6 +52,32 @@
     "download": "https://github.com/cmyksoda/empty-slot-creator/releases/download/v1.0.1/EmptySlotCreator-v1.0.1.zip"
   },
   {
+    "repo": "GodModeWii",
+    "dirname": "GodModeWii",
+    "name": "GodModeWii",
+    "coder": "quatric, cmyksoda",
+    "version": "0.9.1",
+    "shortDescription": "GodMode9-style file manager",
+    "longDescription": "A text-mode, GodMode9-style file manager for the Wii and the Wii U's vWii.\n\nBrowse the SD card, SD Gecko, every USB drive, the NAND, the SEEPROM, the disc drive and your console's keys. Copy, cut, paste and delete between devices, see free space, and edit the NAND only after the Konami code and a brick-risk disclaimer.\n\nWARNING: modifying the NAND can permanently brick your console.",
+    "longDescriptionDraft": "GodModeWii is a collaboration between quatric and I.\n\nIt's a text-based file manager for the Wii and the Wii U's vWii, in the style of GodMode9. With GodModeWii, you can perform standard file manager operations, as well as export Miis, install WADs, launch homebrew apps, and more.\n\nWARNING: changing the NAND can permanently brick your console. NAND changes stay locked until you enter the Konami code.",
+    "icon": true,
+    "source": "https://github.com/quatric/GodModeWii",
+    "download": "https://github.com/quatric/GodModeWii/releases/download/v0.9.1/GodModeWii.zip"
+  },
+  {
+    "repo": "netsurf-wii",
+    "dirname": "netsurf",
+    "name": "NetSurf Wii",
+    "coder": "quatric, cmyksoda",
+    "version": "1.2.0",
+    "shortDescription": "NetSurf 3.12 Dev — Experimental",
+    "longDescription": "Experimental Wii port of the NetSurf web browser using libnsfb, SDL, curl, mbedTLS, and libwupc.",
+    "longDescriptionDraft": "NetSurf Wii is a collaboration between quatric and I.\n\nIt's a Wii port of the NetSurf web browser, with HTTPS through curl and mbedTLS.\n\nBrowse with a Wii Remote, Classic Controller, GameCube controller, Wii U Pro Controller, or a USB keyboard and mouse.",
+    "icon": true,
+    "source": "https://github.com/quatric/netsurf-wii",
+    "download": "https://github.com/quatric/netsurf-wii/releases/download/v1.2.0/netsurf-wii.zip"
+  },
+  {
     "repo": "Paper-Airplane-Chase-GX",
     "dirname": "paperplane",
     "name": "Paper Airplane Chase GX",

@@ -26,8 +26,8 @@ from pathlib import Path
 
 OWNER = "cmyksoda"
 TOPIC = "homebrew-app"
-# Apps in other people's repos, added once their owner agrees (GodModeWii and NetSurf Wii wait on Larsen).
-EXTRA_REPOS = []
+# Apps in other people's repos, added once their owner agrees.
+EXTRA_REPOS = ["quatric/GodModeWii", "quatric/netsurf-wii"]
 
 FIELD_ORDER = [
     "repo", "dirname", "name", "coder", "version", "shortDescription", "longDescription",
