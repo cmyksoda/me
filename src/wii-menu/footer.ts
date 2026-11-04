@@ -34,10 +34,12 @@ const SPEAKER = { on: 'web_speaker_on.tpl', off: 'web_speaker_off.tpl' };
 // The rails each pod sits in: end caps and the middle stretch.
 const RAIL = /^Btn[LR]_a\d_[012]$/;
 // What slides in over a window wider than the console's picture, with how far past its edge each is parked.
+// Each button takes its shadow (the a1 pod's picture of it) along.
 const POD_SLIDES: Slide[] = [
   [['N_BtnL_a3', 'N_BtnL_a4'], 207], [['N_Dust'], 185],
-  [['N_BtnL_a0_Set'], 46], [['N_BtnL_a0_Add'], 46], [['N_BtnL_a0_Cal'], 46],
-  [['N_BtnR_a0_Bbs'], 46], [['N_BtnR_a0_Ch'], 46],
+  [['N_BtnL_a0_Set', 'BtnL_a1_Set'], 46], [['N_BtnL_a0_Add', 'BtnL_a1_Add'], 46],
+  [['N_BtnL_a0_Cal', 'BtnL_a1_Cal'], 46],
+  [['N_BtnR_a0_Bbs', 'BtnR_a1_Bbs'], 46], [['N_BtnR_a0_Ch', 'BtnR_a1_Ch'], 46],
 ];
 const BALLOON_DELAY = 16;
 const NEW_MAIL_EVERY = 3000;
@@ -102,7 +104,8 @@ export class Footer {
     keyed('toGrid', 6000, 6040);
     keyed('lettersOut', 3100, 3113);
     keyed('readerIn', 3600, 3613);
-    keyed('backPress', 3000, 3020);
+    // Its range also keys Back and Trash leaving, which readerOut plays afterward.
+    range('backPress', group('G_CalExit'), 3000, 3020);
     keyed('readerOut', 3620, 3633);
     keyed('lettersIn', 3426, 3439);
     for (const [name, groupName, inFrom, inTo, outFrom, outTo] of [
