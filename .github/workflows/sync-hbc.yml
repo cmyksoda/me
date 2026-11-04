@@ -1,0 +1,39 @@
+name: Sync Homebrew Channel apps
+
+on:
+  schedule:
+    - cron: "23 */4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: sync-hbc
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read the latest releases
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 -I tools/hbc/sync_apps.py --commit-message "$RUNNER_TEMP/commit-message.txt"
+      - name: Commit and deploy
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -z "$(git status --porcelain src/hbc)" ]; then
+            echo "Nothing changed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/hbc
+          git commit -F "$RUNNER_TEMP/commit-message.txt"
+          git pull --rebase
+          git push
+          # Pushes made with GITHUB_TOKEN don't start deploy.yml, but a dispatch does.
+          gh workflow run deploy.yml --ref "$GITHUB_REF_NAME"
