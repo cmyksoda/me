@@ -63,8 +63,8 @@ export const letters: Letter[] = [
       'The Internet Channel runs quatric\'s Wii port of NetSurf, packed entirely inside the channel. It\'s for '
         + 'the Wii only, not the Wii U\'s vWii, and installing it replaces your Internet Channel.',
       'The Forecast Channel is the WiiLink version, redrawn with the Japanese weather symbols everywhere, on the '
-        + 'Wii Menu icon too. The icon also features a live temperature reading where the Japanese channel would show '
-        + 'the current date. Installing it replaces your Forecast Channel.',
+        + 'Wii Menu icon too. The icon also shows the current temperature, weather symbol and conditions, and '
+        + 'WiiLink\'s logo in place of Weathernews\'. Installing it replaces your Forecast Channel.',
       'Please back up your NAND before you install any of these channels.\ncmyksoda / Jaxi',
     ].join('\n\n'),
   },

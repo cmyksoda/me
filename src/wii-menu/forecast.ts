@@ -8,6 +8,8 @@ const CITY = 'Redmond';
 const CONDITION = 'Sunny';
 // WiiLink's "Sunny" carries mark 101, which is the sun alone at the center.
 const SYMBOL = 'W_sun_00';
+// icon.cs scales each mark to fill the same box; this is mark 101's scale from its table.
+const SUN_SCALE = 0.7176513671875;
 // About the Seattle area's normal daily highs in °F, January to December.
 const HIGHS = [48, 50, 54, 59, 65, 71, 77, 78, 71, 60, 51, 46];
 const TIME_ZONE = 'America/Los_Angeles';
@@ -16,12 +18,15 @@ const UPDATE_HOUR = 15;
 const NUMBER_CELLS = 14;
 const DIGIT_WIDTH = 50;
 
-/** icon.cs on a console with data: the sun and temperature, with icon_Rso0 cycling the Weathernews logo over them. */
+/** icon.cs on a console with data: the sun, temperature and condition, with icon_Rso0 cycling the WiiLink logo over them. */
 export function forecastIcon(channel: ChannelBase, instance: LayoutInstance): AnimationPlayer | null {
   if (channel.id !== FORECAST_ID) return null;
   const text = `${latestForecast().fahrenheit}°F`;
   showSymbol(instance);
+  fitSun(instance);
   for (const name of ['current_text', 'current_sdw']) instance.pane(name).text = text;
+  for (const name of ['condition_text', 'condition_sdw']) instance.pane(name).text = CONDITION;
+  instance.pane('title_nodata').visible = false;
   return moduleClip(channel.icon, instance, 'icon').play();
 }
 
@@ -75,6 +80,22 @@ function moduleClip(archive: Archive, instance: LayoutInstance, layout: string):
 function showSymbol(instance: LayoutInstance): void {
   for (const pane of instance.pane('code').children) {
     if (pane.name.startsWith('W_')) pane.visible = pane.name === SYMBOL;
+  }
+}
+
+/**
+ * The sun is centered on `code`'s origin, so only the scale changes. The temperature and condition text
+ * are children of `code`; they shrink back by the same ratio and keep the layout's place and size.
+ */
+function fitSun(instance: LayoutInstance): void {
+  const code = instance.pane('code');
+  const ratio = code.scale[0] / SUN_SCALE;
+  code.scale = [SUN_SCALE, SUN_SCALE];
+  for (const name of ['current_label', 'condition_label']) {
+    const pane = instance.pane(name);
+    pane.translate[0] *= ratio;
+    pane.translate[1] *= ratio;
+    pane.scale = [pane.scale[0] * ratio, pane.scale[1] * ratio];
   }
 }
 
