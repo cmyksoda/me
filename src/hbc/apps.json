@@ -43,13 +43,13 @@
     "dirname": "emptyslot",
     "name": "Empty Slot Creator",
     "coder": "cmyksoda",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "shortDescription": "Create invisible forwarder channels",
     "longDescription": "Pick a homebrew app and get a WAD for a channel that looks like an unused slot on the Wii Menu and opens that app. The WAD is saved to sd:/wad; install it with a WAD manager such as YAWMM ModMii Edition.",
     "longDescriptionDraft": "A Homebrew Channel app that makes invisible forwarder channel WADs. You can select any homebrew software you have installed, and the app will generate a WAD for you to install with the WAD manager of your choice.\n\nThe installed channel looks exactly like an unused slot on the Wii Menu, and can only be detected when hovered over. The banner recreates the same look as the icon and has gentle white noise as its audio.",
     "icon": true,
     "source": "https://github.com/cmyksoda/empty-slot-creator",
-    "download": "https://github.com/cmyksoda/empty-slot-creator/releases/download/v1.0.0/EmptySlotCreator-v1.0.0.zip"
+    "download": "https://github.com/cmyksoda/empty-slot-creator/releases/download/v1.0.1/EmptySlotCreator-v1.0.1.zip"
   },
   {
     "repo": "Paper-Airplane-Chase-GX",
