@@ -60,8 +60,9 @@ export const letters: Letter[] = [
       'Super Mario Bros. 25th Anniversary, which shows a 25 on its ? blocks, came pre-installed on the anniversary '
         + 'Wii consoles in Japan, Hong Kong, Taiwan and Australia. North America never got it, so this version '
         + 'combines the English banner from the Australian release with the 60 Hz ROM from the Japanese release.',
-      'The Internet Channel runs quatric\'s Wii port of NetSurf, packed entirely inside the channel. It\'s for '
-        + 'the Wii only, not the Wii U\'s vWii, and installing it replaces your Internet Channel.',
+      'The Internet Channel runs the Wii port of NetSurf that quatric and I made together, packed entirely '
+        + 'inside the channel. It\'s for the Wii only, not the Wii U\'s vWii. Installing it replaces your '
+        + 'Internet Channel.',
       'The Forecast Channel is the WiiLink version, redrawn with the Japanese weather symbols everywhere, on the '
         + 'Wii Menu icon too. The icon also shows the current temperature, weather symbol and conditions, and '
         + 'WiiLink\'s logo in place of Weathernews\'. Installing it replaces your Forecast Channel.',
