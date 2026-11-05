@@ -70,16 +70,18 @@ export function tilted(pane: PaneNode): boolean {
   return Math.abs(m[4]) > TILT * Math.hypot(m[0], m[4]);
 }
 
-/** Makes a rail `extra` units longer at its outer end (−1 left, 1 right): the middle stretches and the cap moves. */
-export function lengthenRail(middle: PaneNode, outerCap: PaneNode, outward: -1 | 1, extra: number): void {
+/** Makes a rail longer at its own left and right ends by these many units: the middle stretches, the caps move. */
+export function lengthenRail(
+  middle: PaneNode, caps: [PaneNode, PaneNode], extraLeft: number, extraRight: number,
+): void {
   const m = middle.world;
   const width = middle.size[0];
   const left = -((middle.source.origin % 3) / 2) * width;
-  const fixed = outward < 0 ? left + width : left;
-  const stretch = (width + extra) / width;
+  const stretch = (width + extraLeft + extraRight) / width;
   for (const row of [0, 4, 8]) {
-    outerCap.world[row + 3] += m[row] * outward * extra;
-    m[row + 3] += m[row] * fixed * (1 - stretch);
+    caps[0].world[row + 3] -= m[row] * extraLeft;
+    caps[1].world[row + 3] += m[row] * extraRight;
+    m[row + 3] += m[row] * (left - extraLeft - left * stretch);
     m[row] *= stretch;
   }
 }

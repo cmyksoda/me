@@ -63,8 +63,8 @@ export class Footer {
   private readonly sd: LayoutInstance;
   private readonly clips = new Map<string, AnimationPlayer>();
   private readonly pods: Sliders;
-  // Each pod's rails, and which way is out (the left pods' outer caps face left).
-  private readonly rails: { middle: PaneNode; outer: PaneNode; inner: PaneNode; outward: -1 | 1 }[] = [];
+  // Each pod's rails: the middle stretch, the caps at its own left and right, and its side of the picture.
+  private readonly rails: { middle: PaneNode; caps: [PaneNode, PaneNode]; side: -1 | 1 }[] = [];
   private readonly arrows: Sliders;
   private readonly balloons: Partial<Record<FooterTarget, Balloon>>;
   private mode: Mode = 'grid';
@@ -82,11 +82,8 @@ export class Footer {
     for (const name of this.layout.panes.keys()) {
       const pod = /^(Btn([LR])_a\d)_1$/.exec(name);
       if (!pod) continue;
-      const left = pod[2] === 'L';
       const cap = (end: number) => this.layout.pane(`${pod[1]}_${end}`);
-      this.rails.push({
-        middle: this.layout.pane(name), outer: cap(left ? 0 : 2), inner: cap(left ? 2 : 0), outward: left ? -1 : 1,
-      });
+      this.rails.push({ middle: this.layout.pane(name), caps: [cap(0), cap(2)], side: pod[2] === 'L' ? -1 : 1 });
     }
     this.arrows = new Sliders(this.layout, PAGE_ARROWS);
     const footer = cmnBtn.animation('my_IplTop_e')!;
@@ -379,17 +376,21 @@ export class Footer {
   }
 
   /**
-   * Contained, a swinging pod's rails can't run on along the picture's edge, so they grow by the width beside the
-   * picture instead, reaching the window's edge as the run-on does at rest, and draw whole.
+   * Contained, a swinging pod's rails can't run on along the picture's edge, so they draw whole and grow by the width
+   * beside the picture at the end facing the window's edge, as far as it faces it: all of it while flat, as the run-on
+   * reaches at rest, and none upright, so the growth passes from one end to the other as the pod turns.
    */
   private swing(screen: Screen): Set<PaneNode> {
     const swinging = new Set<PaneNode>();
     if (!screen.contained) return swinging;
     const extra = (screen.window - screen.projection) / 2;
-    for (const { middle, outer, inner, outward } of this.rails) {
+    for (const { middle, caps, side } of this.rails) {
       if (!tilted(middle)) continue;
-      lengthenRail(middle, outer, outward, extra);
-      swinging.add(middle).add(outer).add(inner);
+      const m = middle.world;
+      // How squarely the rail's own right end faces the window's edge on its side (−1: its left end does).
+      const facing = (side * m[0]) / Math.hypot(m[0], m[4]);
+      lengthenRail(middle, caps, extra * Math.max(0, -facing), extra * Math.max(0, facing));
+      swinging.add(middle).add(caps[0]).add(caps[1]);
     }
     return swinging;
   }
