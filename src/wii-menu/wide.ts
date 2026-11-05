@@ -111,22 +111,27 @@ export class Sliders {
   /**
    * Runs `inPicture` with the sliders (and any pane `whole` names) whole and the rest of the layout cut at the
    * picture's edge, then `beyond` with no cut. A unit speeds on out of the window as it nears its parking place, as
-   * spreading the layout would, so it never rests in view where the console has it off screen; a swinging one keeps
-   * to its pod.
+   * spreading the layout would, so it never rests in view where the console has it off screen. It's pushed along its
+   * own length, so one on a swinging pod stays on it: all sideways while flat, less as it turns, none upright.
    */
   draw(screen: Screen, inPicture: () => void, beyond?: () => void, whole?: (pane: PaneNode) => boolean): void {
-    const moved: [PaneNode, number][] = [];
+    const moved: [PaneNode, number, number][] = [];
     if (screen.contained) {
       const spread = screen.window / screen.projection;
       for (const { panes, parkedPast } of this.units) {
-        if (tilted(panes[0])) continue;
-        const x = panes[0].world[3];
+        const m = panes[0].world;
+        const x = m[3];
         const toPark = Math.min(1, Math.max(0, (Math.abs(x) - screen.projection / 2) / parkedPast));
         const shift = Math.sign(x) * (spread - 1) * Math.abs(x) * toPark;
-        for (const pane of panes.flatMap(subtree)) moved.push([pane, shift]);
+        const length = Math.hypot(m[0], m[4]);
+        const [alongX, alongY] = [m[0] / length, m[4] / length];
+        for (const pane of panes.flatMap(subtree)) moved.push([pane, shift * alongX * alongX, shift * alongX * alongY]);
       }
     }
-    for (const [pane, shift] of moved) pane.world[3] += shift;
+    for (const [pane, dx, dy] of moved) {
+      pane.world[3] += dx;
+      pane.world[7] += dy;
+    }
     const all = subtree(this.instance.root);
     for (const pane of all) {
       const free = (this.panes.has(pane) && !this.rail?.test(pane.name)) || whole?.(pane);
@@ -135,7 +140,10 @@ export class Sliders {
     inPicture();
     for (const pane of all) pane.bounds = null;
     beyond?.();
-    for (const [pane, shift] of moved) pane.world[3] -= shift;
+    for (const [pane, dx, dy] of moved) {
+      pane.world[3] -= dx;
+      pane.world[7] -= dy;
+    }
   }
 }
 
