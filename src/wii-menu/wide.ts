@@ -111,27 +111,31 @@ export class Sliders {
   /**
    * Runs `inPicture` with the sliders (and any pane `whole` names) whole and the rest of the layout cut at the
    * picture's edge, then `beyond` with no cut. A unit speeds on out of the window as it nears its parking place, as
-   * spreading the layout would, so it never rests in view where the console has it off screen. It's pushed along its
-   * own length, so one on a swinging pod stays on it: all sideways while flat, less as it turns, none upright.
+   * spreading the layout would, so it never rests in view where the console has it off screen. On a swinging pod it
+   * stays put and fades instead, the further past the picture's edge and the flatter the pod, so it's gone by the
+   * time the pod lies flat and would push it away.
    */
   draw(screen: Screen, inPicture: () => void, beyond?: () => void, whole?: (pane: PaneNode) => boolean): void {
-    const moved: [PaneNode, number, number][] = [];
+    const moved: [PaneNode, number][] = [];
+    const faded: [PaneNode, number][] = [];
     if (screen.contained) {
       const spread = screen.window / screen.projection;
       for (const { panes, parkedPast } of this.units) {
         const m = panes[0].world;
         const x = m[3];
         const toPark = Math.min(1, Math.max(0, (Math.abs(x) - screen.projection / 2) / parkedPast));
+        const unit = panes.flatMap(subtree);
+        if (tilted(panes[0])) {
+          const flat = (m[0] * m[0]) / (m[0] * m[0] + m[4] * m[4]);
+          for (const pane of unit) faded.push([pane, pane.globalAlpha]);
+          for (const pane of unit) pane.globalAlpha *= 1 - toPark * flat;
+          continue;
+        }
         const shift = Math.sign(x) * (spread - 1) * Math.abs(x) * toPark;
-        const length = Math.hypot(m[0], m[4]);
-        const [alongX, alongY] = [m[0] / length, m[4] / length];
-        for (const pane of panes.flatMap(subtree)) moved.push([pane, shift * alongX * alongX, shift * alongX * alongY]);
+        for (const pane of unit) moved.push([pane, shift]);
       }
     }
-    for (const [pane, dx, dy] of moved) {
-      pane.world[3] += dx;
-      pane.world[7] += dy;
-    }
+    for (const [pane, shift] of moved) pane.world[3] += shift;
     const all = subtree(this.instance.root);
     for (const pane of all) {
       const free = (this.panes.has(pane) && !this.rail?.test(pane.name)) || whole?.(pane);
@@ -140,10 +144,8 @@ export class Sliders {
     inPicture();
     for (const pane of all) pane.bounds = null;
     beyond?.();
-    for (const [pane, dx, dy] of moved) {
-      pane.world[3] -= dx;
-      pane.world[7] -= dy;
-    }
+    for (const [pane, shift] of moved) pane.world[3] -= shift;
+    for (const [pane, alpha] of faded) pane.globalAlpha = alpha;
   }
 }
 
