@@ -148,6 +148,7 @@ table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nu
 .win:focus { outline: none; }
 .win.on, .win:focus-visible { stroke: var(--ink); stroke-width: 1.5px; }
 .tbuild { display: block; font-family: var(--body); font-size: 0.8rem; color: var(--muted); }
+.nw { white-space: nowrap; }
 .tab small { display: block; font-family: var(--body); font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem; }
 .sort { display: flex; justify-content: center; gap: 0.6rem; margin: 0 0 1.2rem; }
 .sortbtn { appearance: none; min-height: 44px; padding: 0.2rem 1.2rem 0; border-radius: 999px; cursor: pointer;
@@ -209,7 +210,7 @@ footer h2 { font-size: 1.3rem; margin-bottom: 0.3rem; }
 @media (max-width: 700px) {
   /* (two to a row, and an odd last tab centered under them) */
   .tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; }
-  .tab { flex: 0 1 calc(50% - 0.3rem); min-width: 0; padding: 0 0.4rem; }
+  .tab { flex: 0 1 calc(50% - 0.3rem); min-width: 0; height: auto; padding: 0.6rem 0.9rem 0.5rem; border-radius: 28px; }
 }
 @media (max-width: 520px) {
   .scene { grid-template-columns: 1fr; } .scene img, .scene .noimg { width: 100%; height: auto; aspect-ratio: 384 / 224; }
@@ -327,6 +328,8 @@ totop.addEventListener('click', e => { e.preventDefault(); glide(0, 0); document
 const B = D.budget, REL = D.versions[0].name;
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'})[c]);
+// (a version number never breaks at its hyphen on a narrow screen)
+const whole = s => s.replace(/(\S+-\S+)/g, '<span class="nw">$1</span>');
 let ver = location.hash === '#dev' ? 'dev' : 'release', dev, sortBy = 'order';
 function useVersion(v) {
   ver = v;
@@ -412,7 +415,7 @@ function sceneHtml(s) {
 function render() {
   $('tabs').innerHTML = D.devices.map(d => {
     const t = D.totals.find(x => x.id === d.id);
-    return `<button class="tab" role="tab" aria-selected="${d.id === dev}" data-dev="${d.id}">${d.name}<small>${t.timed ? (t.builds ? t.builds + ' · ' : '') + t.timed + ' timed' : 'not yet'}</small></button>`;
+    return `<button class="tab" role="tab" aria-selected="${d.id === dev}" data-dev="${d.id}">${d.name}<small>${t.timed ? (t.builds ? whole(t.builds) + ' · ' : '') + t.timed + ' timed' : 'not yet'}</small></button>`;
   }).join('');
   const games = sorted(D.games, gameWorst);
   $('games').innerHTML = games.map((g, i) => {
