@@ -62,6 +62,7 @@ export class Menu {
     this.preview = new Preview(this.assets, this.renderer, this.sound, channel);
     this.slotRect = this.rectFor(channel);
     this.grid.footer.setArrows(false, false);
+    this.grid.footer.pauseNewMail(true);
     this.sound.stopMusic(5);
     this.state = 'opening';
     this.wait = ZOOM_WAIT;
@@ -146,6 +147,7 @@ export class Menu {
         this.state = 'grid';
         this.preview = null;
         this.grid.resume();
+        this.grid.footer.pauseNewMail(false);
         // The music starts over 0.5 s after Back was pressed, two updates after the zoom.
         this.sound.startMusic(2);
       }

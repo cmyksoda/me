@@ -70,6 +70,7 @@ export class Footer {
   private readonly arrowShown = { left: false, right: false };
   private mailCount = 0;
   private newMailSince: number | null = null;
+  private newMailPausedAt: number | null = null;
 
   constructor(assets: Assets, private readonly renderer: Renderer, private readonly sound: Sound) {
     const { cmnBtn, balloon } = assets.menu;
@@ -250,6 +251,17 @@ export class Footer {
     this.newMailSince = null;
   }
 
+  /** While a preview is open the new-mail ring waits (setUnk_0x105), then carries on where it left off. */
+  pauseNewMail(paused: boolean): void {
+    if (paused) {
+      this.newMailPausedAt ??= performance.now();
+      return;
+    }
+    if (this.newMailPausedAt === null) return;
+    if (this.newMailSince !== null) this.newMailSince += performance.now() - this.newMailPausedAt;
+    this.newMailPausedAt = null;
+  }
+
   /** Which footer control the pointer is over, in the order the GUI manager resolves them. */
   hit(x: number, y: number): FooterTarget | null {
     if (this.busy) return null;
@@ -324,7 +336,8 @@ export class Footer {
       this.queue[0]?.play();
     }
     for (const balloon of Object.values(this.balloons)) balloon!.update(frames);
-    if (this.newMailSince !== null && performance.now() - this.newMailSince >= NEW_MAIL_EVERY) {
+    const ringing = this.newMailSince !== null && this.newMailPausedAt === null;
+    if (ringing && performance.now() - this.newMailSince! >= NEW_MAIL_EVERY) {
       this.newMailSince = performance.now();
       this.clips.get('newMail')!.play();
       this.sound.play('WIPL_SE_NEW_ARRIVAL');
