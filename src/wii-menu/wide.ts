@@ -7,6 +7,9 @@ import type { Rect, Renderer } from './lyt/renderer';
 const DRAW_OUT = 1000;
 // The sine of the angle a pane turns from flat before it counts as swinging.
 const TILT = 0.01;
+// A unit on a swinging pod starts fading this far inside the picture's edge, so the fade is slow enough to see.
+// The pods rest no button nearer the edge than 76 units.
+const FADE_INSIDE = 64;
 
 /** Copies the 16:9 textures from donor panes onto the panes they stand in for, or puts the 4:3 ones back. */
 export function useWideTextures(instance: LayoutInstance, donors: [string, string[]][], wide: boolean): void {
@@ -99,6 +102,8 @@ export const PAGE_ARROWS: Slide[] = [[['N_ArwL_End'], 160], [['N_ArwR__End'], 16
 export class Sliders {
   private readonly units: { panes: PaneNode[]; parkedPast: number }[];
   private readonly panes = new Set<PaneNode>();
+  // The units on a swinging pod this frame that are partly faded, with their opacity.
+  private fading: { panes: Set<PaneNode>; alpha: number }[] = [];
 
   /** `rail` names the sliders' panes that stay cut at the picture's edge, because `drawWings` runs them on. */
   constructor(
@@ -114,12 +119,12 @@ export class Sliders {
    * Runs `inPicture` with the sliders (and any pane `whole` names) whole and the rest of the layout cut at the
    * picture's edge, then `beyond` with no cut. A unit speeds on out of the window as it nears its parking place, as
    * spreading the layout would, so it never rests in view where the console has it off screen. On a swinging pod it
-   * stays put and fades instead, the further past the picture's edge and the flatter the pod, so it's gone by the
-   * time the pod lies flat and would push it away.
+   * stays put and fades instead (see `drawLayout`), the further past the picture's edge and the flatter the pod, so
+   * it's gone by the time the pod lies flat and would push it away.
    */
   draw(screen: Screen, inPicture: () => void, beyond?: () => void, whole?: (pane: PaneNode) => boolean): void {
     const moved: [PaneNode, number][] = [];
-    const faded: [PaneNode, number][] = [];
+    this.fading = [];
     if (screen.contained) {
       const spread = screen.window / screen.projection;
       for (const { panes, parkedPast } of this.units) {
@@ -128,9 +133,12 @@ export class Sliders {
         const toPark = Math.min(1, Math.max(0, (Math.abs(x) - screen.projection / 2) / parkedPast));
         const unit = panes.flatMap(subtree);
         if (tilted(panes[0])) {
-          const flat = (m[0] * m[0]) / (m[0] * m[0] + m[4] * m[4]);
-          for (const pane of unit) faded.push([pane, pane.globalAlpha]);
-          for (const pane of unit) pane.globalAlpha *= 1 - toPark * flat;
+          const fadeFrom = screen.projection / 2 - FADE_INSIDE;
+          const out = Math.min(1, Math.max(0, (Math.abs(x) - fadeFrom) / (FADE_INSIDE + parkedPast)));
+          // Even in the pod's angle, so the fade spans the whole half turn.
+          const flat = 1 - (2 / Math.PI) * Math.atan2(Math.abs(m[4]), Math.abs(m[0]));
+          const alpha = 1 - out * flat;
+          if (alpha < 1) this.fading.push({ panes: new Set(unit), alpha });
           continue;
         }
         const shift = Math.sign(x) * (spread - 1) * Math.abs(x) * toPark;
@@ -147,8 +155,44 @@ export class Sliders {
     for (const pane of all) pane.bounds = null;
     beyond?.();
     for (const [pane, shift] of moved) pane.world[3] -= shift;
-    for (const [pane, alpha] of faded) pane.globalAlpha = alpha;
   }
+
+  /**
+   * Draws the layout's panes that `only` passes, each fading unit as one picture: what lies behind it is kept and laid
+   * back over it, since fading its layers one by one would show the ring under its face through it.
+   */
+  drawLayout(renderer: Renderer, only: (pane: PaneNode) => boolean): void {
+    const fading = new Set(this.fading.flatMap((unit) => [...unit.panes]));
+    renderer.drawLayout(this.instance, (pane) => only(pane) && !fading.has(pane));
+    // One at a time, so a unit overlapping another fades over it.
+    for (const { panes, alpha } of this.fading) {
+      const rect = extent(panes);
+      renderer.keep([rect]);
+      renderer.drawLayout(this.instance, (pane) => only(pane) && panes.has(pane));
+      renderer.fadeBack(rect, 1 - alpha, 1 - alpha);
+    }
+  }
+}
+
+/** The rectangle around everything the panes draw, from their quads' corners. */
+function extent(panes: Iterable<PaneNode>): Rect {
+  const rect: Rect = [Infinity, -Infinity, -Infinity, Infinity];
+  for (const pane of panes) {
+    if (!pane.visible) continue;
+    const m = pane.world;
+    const [width, height] = pane.size;
+    const x = -((pane.source.origin % 3) / 2) * width;
+    const y = -(Math.floor(pane.source.origin / 3) / 2) * height;
+    for (const [cx, cy] of [[x, y], [x + width, y], [x, y + height], [x + width, y + height]]) {
+      const wx = m[0] * cx - m[1] * cy + m[3];
+      const wy = m[4] * cx - m[5] * cy + m[7];
+      rect[0] = Math.min(rect[0], wx);
+      rect[1] = Math.max(rect[1], wy);
+      rect[2] = Math.max(rect[2], wx);
+      rect[3] = Math.min(rect[3], wy);
+    }
+  }
+  return rect;
 }
 
 /** Where a pane's middle line meets x = edge, in its own units along it. */

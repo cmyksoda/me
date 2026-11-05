@@ -365,7 +365,7 @@ export class Footer {
     const swinging = this.swing(screen);
     this.pods.draw(
       screen,
-      () => this.renderer.drawLayout(this.layout, (pane) => !isUnder(pane, ['N_ArwL', 'N_ArwR'])),
+      () => this.pods.drawLayout(this.renderer, (pane) => !isUnder(pane, ['N_ArwL', 'N_ArwR'])),
       // Contained, the rails run on to the window's edges.
       () => drawWings(
         this.renderer, screen, this.layout,
