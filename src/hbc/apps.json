@@ -108,13 +108,13 @@
     "dirname": "vbcgx",
     "name": "VBoy Color GX",
     "coder": "cmyksoda",
-    "version": "1.2.0",
+    "version": "2.0.0",
     "shortDescription": "Virtual Boy emulator, in color!",
     "longDescription": "VBoy Color GX is a port of VBoy Color to the Wii, using Tantric's GX frontend.\n\nOptimized for steady performance during gameplay. Includes many different color options.\n\nSupports Wii Remote + Nunchuk, Classic Controller, Wii U Pro Controller, GameCube controller, and the Wii U GamePad in vWii.",
-    "longDescriptionDraft": "VBoy Color GX is a Wii port of VBoy Color, a Virtual Boy emulator that adds color. It uses a modified version of Tantric's FCE Ultra GX frontend for a clean, familiar way to browse and load games.",
+    "longDescriptionDraft": "VBoy Color GX is a Wii port of VBoy Color, a Virtual Boy emulator that adds color. It uses a modified version of Tantric's FCE Ultra GX frontend for a clean, familiar way to browse and load games.\n\nThe official games run at full speed or close to it on a Wii and on a Wii U in Wii mode. The speed benchmark at cmyksoda.cc/vbcgx/bench times every scene.",
     "icon": true,
     "source": "https://github.com/cmyksoda/vbcgx",
-    "download": "https://github.com/cmyksoda/vbcgx/releases/download/v1.2.0/vbcgx.zip"
+    "download": "https://github.com/cmyksoda/vbcgx/releases/download/v2.0.0/vbcgx.zip"
   },
   {
     "repo": "vectrexwii",
