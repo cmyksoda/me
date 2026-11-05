@@ -7,7 +7,7 @@ import type { Renderer } from './lyt/renderer';
 import { parseTPL } from './lyt/tpl';
 import type { Sound } from './sound';
 import { speakerButton } from './speaker';
-import { drawWings, PAGE_ARROWS, Sliders, type Slide } from './wide';
+import { drawWings, lengthenRail, PAGE_ARROWS, Sliders, tilted, type Slide } from './wide';
 
 export type FooterTarget =
   'options' | 'board' | 'left' | 'right' | 'sd' | 'calendar' | 'create' | 'menu' | 'back' | 'trash';
@@ -63,6 +63,8 @@ export class Footer {
   private readonly sd: LayoutInstance;
   private readonly clips = new Map<string, AnimationPlayer>();
   private readonly pods: Sliders;
+  // Each pod's rails, and which way is out (the left pods' outer caps face left).
+  private readonly rails: { middle: PaneNode; outer: PaneNode; inner: PaneNode; outward: -1 | 1 }[] = [];
   private readonly arrows: Sliders;
   private readonly balloons: Partial<Record<FooterTarget, Balloon>>;
   private mode: Mode = 'grid';
@@ -77,6 +79,15 @@ export class Footer {
     this.layout = cmnBtn.instance('my_IplTop_e');
     this.sd = cmnBtn.instance('mn_Sdcard_Btn');
     this.pods = new Sliders(this.layout, POD_SLIDES, RAIL);
+    for (const name of this.layout.panes.keys()) {
+      const pod = /^(Btn([LR])_a\d)_1$/.exec(name);
+      if (!pod) continue;
+      const left = pod[2] === 'L';
+      const cap = (end: number) => this.layout.pane(`${pod[1]}_${end}`);
+      this.rails.push({
+        middle: this.layout.pane(name), outer: cap(left ? 0 : 2), inner: cap(left ? 2 : 0), outward: left ? -1 : 1,
+      });
+    }
     this.arrows = new Sliders(this.layout, PAGE_ARROWS);
     const footer = cmnBtn.animation('my_IplTop_e')!;
     const range = (name: string, panes: string[], from: number, to: number, loop = false) => {
@@ -354,15 +365,33 @@ export class Footer {
       this.renderer.drawLayout(this.sd);
     });
     this.layout.update(identity(), screen);
+    const swinging = this.swing(screen);
     this.pods.draw(
       screen,
       () => this.renderer.drawLayout(this.layout, (pane) => !isUnder(pane, ['N_ArwL', 'N_ArwR'])),
       // Contained, the rails run on to the window's edges.
       () => drawWings(
         this.renderer, screen, this.layout,
-        (pane, across) => RAIL.test(pane.name) && !(INNER_CAP.test(pane.name) && across < TIP),
+        (pane, across) => RAIL.test(pane.name) && !swinging.has(pane) && !(INNER_CAP.test(pane.name) && across < TIP),
       ),
+      (pane) => swinging.has(pane),
     );
+  }
+
+  /**
+   * Contained, a swinging pod's rails can't run on along the picture's edge, so they grow by the width beside the
+   * picture instead, reaching the window's edge as the run-on does at rest, and draw whole.
+   */
+  private swing(screen: Screen): Set<PaneNode> {
+    const swinging = new Set<PaneNode>();
+    if (!screen.contained) return swinging;
+    const extra = (screen.window - screen.projection) / 2;
+    for (const { middle, outer, inner, outward } of this.rails) {
+      if (!tilted(middle)) continue;
+      lengthenRail(middle, outer, outward, extra);
+      swinging.add(middle).add(outer).add(inner);
+    }
+    return swinging;
   }
 
   /** Arrow scene: the page arrows over the grid, then the footer balloons. */

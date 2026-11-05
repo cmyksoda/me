@@ -5,6 +5,8 @@ import type { Rect, Renderer } from './lyt/renderer';
 
 // How far a pane is drawn out from the console picture's edge, so its column there covers the window beyond.
 const DRAW_OUT = 1000;
+// The sine of the angle a pane turns from flat before it counts as swinging.
+const TILT = 0.01;
 
 /** Copies the 16:9 textures from donor panes onto the panes they stand in for, or puts the 4:3 ones back. */
 export function useWideTextures(instance: LayoutInstance, donors: [string, string[]][], wide: boolean): void {
@@ -62,6 +64,26 @@ export function drawWings(
 
 const subtree = (pane: PaneNode): PaneNode[] => [pane, ...pane.children.flatMap(subtree)];
 
+/** A pane turned away from flat, as the footer pods are while they swing round. */
+export function tilted(pane: PaneNode): boolean {
+  const m = pane.world;
+  return Math.abs(m[4]) > TILT * Math.hypot(m[0], m[4]);
+}
+
+/** Makes a rail `extra` units longer at its outer end (−1 left, 1 right): the middle stretches and the cap moves. */
+export function lengthenRail(middle: PaneNode, outerCap: PaneNode, outward: -1 | 1, extra: number): void {
+  const m = middle.world;
+  const width = middle.size[0];
+  const left = -((middle.source.origin % 3) / 2) * width;
+  const fixed = outward < 0 ? left + width : left;
+  const stretch = (width + extra) / width;
+  for (const row of [0, 4, 8]) {
+    outerCap.world[row + 3] += m[row] * outward * extra;
+    m[row + 3] += m[row] * fixed * (1 - stretch);
+    m[row] *= stretch;
+  }
+}
+
 /** Panes that move together, and how far past the picture's edge their middle is when the layout parks them. */
 export type Slide = [names: string[], parkedPast: number];
 
@@ -87,15 +109,17 @@ export class Sliders {
   }
 
   /**
-   * Runs `inPicture` with the sliders whole and the rest of the layout cut at the picture's edge, then `beyond` with
-   * no cut. A unit speeds on out of the window as it nears its parking place, as spreading the layout would, so it
-   * never rests in view where the console has it off screen.
+   * Runs `inPicture` with the sliders (and any pane `whole` names) whole and the rest of the layout cut at the
+   * picture's edge, then `beyond` with no cut. A unit speeds on out of the window as it nears its parking place, as
+   * spreading the layout would, so it never rests in view where the console has it off screen; a swinging one keeps
+   * to its pod.
    */
-  draw(screen: Screen, inPicture: () => void, beyond?: () => void): void {
+  draw(screen: Screen, inPicture: () => void, beyond?: () => void, whole?: (pane: PaneNode) => boolean): void {
     const moved: [PaneNode, number][] = [];
     if (screen.contained) {
       const spread = screen.window / screen.projection;
       for (const { panes, parkedPast } of this.units) {
+        if (tilted(panes[0])) continue;
         const x = panes[0].world[3];
         const toPark = Math.min(1, Math.max(0, (Math.abs(x) - screen.projection / 2) / parkedPast));
         const shift = Math.sign(x) * (spread - 1) * Math.abs(x) * toPark;
@@ -104,7 +128,10 @@ export class Sliders {
     }
     for (const [pane, shift] of moved) pane.world[3] += shift;
     const all = subtree(this.instance.root);
-    for (const pane of all) pane.bounds = this.panes.has(pane) && !this.rail?.test(pane.name) ? null : screen.contained;
+    for (const pane of all) {
+      const free = (this.panes.has(pane) && !this.rail?.test(pane.name)) || whole?.(pane);
+      pane.bounds = free ? null : screen.contained;
+    }
     inPicture();
     for (const pane of all) pane.bounds = null;
     beyond?.();
