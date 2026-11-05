@@ -317,7 +317,8 @@ export class Board {
     this.fly = 0;
     this.leaveCard(card);
     card.clips.select.play();
-    this.readerClips.open.play();
+    // Clips step before input is read, so without this the first frame shows the reader's untouched, fully open pose.
+    this.readerClips.open.play().apply();
     this.maskIn.play();
     this.masked = true;
     this.sound.play('WIPL_SE_BOARD_SELECT');
