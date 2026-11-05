@@ -56,13 +56,26 @@
     "dirname": "GodModeWii",
     "name": "GodModeWii",
     "coder": "quatric, cmyksoda",
-    "version": "0.9.1",
+    "version": "0.10.0",
     "shortDescription": "GodMode9-style file manager",
     "longDescription": "A text-mode, GodMode9-style file manager for the Wii and the Wii U's vWii.\n\nBrowse the SD card, SD Gecko, every USB drive, the NAND, the SEEPROM, the disc drive and your console's keys. Copy, cut, paste and delete between devices, see free space, and edit the NAND only after the Konami code and a brick-risk disclaimer.\n\nWARNING: modifying the NAND can permanently brick your console.",
     "longDescriptionDraft": "GodModeWii is a collaboration between quatric and I.\n\nIt's a text-based file manager for the Wii and the Wii U's vWii, in the style of GodMode9. With GodModeWii, you can perform standard file manager operations, as well as export Miis, install WADs, launch homebrew apps, and more.\n\nWARNING: changing the NAND can permanently brick your console. NAND changes stay locked until you enter the Konami code.",
     "icon": true,
     "source": "https://github.com/quatric/GodModeWii",
-    "download": "https://github.com/quatric/GodModeWii/releases/download/v0.9.1/GodModeWii.zip"
+    "download": "https://github.com/quatric/GodModeWii/releases/download/v0.10.0/GodModeWii.zip"
+  },
+  {
+    "repo": "MiiKit-Demo",
+    "dirname": "MiiKit-Demo",
+    "name": "MiiKit Demo",
+    "coder": "cmyksoda",
+    "version": "1.0.1",
+    "shortDescription": "All your Miis, in 3D",
+    "longDescription": "Demo for MiiKit, the Mii library that started as sdk/mii in hbc-reborn. Displays the Miis that exist on your Wii and information about them. Their faces and bodies are read straight from your system.\n\nMusic: Focus Loop by FreeGroove (Pixabay)",
+    "longDescriptionDraft": "MiiKit Demo is a Wii app that shows every Mii on your Wii in 3D, with their faces and bodies read straight from the system. It's a demo of MiiKit, the Mii library that started as sdk/mii in hbc-reborn.\n\nMusic: Focus Loop by FreeGroove (Pixabay)",
+    "icon": true,
+    "source": "https://github.com/cmyksoda/MiiKit-Demo",
+    "download": "https://github.com/cmyksoda/MiiKit-Demo/releases/download/v1.0.1/MiiKit-Demo-1.0.1.zip"
   },
   {
     "repo": "netsurf-wii",
@@ -89,19 +102,6 @@
     "icon": true,
     "source": "https://github.com/cmyksoda/Paper-Airplane-Chase-GX",
     "download": "https://github.com/cmyksoda/Paper-Airplane-Chase-GX/releases/download/v1.1.0/Paper-Airplane-Chase-GX.zip"
-  },
-  {
-    "repo": "sdk-mii-demo",
-    "dirname": "sdk-mii-demo",
-    "name": "sdk/mii Demo",
-    "coder": "cmyksoda",
-    "version": "1.0.0",
-    "shortDescription": "All your Miis, in 3D",
-    "longDescription": "Demo for sdk/mii, from hbc-reborn. Displays the Miis that exist on your Wii and information about them. Their faces and bodies are read straight from your system.\n\nMusic: Focus Loop by FreeGroove (Pixabay)",
-    "longDescriptionDraft": "sdk/mii Demo is a Wii app that shows every Mii on your Wii in 3D, with their faces and bodies read straight from the system. It's a demo of sdk/mii, the Mii renderer from hbc-reborn.\n\nMusic: Focus Loop by FreeGroove (Pixabay)",
-    "icon": true,
-    "source": "https://github.com/cmyksoda/sdk-mii-demo",
-    "download": "https://github.com/cmyksoda/sdk-mii-demo/releases/download/v1.0.0/sdk-mii-demo-1.0.0.zip"
   },
   {
     "repo": "vbcgx",
