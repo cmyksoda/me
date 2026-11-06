@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="The normal Wii Menu, with its accent color changed: Piink, ten more colors and a rainbow, for every region." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Colorful Wii Menu Themes · cmyksoda</title>
+    <script>
+      let savedTheme = null;
+      try { savedTheme = localStorage.getItem('cmyksoda-theme'); } catch {}
+      document.documentElement.dataset.theme = ['light', 'dark'].includes(savedTheme ?? '')
+        ? savedTheme
+        : window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    </script>
+  </head>
+  <body>
+    <header class="top">
+      <a class="home-link" href="../">cmyksoda.cc</a>
+      <button class="mode-toggle" type="button" aria-pressed="false" aria-label="Dark mode">
+        <span data-mode="light">Light Mode</span> / <span data-mode="dark">Dark Mode</span>
+      </button>
+    </header>
+    <main>
+      <section class="intro" aria-labelledby="title">
+        <div class="intro-text">
+          <h1 id="title">Colorful Wii Menu Themes</h1>
+          <p>The normal Wii Menu, with its accent color changed. Inspired by wilsoff's 2011 Piink theme, my favorite Wii Menu theme, which I've updated for every region and expanded to include ten more colors and a rainbow.</p>
+        </div>
+        <figure class="hero">
+          <img id="hero-shot" src="../wii-themes/shots/piink/menu.webp" width="640" height="478" alt="The Wii Menu with the Piink theme" />
+        </figure>
+      </section>
+
+      <section class="picker" aria-labelledby="picker-title">
+        <h2 id="picker-title">Choose a theme</h2>
+        <div class="tiles" id="tiles" role="radiogroup" aria-labelledby="picker-title"></div>
+      </section>
+
+      <section class="theme" aria-labelledby="theme-name">
+        <div class="theme-head">
+          <h2 id="theme-name">Piink</h2>
+          <p id="theme-note" class="note"></p>
+        </div>
+        <div class="downloads">
+          <h3>Downloads</h3>
+          <table id="downloads">
+            <thead><tr><th scope="col">Region</th><th scope="col">csm for Wii Menu 4.3</th><th scope="col">mym for any Wii Menu 4.x</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <h3>Previews</h3>
+        <div class="screens" id="screens"></div>
+      </section>
+
+      <section class="install" aria-labelledby="install-title">
+        <h2 id="install-title">Installing</h2>
+        <ol>
+          <li>Install <a href="https://wii.hacks.guide/priiloader">Priiloader</a> first. It can save your Wii if a theme goes wrong.</li>
+          <li>Open Wii Settings and read the version in the top right corner, like <b>Ver. 4.3U</b>.</li>
+          <li>Download the csm for that region. The csm files are for Wii Menu 4.3 only. The mym is the theme on its own, for building your own csm on any 4.x menu.</li>
+          <li>Install it with <a href="https://oscwii.org/library/app/csm-installer">csm-installer</a> or the theme installer of your choice.</li>
+        </ol>
+        <p class="warning">Never install these on a Wii U. They're built from the Wii's own menu, and a Wii theme on a Wii U's Wii mode can brick it. Never install a csm for a different region, either.</p>
+        <p>One bug is known from Piink's thread: on USA consoles, the Start button in the Disc Channel turns blue again once a disc finishes loading.</p>
+      </section>
+
+      <section class="piink" aria-labelledby="piink-title">
+        <h2 id="piink-title">About Piink</h2>
+        <p>wilsoff released Piink on the WADder forum in May 2011, for USA and European Wiis, and asked anyone who changed it to call small updates v1.1. My v1.1 adds support for Japanese and Korean Wiis, and turns the HOME Menu pink in every language, where the original covered English only. His files are here unchanged.</p>
+        <ul class="originals" id="originals"></ul>
+        <p class="links"><a href="https://www.tapatalk.com/groups/wadder/piink-menu-pink-wii-system-menu-theme-release-t435.html">The release thread</a>, and its <a href="https://web.archive.org/web/20111110/http://wadder.freeforums.org/piink-menu-pink-wii-system-menu-theme-release-t435.html">2011 copy in the Wayback Machine</a>.</p>
+      </section>
+
+      <footer class="credits">
+        <p>Piink by wilsoff, who thanks diddy81 and sym. The other colors take their range from the DarkWii themes by DVBisOK. Screenshots are from Dolphin.</p>
+      </footer>
+    </main>
+    <noscript><p class="noscript">This page needs JavaScript to show the themes.</p></noscript>
+    <script type="module" src="../src/wii-themes/main.ts"></script>
+  </body>
+</html>

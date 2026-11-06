@@ -8,6 +8,7 @@ export default defineConfig({
         main: 'index.html',
         wiiForwarders: 'wii-forwarders/index.html',
         wiiHomebrew: 'wii-homebrew/index.html',
+        wiiThemes: 'wii-themes/index.html',
       },
     },
   },

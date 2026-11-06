@@ -1,0 +1,868 @@
+{
+ "themes": [
+  {
+   "name": "Piink",
+   "shade": "Piink",
+   "hex": "#ea70bf",
+   "version": "1.1",
+   "author": "wilsoff",
+   "regions": [
+    {
+     "code": "U",
+     "label": "USA",
+     "menu": "4.3U",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Piink%20%28wilsoff%29/PiinkMenuTheme.4XU.v1.1.mym",
+      "size": 974025,
+      "sha256": "b73c0d3ae547bd7986d361606a38e0b6c06c139e127e83c595321ef42e31a2bb"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-7Dv4QcsrNt/Piink.4.3U.v1.1.csm",
+      "size": 7488327,
+      "sha256": "c7ba8888d9b63e86565499248aaa9653681561ad58e4f89391f2bb0089797c33"
+     }
+    },
+    {
+     "code": "E",
+     "label": "Europe",
+     "menu": "4.3E",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Piink%20%28wilsoff%29/PiinkMenuTheme.4XE.v1.1.mym",
+      "size": 974024,
+      "sha256": "969f60a3435ea8b812e97f4942194036c8574ae831100378c9750dcbcbfe2016"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-VADVipSGYu/Piink.4.3E.v1.1.csm",
+      "size": 8281287,
+      "sha256": "c43a3e7696b46d2c0d352c345c9dd911333154b8f941b1a4b43d36de65a0f936"
+     }
+    },
+    {
+     "code": "J",
+     "label": "Japan",
+     "menu": "4.3J",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Piink%20%28wilsoff%29/PiinkMenuTheme.4XJ.v1.1.mym",
+      "size": 974263,
+      "sha256": "3f0a5da859ac476d1f0e7e60b6b1bb81f87e43e662c36fb6a8fbc2e9e9930f3e"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-ZZoCv6taaC/Piink.4.3J.v1.1.csm",
+      "size": 7441127,
+      "sha256": "b66ba27a2871d3f3b42b2433578486ef3bf0da83288bba0849fe5013ff6a959a"
+     }
+    },
+    {
+     "code": "K",
+     "label": "Korea",
+     "menu": "4.3K",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Piink%20%28wilsoff%29/PiinkMenuTheme.4XK.v1.1.mym",
+      "size": 985529,
+      "sha256": "597634f9325efc2ddcc680a0c9ea8a40876cd8e83588cff90b560fe52c536f4a"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-RtkMM8ToHH/Piink.4.3K.v1.1.csm",
+      "size": 7320999,
+      "sha256": "84dd3d09d904101b659294fbea79743a2687ba847165b5df6a14c1d1eaed103b"
+     }
+    }
+   ],
+   "special": null
+  },
+  {
+   "name": "Red",
+   "shade": "Cherry",
+   "hex": "#e6293f",
+   "version": "1.0",
+   "author": "cmyksoda",
+   "regions": [
+    {
+     "code": "U",
+     "label": "USA",
+     "menu": "4.3U",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Red%20%28cmyksoda%29/RedMenuTheme.4XU.v1.0.mym",
+      "size": 984462,
+      "sha256": "0a5f48045cac05249edddf90bd65b8b36b1e2f762e863db96d26fa8ccc335c51"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-fr6B9h5mLD/Red.4.3U.v1.0.csm",
+      "size": 7485447,
+      "sha256": "988d6eed17b23c2f146e52a73d4760f49962ca51b63af4397c467b3eaaa35ce4"
+     }
+    },
+    {
+     "code": "E",
+     "label": "Europe",
+     "menu": "4.3E",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Red%20%28cmyksoda%29/RedMenuTheme.4XE.v1.0.mym",
+      "size": 984461,
+      "sha256": "7feda5b0bac1557f0c31f8c1b238e0510c691885ae7c993ac8a7ac848f61e08a"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-sLAnEe4PdP/Red.4.3E.v1.0.csm",
+      "size": 8278375,
+      "sha256": "48924fcde66fe1521c0a9bda6c53477a079d147ed5e95fe835542c8e7096a9e2"
+     }
+    },
+    {
+     "code": "J",
+     "label": "Japan",
+     "menu": "4.3J",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Red%20%28cmyksoda%29/RedMenuTheme.4XJ.v1.0.mym",
+      "size": 984700,
+      "sha256": "f18962a079ac84b252959c40bde4c2f810574bc187d314ae7f58316b767eef31"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-o2h3ENQvDg/Red.4.3J.v1.0.csm",
+      "size": 7438695,
+      "sha256": "958f3de33ce11196400ec0c25fe994ae79b5ab2a9779044eab8f56b8cac54474"
+     }
+    },
+    {
+     "code": "K",
+     "label": "Korea",
+     "menu": "4.3K",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Red%20%28cmyksoda%29/RedMenuTheme.4XK.v1.0.mym",
+      "size": 995977,
+      "sha256": "c4ccb2387dd7629bcf750696f000ce6c906b097b15bfbb6d557af128add3c3e8"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-CAaHQe3BW2/Red.4.3K.v1.0.csm",
+      "size": 7318087,
+      "sha256": "fd16c425f47d3e0c4a3e5049305b7a69750a2620b5d4104c4133b6fed43a9ee6"
+     }
+    }
+   ],
+   "special": null
+  },
+  {
+   "name": "Orange",
+   "shade": "Pumpkin",
+   "hex": "#f3680f",
+   "version": "1.0",
+   "author": "cmyksoda",
+   "regions": [
+    {
+     "code": "U",
+     "label": "USA",
+     "menu": "4.3U",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Orange%20%28cmyksoda%29/OrangeMenuTheme.4XU.v1.0.mym",
+      "size": 983491,
+      "sha256": "3efcb05083b17f14eed805969d29bf39143397b70d4ddef089ce5b69e45c99ab"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-seQhDXXveG/Orange.4.3U.v1.0.csm",
+      "size": 7481575,
+      "sha256": "8fc070e95c2362348e51c146f110395e0d2df10de1d11e558a22511956e0e115"
+     }
+    },
+    {
+     "code": "E",
+     "label": "Europe",
+     "menu": "4.3E",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Orange%20%28cmyksoda%29/OrangeMenuTheme.4XE.v1.0.mym",
+      "size": 983490,
+      "sha256": "b7b5737bcbf47142877c23edc38d7019326d5580dc0fa1de5622da840be43dfd"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-QnaTK6wefN/Orange.4.3E.v1.0.csm",
+      "size": 8274503,
+      "sha256": "dddc5e6e7c2d11bb15ad87ebfc44d41de348014ff759595e646f3f0b00dc2d24"
+     }
+    },
+    {
+     "code": "J",
+     "label": "Japan",
+     "menu": "4.3J",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Orange%20%28cmyksoda%29/OrangeMenuTheme.4XJ.v1.0.mym",
+      "size": 983729,
+      "sha256": "95e6453e97c4534bd742bc00a6717739596e1e7fcbe839a91cdf1eba62068911"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-ahpuBPooGR/Orange.4.3J.v1.0.csm",
+      "size": 7434535,
+      "sha256": "f1a503339a09c0eb58644eebe6af017904c63a630f29ff2c2604a2b378bd5570"
+     }
+    },
+    {
+     "code": "K",
+     "label": "Korea",
+     "menu": "4.3K",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Orange%20%28cmyksoda%29/OrangeMenuTheme.4XK.v1.0.mym",
+      "size": 994999,
+      "sha256": "afa2eb9f3bceb9ad46997ec33bf710bd1f6923a3d9ee242b7cbdb6da112a909b"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-PuVtvKk764/Orange.4.3K.v1.0.csm",
+      "size": 7314215,
+      "sha256": "811de0b8f5c1dbe4caa83dbff3dfd0edaed0eff112391da5f064d169cf392c52"
+     }
+    }
+   ],
+   "special": null
+  },
+  {
+   "name": "Yellow",
+   "shade": "Gold",
+   "hex": "#eeb318",
+   "version": "1.0",
+   "author": "cmyksoda",
+   "regions": [
+    {
+     "code": "U",
+     "label": "USA",
+     "menu": "4.3U",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Yellow%20%28cmyksoda%29/YellowMenuTheme.4XU.v1.0.mym",
+      "size": 985299,
+      "sha256": "05e99c372f30573e3431cff1554ff39fa35ae96db71947dcffab92fb9cf2e1dc"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-QpHC4ak3Ri/Yellow.4.3U.v1.0.csm",
+      "size": 7483239,
+      "sha256": "9c5306fbba34b7fa03a812f7ebe0a4ebd20e4daeeed82be6215baedb3deb6be1"
+     }
+    },
+    {
+     "code": "E",
+     "label": "Europe",
+     "menu": "4.3E",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Yellow%20%28cmyksoda%29/YellowMenuTheme.4XE.v1.0.mym",
+      "size": 985298,
+      "sha256": "1f1dbb33400620cbe316f274164a02bfd15a60c20fb71d10911a477e312c0ea2"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-miN8jtJGj7/Yellow.4.3E.v1.0.csm",
+      "size": 8276167,
+      "sha256": "30a781f87df6cdcfd4ba94eff48571618dc5d44eeca9597bb22e448dcea4b1d7"
+     }
+    },
+    {
+     "code": "J",
+     "label": "Japan",
+     "menu": "4.3J",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Yellow%20%28cmyksoda%29/YellowMenuTheme.4XJ.v1.0.mym",
+      "size": 985537,
+      "sha256": "b8999ade79dd7a78bbf5e4ccde6823fabbbdaab94c1f71b1c03a9a0481e32a40"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-g6iV38gH8e/Yellow.4.3J.v1.0.csm",
+      "size": 7435879,
+      "sha256": "d1db984b0776ac6b95e1ed6aad1f05bf9db9dee50cbce3b5eaddcf1474918113"
+     }
+    },
+    {
+     "code": "K",
+     "label": "Korea",
+     "menu": "4.3K",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Yellow%20%28cmyksoda%29/YellowMenuTheme.4XK.v1.0.mym",
+      "size": 996803,
+      "sha256": "b2c559ee05a3c41951aa2959dc156bf344bc3d9313646329a3d3355d05a961be"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-nYVgvUkVLa/Yellow.4.3K.v1.0.csm",
+      "size": 7315879,
+      "sha256": "3d1dd9f0f7a00e83ccead25954c9d26435178f507e5d8b649ecac2da867f9760"
+     }
+    }
+   ],
+   "special": null
+  },
+  {
+   "name": "Lime",
+   "shade": "Lime",
+   "hex": "#a4e234",
+   "version": "1.0",
+   "author": "cmyksoda",
+   "regions": [
+    {
+     "code": "U",
+     "label": "USA",
+     "menu": "4.3U",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Lime%20%28cmyksoda%29/LimeMenuTheme.4XU.v1.0.mym",
+      "size": 984667,
+      "sha256": "1fb57b7874a7dc223e97adf18c6e407c34bd09993b45961c6f571b2adb0c1a10"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-HaaiAk8xHS/Lime.4.3U.v1.0.csm",
+      "size": 7484711,
+      "sha256": "8b091b2e9007812f6b05748ee3701dbd4faa1db8d2fd032c3bac8419853512c6"
+     }
+    },
+    {
+     "code": "E",
+     "label": "Europe",
+     "menu": "4.3E",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Lime%20%28cmyksoda%29/LimeMenuTheme.4XE.v1.0.mym",
+      "size": 984666,
+      "sha256": "9b0902b1821652fc3950d9137d4d299b71bc149de800f6b9caa38c3e224c5eaf"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-CDDs29Geta/Lime.4.3E.v1.0.csm",
+      "size": 8277607,
+      "sha256": "1550b934519f0444828671ada33d14e695499afccd38f262d0cfd6750121ebe8"
+     }
+    },
+    {
+     "code": "J",
+     "label": "Japan",
+     "menu": "4.3J",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Lime%20%28cmyksoda%29/LimeMenuTheme.4XJ.v1.0.mym",
+      "size": 984905,
+      "sha256": "977d9c9cfffd26047563976eb7bb819b004b7abcbfb6bc3f8a7223d53427983e"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-ZReGXwkHpX/Lime.4.3J.v1.0.csm",
+      "size": 7437575,
+      "sha256": "a2557890f6907d663729e51587914a0fbbbc83a6301a29884e65bd0ad7df073d"
+     }
+    },
+    {
+     "code": "K",
+     "label": "Korea",
+     "menu": "4.3K",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Lime%20%28cmyksoda%29/LimeMenuTheme.4XK.v1.0.mym",
+      "size": 996173,
+      "sha256": "558b142264c9e37dee4994865d043172d06bbde365c8eb6bbc703b374be1f608"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-ZsFTt5vuEC/Lime.4.3K.v1.0.csm",
+      "size": 7317319,
+      "sha256": "e615ad8c610a3d1a68ac1040b389636f5a3b6c39608c33666f299bf270a0392d"
+     }
+    }
+   ],
+   "special": null
+  },
+  {
+   "name": "Green",
+   "shade": "Forest",
+   "hex": "#1a812f",
+   "version": "1.0",
+   "author": "cmyksoda",
+   "regions": [
+    {
+     "code": "U",
+     "label": "USA",
+     "menu": "4.3U",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Green%20%28cmyksoda%29/GreenMenuTheme.4XU.v1.0.mym",
+      "size": 983970,
+      "sha256": "296ae91fc05738ed0bdac95866d6ebcdc57b9df5ecd37853244e1b4e7abc5693"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-LuX6kUnk9k/Green.4.3U.v1.0.csm",
+      "size": 7485607,
+      "sha256": "9ea42e272095a248fcf4f96677a57f9bb8c0fa63015eaba7245665ae1e68f6c6"
+     }
+    },
+    {
+     "code": "E",
+     "label": "Europe",
+     "menu": "4.3E",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Green%20%28cmyksoda%29/GreenMenuTheme.4XE.v1.0.mym",
+      "size": 983969,
+      "sha256": "61e8c8d9ca5f3ff88eb154babdf1e328846884e2ed1b3b8557a00c7ac6f284f1"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-QhXWd38cUp/Green.4.3E.v1.0.csm",
+      "size": 8278535,
+      "sha256": "e3678530fcf34a307ae2d7919d0862131ca26b8680dbe1a41115d6947383a198"
+     }
+    },
+    {
+     "code": "J",
+     "label": "Japan",
+     "menu": "4.3J",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Green%20%28cmyksoda%29/GreenMenuTheme.4XJ.v1.0.mym",
+      "size": 984208,
+      "sha256": "b61f2b38c7058ea50f21419f37b357c632802f9181d3947b3b7a7ea6115be85b"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-brLAbjtqiP/Green.4.3J.v1.0.csm",
+      "size": 7438951,
+      "sha256": "ffc8b2011ea6897f0d399493bec1e398bf61db25ce432ef6e46b1542304279a8"
+     }
+    },
+    {
+     "code": "K",
+     "label": "Korea",
+     "menu": "4.3K",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Green%20%28cmyksoda%29/GreenMenuTheme.4XK.v1.0.mym",
+      "size": 995479,
+      "sha256": "049054f9d91b2f5a356f877de2a59fd13aa2a30e35ced0acfeae2748ee26f972"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-3A92vsaT2s/Green.4.3K.v1.0.csm",
+      "size": 7318247,
+      "sha256": "04e97aba37c3396b818b399eef130f8f512bdef461293d8bbf9fa257e9cc223a"
+     }
+    }
+   ],
+   "special": null
+  },
+  {
+   "name": "Teal",
+   "shade": "Teal",
+   "hex": "#24a98a",
+   "version": "1.0",
+   "author": "cmyksoda",
+   "regions": [
+    {
+     "code": "U",
+     "label": "USA",
+     "menu": "4.3U",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Teal%20%28cmyksoda%29/TealMenuTheme.4XU.v1.0.mym",
+      "size": 987185,
+      "sha256": "60f131e95a92763f833606cb4dbd9da0d051ee69c08f88f37da8c36bb4f1c2cd"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-Spe8TxthGL/Teal.4.3U.v1.0.csm",
+      "size": 7486855,
+      "sha256": "9df3bd647672b7b7a406405e76140bdbb0416a3c3e71241a2d8467f63b047c31"
+     }
+    },
+    {
+     "code": "E",
+     "label": "Europe",
+     "menu": "4.3E",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Teal%20%28cmyksoda%29/TealMenuTheme.4XE.v1.0.mym",
+      "size": 987184,
+      "sha256": "aa9a243422ce12ac74d8226e13abab38ddc840d33f459128741e5dd21af0a762"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-9LrtmXa4Zr/Teal.4.3E.v1.0.csm",
+      "size": 8279783,
+      "sha256": "af229066ae824e3800d51fb805ba7aa8e3148e6275e05ce5fd217bb32971c946"
+     }
+    },
+    {
+     "code": "J",
+     "label": "Japan",
+     "menu": "4.3J",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Teal%20%28cmyksoda%29/TealMenuTheme.4XJ.v1.0.mym",
+      "size": 987423,
+      "sha256": "318e201990ce28d7b760c4b6fcfb9a90db161af329538ff1409c5b560ccb1abf"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-7ygUKiVzFC/Teal.4.3J.v1.0.csm",
+      "size": 7439815,
+      "sha256": "f5a17e3971aa1d1ea5158c577b2cc6131ba21696c42f1c4304cc34b40ed7b217"
+     }
+    },
+    {
+     "code": "K",
+     "label": "Korea",
+     "menu": "4.3K",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Teal%20%28cmyksoda%29/TealMenuTheme.4XK.v1.0.mym",
+      "size": 998699,
+      "sha256": "e9d39d652a18bc32e5dbd9c4a7fdb26ec7824a7fa52144c807b9734a28d7deed"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-jz8pUfMQKB/Teal.4.3K.v1.0.csm",
+      "size": 7319463,
+      "sha256": "ecd539e9cddc83584d911c1b62e6ea337db3580760b2fa2c6ecab2533fd5bb40"
+     }
+    }
+   ],
+   "special": null
+  },
+  {
+   "name": "Purple",
+   "shade": "Violet",
+   "hex": "#9657e8",
+   "version": "1.0",
+   "author": "cmyksoda",
+   "regions": [
+    {
+     "code": "U",
+     "label": "USA",
+     "menu": "4.3U",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Purple%20%28cmyksoda%29/PurpleMenuTheme.4XU.v1.0.mym",
+      "size": 984917,
+      "sha256": "63dc4a359b5f0cb484138909f975762b58eda3df58ba7c6213ab39eb6176b903"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-P6Azq9AEaH/Purple.4.3U.v1.0.csm",
+      "size": 7488679,
+      "sha256": "787adca870fb65540821caee6fc9bc51841c0f484aa11542afc17e9050ca1e17"
+     }
+    },
+    {
+     "code": "E",
+     "label": "Europe",
+     "menu": "4.3E",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Purple%20%28cmyksoda%29/PurpleMenuTheme.4XE.v1.0.mym",
+      "size": 984916,
+      "sha256": "c29e2d62241ee6b10b76d66413f5afbd7f106104c5c689a7a4a3f4d9b6bd9f85"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-uNQVRgDE2n/Purple.4.3E.v1.0.csm",
+      "size": 8281607,
+      "sha256": "9de895eab8e5a8ae8563acf53fc8dd00228cf389e651776418c199190ff77bc2"
+     }
+    },
+    {
+     "code": "J",
+     "label": "Japan",
+     "menu": "4.3J",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Purple%20%28cmyksoda%29/PurpleMenuTheme.4XJ.v1.0.mym",
+      "size": 985155,
+      "sha256": "a0076a67ae5ca9681db96b0437dc252f4d4f1afd6ea32bca2fbce0edfaf187ce"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-rnm65HpTvk/Purple.4.3J.v1.0.csm",
+      "size": 7442023,
+      "sha256": "c254706f50dd4836bae4722cfa1a26a8eaa5dc04eb97fb226e06bc4068fec274"
+     }
+    },
+    {
+     "code": "K",
+     "label": "Korea",
+     "menu": "4.3K",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Purple%20%28cmyksoda%29/PurpleMenuTheme.4XK.v1.0.mym",
+      "size": 996424,
+      "sha256": "fc7900875aed88df0a8b574fe3fcb69ce2151f7a16e5badd0ce95167ec3726f4"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-kWVTohwW7F/Purple.4.3K.v1.0.csm",
+      "size": 7321351,
+      "sha256": "63bfb0f69b9043b4d640846a745392b3a383b623ff52d77ff99696039c68fb67"
+     }
+    }
+   ],
+   "special": null
+  },
+  {
+   "name": "Brown",
+   "shade": "Chocolate",
+   "hex": "#77482f",
+   "version": "1.0",
+   "author": "cmyksoda",
+   "regions": [
+    {
+     "code": "U",
+     "label": "USA",
+     "menu": "4.3U",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Brown%20%28cmyksoda%29/BrownMenuTheme.4XU.v1.0.mym",
+      "size": 981344,
+      "sha256": "c0c1808a4906b275f0e9f2fd09c078f930ba4f4778d645abd2f10d8c9a6fea69"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-SGrsuz3uPV/Brown.4.3U.v1.0.csm",
+      "size": 7478919,
+      "sha256": "fa3f84b5cf1e8a7d0746527053a52878ca4030a2b5abdcd4eeb06083841a6743"
+     }
+    },
+    {
+     "code": "E",
+     "label": "Europe",
+     "menu": "4.3E",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Brown%20%28cmyksoda%29/BrownMenuTheme.4XE.v1.0.mym",
+      "size": 981343,
+      "sha256": "4e0ad72ae7d0183044e7b75d14e3443dce09ef4b10d8366d6de90775dbe770d5"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-NCba5CNMYs/Brown.4.3E.v1.0.csm",
+      "size": 8271879,
+      "sha256": "0611cd09055a50f56de985efbcf075b477c62fbe9e2db913e56a2c46e5afde1b"
+     }
+    },
+    {
+     "code": "J",
+     "label": "Japan",
+     "menu": "4.3J",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Brown%20%28cmyksoda%29/BrownMenuTheme.4XJ.v1.0.mym",
+      "size": 981582,
+      "sha256": "441b727675a47774ecf4070f3e4ba7ce0dcbd99cb02f4a71d99b6c8d4e06a882"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-6L9RSMPDvy/Brown.4.3J.v1.0.csm",
+      "size": 7432391,
+      "sha256": "f5c46175b69917717f095514bdba88b10a362153b53a2bba72c115c3446e4da4"
+     }
+    },
+    {
+     "code": "K",
+     "label": "Korea",
+     "menu": "4.3K",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Brown%20%28cmyksoda%29/BrownMenuTheme.4XK.v1.0.mym",
+      "size": 992849,
+      "sha256": "4b83c1888b0a5e7066bd436df4210cf71b74b49512159af17f8eb231cb397c58"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-HkaApTLs2S/Brown.4.3K.v1.0.csm",
+      "size": 7311559,
+      "sha256": "32b74c484c4ba99db5143cfe83e16eb989377ffe407187d1372f93122cdd0972"
+     }
+    }
+   ],
+   "special": null
+  },
+  {
+   "name": "Silver",
+   "shade": "Silver",
+   "hex": "#868686",
+   "version": "1.0",
+   "author": "cmyksoda",
+   "regions": [
+    {
+     "code": "U",
+     "label": "USA",
+     "menu": "4.3U",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Silver%20%28cmyksoda%29/SilverMenuTheme.4XU.v1.0.mym",
+      "size": 962680,
+      "sha256": "bfabffd668495bb2ff9bfee07c832bb66eabc171719a677258718ac012e83b58"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-aRZDnX8epY/Silver.4.3U.v1.0.csm",
+      "size": 7464967,
+      "sha256": "5c80ee5460d4ad84194cf8618431ccc1afc684e291a7518d4dd81cb989e492d6"
+     }
+    },
+    {
+     "code": "E",
+     "label": "Europe",
+     "menu": "4.3E",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Silver%20%28cmyksoda%29/SilverMenuTheme.4XE.v1.0.mym",
+      "size": 962679,
+      "sha256": "1db53999cce9016016c25bb371da9e2b3e1595646d4a24cc4b21a7cca46521b4"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-BvNtrNQBzS/Silver.4.3E.v1.0.csm",
+      "size": 8257927,
+      "sha256": "d5332db0d8576d1705f63e8af340aa75b74de1e1e9934b4f322a06f5e8467aef"
+     }
+    },
+    {
+     "code": "J",
+     "label": "Japan",
+     "menu": "4.3J",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Silver%20%28cmyksoda%29/SilverMenuTheme.4XJ.v1.0.mym",
+      "size": 962918,
+      "sha256": "2c556f3da23ee934be24151c9d6db70e0b90cdb2b14764be4864407ad8e86131"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-6EMZ2HdapZ/Silver.4.3J.v1.0.csm",
+      "size": 7416775,
+      "sha256": "f75e51ae956f1d3ca6c63b3427135712eeab9cdd1137dbb749b0e205a95847ee"
+     }
+    },
+    {
+     "code": "K",
+     "label": "Korea",
+     "menu": "4.3K",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Silver%20%28cmyksoda%29/SilverMenuTheme.4XK.v1.0.mym",
+      "size": 974165,
+      "sha256": "303d3976ff865317813a1355a010575dcf7ac99a3ede9a0825414b639ae339a6"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-HDCy9Atp74/Silver.4.3K.v1.0.csm",
+      "size": 7297639,
+      "sha256": "68cc5d23ef47c38d07eee54f2972a50549b6a43aad730471d0f08d0fedfcf92c"
+     }
+    }
+   ],
+   "special": null
+  },
+  {
+   "name": "Black",
+   "shade": "Charcoal",
+   "hex": "#333333",
+   "version": "1.0",
+   "author": "cmyksoda",
+   "regions": [
+    {
+     "code": "U",
+     "label": "USA",
+     "menu": "4.3U",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Black%20%28cmyksoda%29/BlackMenuTheme.4XU.v1.0.mym",
+      "size": 946288,
+      "sha256": "a62c90ca50f1103bed722bd7fed912cb5b5eac4755969971a52f4ea4f426c6f8"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-f6NPpitjiL/Black.4.3U.v1.0.csm",
+      "size": 7457991,
+      "sha256": "7d39f29120a92e2b024c19062f550bfc2bb10cb673a31f5213764c7461edccfb"
+     }
+    },
+    {
+     "code": "E",
+     "label": "Europe",
+     "menu": "4.3E",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Black%20%28cmyksoda%29/BlackMenuTheme.4XE.v1.0.mym",
+      "size": 946287,
+      "sha256": "0a05640c52176ff2b425e54be26630bf231d79e3a84dce4e8efe28463c091c7b"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-8h6t8oh5f4/Black.4.3E.v1.0.csm",
+      "size": 8250919,
+      "sha256": "8b7ee097734254241eb41a6d381da90c7373cf8a60d06891c5272c4c761a97fb"
+     }
+    },
+    {
+     "code": "J",
+     "label": "Japan",
+     "menu": "4.3J",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Black%20%28cmyksoda%29/BlackMenuTheme.4XJ.v1.0.mym",
+      "size": 946526,
+      "sha256": "72d922219aab32619a6277a9c5b73a25b453c6e6d65309dfeeb77b702fba0218"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-hHWPn6adnz/Black.4.3J.v1.0.csm",
+      "size": 7409927,
+      "sha256": "76561f901b649a1261473ff15b4b3152f7810c6ff1fb2a81cd96357b365d2ab8"
+     }
+    },
+    {
+     "code": "K",
+     "label": "Korea",
+     "menu": "4.3K",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Black%20%28cmyksoda%29/BlackMenuTheme.4XK.v1.0.mym",
+      "size": 957770,
+      "sha256": "41752e3bbd7f56907e493ba17f698ed5521e20681db7dcb1270a0c08d2b18051"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-4cNJcvccdC/Black.4.3K.v1.0.csm",
+      "size": 7290631,
+      "sha256": "d0f741ba9daf19669c70a1f6a14873869eff6a30baf7e565af1791f69e80a780"
+     }
+    }
+   ],
+   "special": null
+  },
+  {
+   "name": "Rainbow",
+   "shade": "Rainbow",
+   "hex": "#e0446a",
+   "version": "1.0",
+   "author": "cmyksoda",
+   "regions": [
+    {
+     "code": "U",
+     "label": "USA",
+     "menu": "4.3U",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Rainbow%20%28cmyksoda%29/RainbowMenuTheme.4XU.v1.0.mym",
+      "size": 1101930,
+      "sha256": "505c534368209b714bb151b0796b41d27936f4351f95fa127f2e4533e48d3784"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-Xp8GdBBwzA/Rainbow.4.3U.v1.0.csm",
+      "size": 7619623,
+      "sha256": "8f261091cf06da6c8b0c4223e27fa6a55c90a6fdab55eca135cdee029de9f632"
+     }
+    },
+    {
+     "code": "E",
+     "label": "Europe",
+     "menu": "4.3E",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Rainbow%20%28cmyksoda%29/RainbowMenuTheme.4XE.v1.0.mym",
+      "size": 1101929,
+      "sha256": "623815995c36b32fc693c733086920b896f86d9f316398bf21af62772449dc4a"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-ebwFmk4UWY/Rainbow.4.3E.v1.0.csm",
+      "size": 8412615,
+      "sha256": "604bd183473097451793889b85d267d7745187fcccbb240fbdf5a193be71c3d7"
+     }
+    },
+    {
+     "code": "J",
+     "label": "Japan",
+     "menu": "4.3J",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Rainbow%20%28cmyksoda%29/RainbowMenuTheme.4XJ.v1.0.mym",
+      "size": 1102173,
+      "sha256": "4d8c110de996303197a091dc708e4f0a8fea60f8056b3902693bf79c9118e128"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-7nJR9aEmkF/Rainbow.4.3J.v1.0.csm",
+      "size": 7629255,
+      "sha256": "62588008d65a53ee63892cacea47535631fff174bfa5314c77c0b18b70631d8c"
+     }
+    },
+    {
+     "code": "K",
+     "label": "Korea",
+     "menu": "4.3K",
+     "mym": {
+      "url": "https://archive.org/download/colorful-wii-menu-themes/Rainbow%20%28cmyksoda%29/RainbowMenuTheme.4XK.v1.0.mym",
+      "size": 1113801,
+      "sha256": "169de46098c3d5a03dad6689535683dd5cf618899d88ef199c5ac887209cf2aa"
+     },
+     "csm": {
+      "url": "https://share.cmyksoda.cc/-E57DnDwGxh/Rainbow.4.3K.v1.0.csm",
+      "size": 7452647,
+      "sha256": "ff27769b764988bc1800d7684f6b3da106bcb98077540a83de7f405372567b73"
+     }
+    }
+   ],
+   "special": "rainbow"
+  }
+ ],
+ "screens": [
+  "menu",
+  "disc-channel",
+  "home-menu",
+  "wii-options",
+  "wii-settings",
+  "board-create",
+  "memo",
+  "keyboard"
+ ],
+ "piinkOriginals": [
+  {
+   "url": "https://archive.org/download/colorful-wii-menu-themes/Piink%20originals%20%28wilsoff%2C%202011%29/PiinkMenuTheme.4XE.v1.0.mym",
+   "size": 935487,
+   "sha256": "65a5a6bf149fe7a40eb943d1526bc4cb51a0f0b8572440df490331e4f3138a98",
+   "name": "PiinkMenuTheme.4XE.v1.0.mym"
+  },
+  {
+   "url": "https://archive.org/download/colorful-wii-menu-themes/Piink%20originals%20%28wilsoff%2C%202011%29/PiinkMenuTheme.4XU.v1.0.mym",
+   "size": 935476,
+   "sha256": "23c39f14ac9dfb93ebf4b51fe24796f2b387b97b39058096a90ca69b7b646a72",
+   "name": "PiinkMenuTheme.4XU.v1.0.mym"
+  }
+ ]
+}

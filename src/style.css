@@ -448,7 +448,7 @@ h2 {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.room-card { flex-basis: calc((100% - var(--project-gap)) / 2); padding: 0.875em 0.875em 1.25em; }
+.room-card { flex-basis: calc((100% - 2 * var(--project-gap)) / 3); padding: 0.875em 0.875em 1.25em; }
 .room-card .project-heading { gap: 0.875em; }
 .room-shot {
   display: block;
@@ -523,7 +523,7 @@ h2 {
   .site-shell { padding-inline: 1.75rem; max-width: 45rem; }
   .section-heading { max-width: 648px; }
   .project-grid { --project-gap: 22px; max-width: 648px; }
-  .project-card { flex-basis: calc((100% - var(--project-gap)) / 2); }
+  .project-card, .room-card { flex-basis: calc((100% - var(--project-gap)) / 2); }
 }
 
 @media (max-width: 43.5em) {

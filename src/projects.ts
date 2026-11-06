@@ -44,6 +44,13 @@ export const rooms: Room[] = [
     imageAlt: 'The Homebrew Channel, listing cmyksoda\'s Wii homebrew apps',
     url: 'wii-homebrew/',
   },
+  {
+    title: 'Colorful Wii Menu Themes',
+    color: 'lilac',
+    image: 'projects/wii-themes.webp',
+    imageAlt: 'The Colorful Wii Menu Themes page, with Piink, ten more colors and a rainbow to choose from',
+    url: 'wii-themes/',
+  },
 ];
 
 export const projects: Project[] = [
