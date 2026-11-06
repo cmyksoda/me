@@ -1,7 +1,7 @@
 @font-face {
   font-family: 'Rodin NTLG';
   font-weight: 600;
-  font-display: swap;
+  font-display: block;
   src: url('/wii-themes/rodin-db.woff2') format('woff2');
   /* Rodin's own metrics center capitals, which leaves lowercase labels like "csm" sitting low. */
   ascent-override: 83.3%;
@@ -12,7 +12,7 @@
 @font-face {
   font-family: 'Rodin NTLG';
   font-weight: 700;
-  font-display: swap;
+  font-display: block;
   src: url('/wii-themes/rodin-b.woff2') format('woff2');
   ascent-override: 83.3%;
   descent-override: 16.7%;
