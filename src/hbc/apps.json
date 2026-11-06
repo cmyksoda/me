@@ -56,13 +56,13 @@
     "dirname": "GodModeWii",
     "name": "GodModeWii",
     "coder": "quatric, cmyksoda",
-    "version": "0.10.2",
+    "version": "0.11.0",
     "shortDescription": "GodMode9-style file manager",
     "longDescription": "A text-mode, GodMode9-style file manager for the Wii and the Wii U's vWii.\n\nBrowse the SD card, SD Gecko, every USB drive, the NAND, the SEEPROM, the disc drive and your console's keys. Copy, cut, paste and delete between devices, see free space, and edit the NAND only after the Konami code and a brick-risk disclaimer.\n\nWARNING: modifying the NAND can permanently brick your console.",
     "longDescriptionDraft": "GodModeWii is a collaboration between quatric and I.\n\nIt's a text-based file manager for the Wii and the Wii U's vWii, in the style of GodMode9. With GodModeWii, you can perform standard file manager operations, as well as export Miis, install WADs, launch homebrew apps, and more.\n\nWARNING: changing the NAND can permanently brick your console. NAND changes stay locked until you enter the Konami code.",
     "icon": true,
     "source": "https://github.com/quatric/GodModeWii",
-    "download": "https://github.com/quatric/GodModeWii/releases/download/v0.10.2/GodModeWii.zip"
+    "download": "https://github.com/quatric/GodModeWii/releases/download/v0.11.0/GodModeWii.zip"
   },
   {
     "repo": "MiiKit-Demo",
