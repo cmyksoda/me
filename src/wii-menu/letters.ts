@@ -55,7 +55,7 @@ export const letters: Letter[] = [
     letterhead: 'wii-shop-returned',
     position: [160, -35],
     body: [
-      'The SD Card Menu holds three channels that aren\'t forwarders. They\'re mods of Nintendo\'s own channels, '
+      'The SD Card Menu contains three channels that aren\'t forwarders. They\'re mods of Nintendo\'s own channels, '
         + 'made for USA Wii consoles.',
       'Super Mario Bros. 25th Anniversary, which shows a 25 on its ? blocks, came pre-installed on the anniversary '
         + 'Wii consoles in Japan, Hong Kong, Taiwan and Australia. North America never got it, so this version '
