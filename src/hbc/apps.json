@@ -4,13 +4,13 @@
     "dirname": "am2r",
     "name": "AM2R GX",
     "coder": "cmyksoda",
-    "version": "1.2.4",
+    "version": "1.2.5",
     "shortDescription": "AM2R 1.5.5 on Wii!",
     "longDescription": "\nAM2R GX — AM2R 1.5.5 (Community Update) on the Wii, built on the Butterscotch engine with native GX. Bring your own AM2R 1.1 zip; the first boot builds 1.5.5 from it. Hold HOME, or X + B + Start on a GameCube controller, to quit.\n\nFree software under the AGPL-3.0: see LICENSE.txt and NOTICE.txt.\n\nNot affiliated with Nintendo, YoYo Games, DoctorM64, or the AM2R Community Developers.\n  ",
     "longDescriptionDraft": "AM2R GX is a Wii port of AM2R (Another Metroid 2 Remake) 1.5.5, running on Butterscotch, an open-source GameMaker runner.\n\nYou'll need your own copy of the original AM2R 1.1 release zip. The first boot builds 1.5.5 from it, which takes about four minutes.",
     "icon": false,
     "source": "https://github.com/cmyksoda/AM2R-GX",
-    "download": "https://github.com/cmyksoda/AM2R-GX/releases/download/v1.2.4/am2r-gx-1.2.4-update.zip"
+    "download": "https://github.com/cmyksoda/AM2R-GX/releases/download/v1.2.5/am2r-gx-1.2.5-update.zip"
   },
   {
     "repo": "ASCII-Odyssey",
