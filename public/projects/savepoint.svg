@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="18 18 72 72" width="512" height="512">
+<defs>
+<clipPath id="mask"><circle cx="54" cy="54" r="36"/></clipPath>
+<linearGradient id="bg" gradientUnits="userSpaceOnUse" x1="18" y1="18" x2="90" y2="90"><stop offset="0" stop-color="#2E3567"/><stop offset="1" stop-color="#5E2A60"/></linearGradient>
+<linearGradient id="body" gradientUnits="userSpaceOnUse" x1="54" y1="24" x2="54" y2="84"><stop offset="0" stop-color="#FFC2E0"/><stop offset="1" stop-color="#F59BC9"/></linearGradient>
+</defs>
+<g clip-path="url(#mask)">
+<rect x="0" y="0" width="108" height="108" fill="url(#bg)"/>
+<g transform="translate(54 54) scale(0.86) translate(-54 -54)">
+<path d="M38,24 H70 Q76,24 76,30 V73 Q76,84 65,84 H38 Q32,84 32,78 V30 Q32,24 38,24 Z" fill="url(#body)"/>
+<path d="M38,32 H70 V54 H38 Z M35.5,63.2 H39.2 V59.5 H42.8 V63.2 H46.5 V66.8 H42.8 V70.5 H39.2 V66.8 H35.5 Z M62.8,62.9 A2.8,2.8 0,1 0,62.8,68.5 A2.8,2.8 0,1 0,62.8,62.9 Z M69.9,60.2 A2.8,2.8 0,1 0,69.9,65.8 A2.8,2.8 0,1 0,69.9,60.2 Z" fill="#5A2550"/>
+<path d="M54,48.989 C52.7,48.989 47,43.924 47,40.191 C47,36.547 51.7,35.748 54,39.302 C56.3,35.748 61,36.547 61,40.191 C61,43.924 55.3,48.989 54,48.989 Z" fill="#FFFFFF"/>
+</g>
+</g>
+</svg>

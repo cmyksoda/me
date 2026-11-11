@@ -55,6 +55,27 @@ export const rooms: Room[] = [
 
 export const projects: Project[] = [
   {
+    title: 'Viola',
+    description: 'A desktop and mobile app for using Claude Code on API credits. Made for Max and Ultra subscribers to get the most out of their monthly credits while working like they normally would. Comes with a live credits counter and a collection of themes, even a Windows 95 one.',
+    color: 'yellow', art: 'flower',
+    image: 'projects/viola.svg', imageAlt: 'Viola icon: a white eight-petal flower on a terracotta rounded square',
+    url: 'https://github.com/cmyksoda/Viola',
+  },
+  {
+    title: 'Savepoint',
+    description: 'A cute, simple Android app for keeping your place in your games. Organize your now-playing into shelves, keep a backlog of games to play later, and track your play history with the Play Log. Counts Pokémon shiny hunts, too. Your library lives on your phone, so there\'s no account to make. <3',
+    color: 'pink', art: 'heart',
+    image: 'projects/savepoint.svg', imageAlt: 'Savepoint icon: a pink handheld game console with a white heart on its screen, on a midnight blue and plum circle',
+    url: 'https://github.com/cmyksoda/Savepoint',
+  },
+  {
+    title: 'Nightlight',
+    description: 'An Android dream journal you speak into as you wake. Recordings go to your own computer over [Tailscale](https://tailscale.com), where they\'re transcribed and read by the coding agent you already use, like Claude Code or Codex. It notices recurring patterns, and can help you learn to lucid dream, if you\'d like. <3',
+    color: 'lilac', art: 'sparkles',
+    image: 'projects/nightlight.svg', imageAlt: 'Nightlight icon: a pale crescent moon and a small four-point star on a deep indigo night sky',
+    url: 'https://github.com/cmyksoda/Nightlight',
+  },
+  {
     title: 'Tanka',
     description: 'Work-in-progress. An operating system based on Haiku, the free and open-source spiritual successor to BeOS. Runs natively on the Nintendo Wii, using [ActionRetro\'s Tabby for PowerPC](https://github.com/ActionRetro/Tabby-PPC) as a baseline.',
     color: 'lilac', art: 'window',
