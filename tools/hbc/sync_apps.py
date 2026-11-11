@@ -62,7 +62,7 @@ def tagged_repos():
 
 
 def latest_zip_asset(full_name):
-    """The newest non-prerelease's first .zip asset, or None after printing why not."""
+    """The newest non-prerelease's full .zip asset, or None after printing why not."""
     try:
         release = api(f"repos/{full_name}/releases/latest")
     except urllib.error.HTTPError as error:
@@ -70,7 +70,10 @@ def latest_zip_asset(full_name):
             raise
         print(f"{full_name}: skipped, no published release")
         return None
-    asset = next((a for a in release["assets"] if a["name"].endswith(".zip")), None)
+    zips = [a for a in release["assets"] if a["name"].endswith(".zip")]
+    # An update zip sorts first but ships without icon.png.
+    full = [a for a in zips if not a["name"].endswith("-update.zip")]
+    asset = next(iter(full or zips), None)
     if asset is None:
         print(f"{full_name}: skipped, {release['tag_name']} has no .zip asset")
     return asset
