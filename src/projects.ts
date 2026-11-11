@@ -56,7 +56,7 @@ export const rooms: Room[] = [
 export const projects: Project[] = [
   {
     title: 'Savepoint',
-    description: 'A cute, simple Android app for keeping your place in your games. Organize your now-playing into shelves, keep a backlog, and track your play history with the Play Log. Counts encounters in Pokémon shiny hunts, too. Your library lives on your phone, so there\'s no account to make. <3',
+    description: 'A cute, simple Android app for keeping your place in your games. Organize your now-playing into shelves, keep a backlog, and track your play history with the Play Log. Also includes the option to log encounters in Pokémon shiny hunts! Your library is local-only, on your phone, with no account required.',
     color: 'pink', art: 'heart',
     image: 'projects/savepoint.svg', imageAlt: 'Savepoint icon: a pink handheld game console with a white heart on its screen, on a midnight blue and plum circle',
     url: 'https://github.com/cmyksoda/Savepoint',
@@ -70,14 +70,14 @@ export const projects: Project[] = [
   },
   {
     title: 'Nightlight',
-    description: 'An Android dream journal you speak into as you wake. Recordings go to your own computer over [Tailscale](https://tailscale.com) to be transcribed, and the coding agent you already use, like Claude Code or Codex, reads the transcripts. It notices recurring patterns, and can help you learn to lucid dream, if you\'d like. <3',
+    description: 'An Android dream journal you speak into as you wake. Recordings go to your own computer over [Tailscale](https://tailscale.com) to be transcribed, and the coding agent you already use, like Claude Code or Codex, reads the transcripts. It notices recurring patterns, and can help you learn to lucid dream, if you\'d like.',
     color: 'lilac', art: 'sparkles',
     image: 'projects/nightlight.svg', imageAlt: 'Nightlight icon: a pale crescent moon and a small four-point star on a deep indigo night sky',
     url: 'https://github.com/cmyksoda/Nightlight',
   },
   {
     title: 'MiiKit',
-    description: 'A C library that lets Wii homebrew apps read, edit, and draw Miis, as official Wii games do. Miis are drawn in 3D with the Wii\'s own faces and bodies, read straight from the console. Started as sdk/mii by the [hbc-reborn](https://github.com/Monsterray/hbc-reborn) developers, and [MiiKit Demo](https://github.com/cmyksoda/MiiKit-Demo) shows it running. Public domain (CC0).',
+    description: 'A C library that lets Wii homebrew apps read, edit, and draw Miis, as official Wii games do. Miis are drawn in 3D with the Wii\'s own faces and bodies, read straight from the console. Started as sdk/mii by the [hbc-reborn](https://github.com/Monsterray/hbc-reborn) developers. [MiiKit Demo](https://github.com/cmyksoda/MiiKit-Demo) shows it in action if you\'d like to see it work. Public domain (CC0).',
     color: 'cyan', art: 'flower',
     image: 'projects/miikit.png', imageAlt: 'A smiling Mii in an orange shirt, drawn by MiiKit',
     url: 'https://github.com/cmyksoda/MiiKit',
