@@ -76,11 +76,11 @@ export const projects: Project[] = [
     url: 'https://github.com/cmyksoda/Nightlight',
   },
   {
-    title: 'Tanka',
-    description: 'Work-in-progress. An operating system based on Haiku, the free and open-source spiritual successor to BeOS. Runs natively on the Nintendo Wii, using [ActionRetro\'s Tabby for PowerPC](https://github.com/ActionRetro/Tabby-PPC) as a baseline.',
-    color: 'lilac', art: 'window',
-    image: 'projects/tanka.png', imageAlt: 'Tanka logo', roundedImage: true,
-    url: 'https://github.com/cmyksoda/Tanka',
+    title: 'MiiKit',
+    description: 'A C library that lets Wii homebrew apps read, edit, and draw Miis, the way official Wii games do. Miis are drawn in 3D with the Wii\'s own faces and bodies, read straight from the console. Started as sdk/mii in [hbc-reborn](https://github.com/Monsterray/hbc-reborn), and [MiiKit Demo](https://github.com/cmyksoda/MiiKit-Demo) shows it running. Public domain (CC0).',
+    color: 'cyan', art: 'flower',
+    image: 'projects/miikit.png', imageAlt: 'A smiling Mii in an orange shirt, drawn by MiiKit',
+    url: 'https://github.com/cmyksoda/MiiKit',
   },
   {
     title: 'Animal Crossing Desktop Clock Plasmoid',
