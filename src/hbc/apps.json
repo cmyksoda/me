@@ -17,13 +17,13 @@
     "dirname": "asciiodyssey",
     "name": "ASCII Odyssey",
     "coder": "cmyksoda",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "shortDescription": "Generative music and ASCII visuals",
     "longDescription": "Press start and ASCII Odyssey makes you a brand new voyage: a tracker song composed from a seed, with a light show drawn only in text that dances to the beat.\n\nTen genres, a hundred scenes, and dozens of color palettes. <3",
     "longDescriptionDraft": "ASCII Odyssey is a Wii app that composes a brand-new voyage every time you press Start: a tracker song created from a seed, with a light show drawn only from text that dances to the beat.\n\nIt has ten genres, a hundred scenes, and sixty color palettes.",
     "icon": true,
     "source": "https://github.com/cmyksoda/ASCII-Odyssey",
-    "download": "https://github.com/cmyksoda/ASCII-Odyssey/releases/download/v1.0.0/ASCII-Odyssey.zip"
+    "download": "https://github.com/cmyksoda/ASCII-Odyssey/releases/download/v1.1.0/ASCII-Odyssey.zip"
   },
   {
     "repo": "Bird-and-Beans-GX",
