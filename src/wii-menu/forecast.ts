@@ -18,15 +18,13 @@ const UPDATE_HOUR = 15;
 const NUMBER_CELLS = 14;
 const DIGIT_WIDTH = 50;
 
-/** icon.cs on a console with data: the sun, temperature and condition, with icon_Rso0 cycling the WiiLink logo over them. */
+/** icon.cs on a console with data: the title over the temperature and sun, with icon_Rso0 cycling the AccuWeather logo over them. */
 export function forecastIcon(channel: ChannelBase, instance: LayoutInstance): AnimationPlayer | null {
   if (channel.id !== FORECAST_ID) return null;
   const text = `${latestForecast().fahrenheit}°F`;
   showSymbol(instance);
   fitSun(instance);
   for (const name of ['current_text', 'current_sdw']) instance.pane(name).text = text;
-  for (const name of ['condition_text', 'condition_sdw']) instance.pane(name).text = CONDITION;
-  instance.pane('title_nodata').visible = false;
   return moduleClip(channel.icon, instance, 'icon').play();
 }
 
@@ -84,19 +82,17 @@ function showSymbol(instance: LayoutInstance): void {
 }
 
 /**
- * The sun is centered on `code`'s origin, so only the scale changes. The temperature and condition text
- * are children of `code`; they shrink back by the same ratio and keep the layout's place and size.
+ * The sun is centered on `code`'s origin, so only the scale changes. The temperature is a child of
+ * `code`; it shrinks back by the same ratio and keeps the layout's place and size.
  */
 function fitSun(instance: LayoutInstance): void {
   const code = instance.pane('code');
   const ratio = code.scale[0] / SUN_SCALE;
   code.scale = [SUN_SCALE, SUN_SCALE];
-  for (const name of ['current_label', 'condition_label']) {
-    const pane = instance.pane(name);
-    pane.translate[0] *= ratio;
-    pane.translate[1] *= ratio;
-    pane.scale = [pane.scale[0] * ratio, pane.scale[1] * ratio];
-  }
+  const label = instance.pane('current_label');
+  label.translate[0] *= ratio;
+  label.translate[1] *= ratio;
+  label.scale = [label.scale[0] * ratio, label.scale[1] * ratio];
 }
 
 /** setup_ww_layout's big digits: leading zeros hide, and a USA console in Fahrenheit hides the F as well. */

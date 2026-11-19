@@ -64,8 +64,9 @@ export const letters: Letter[] = [
         + 'inside the channel. It\'s for the Wii only, not the Wii U\'s vWii. Installing it replaces your '
         + 'Internet Channel.',
       'The Forecast Channel is the WiiLink version, redrawn with the Japanese weather symbols everywhere, on the '
-        + 'Wii Menu icon too. The icon also shows the current temperature, weather symbol and conditions, and '
-        + 'WiiLink\'s logo in place of Weathernews\'. Installing it replaces your Forecast Channel.',
+        + 'Wii Menu icon too. The icon also shows the current temperature and weather symbol under its title. '
+        + 'The icon and banner show AccuWeather\'s logo in place of Weathernews\', since WiiLink\'s forecasts '
+        + 'come from AccuWeather. Installing it replaces your Forecast Channel.',
       'Please back up your NAND before you install any of these channels.\ncmyksoda / Jaxi',
     ].join('\n\n'),
   },
