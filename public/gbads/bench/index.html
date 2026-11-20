@@ -113,7 +113,7 @@ table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nu
 .win:focus { outline: none; }
 .win.on, .win:focus-visible { stroke: var(--ink); stroke-width: 1.5px; }
 .nw { white-space: nowrap; }
-.sort { display: flex; justify-content: center; gap: 0.6rem; margin: 1.2rem 0; }
+.sort { display: flex; justify-content: flex-start; gap: 0.6rem; margin: 1.2rem 0; }
 .sortbtn { appearance: none; min-height: 44px; padding: 0.1rem 1.2rem 0; border-radius: 999px; cursor: pointer;
   font-size: 0.92rem; background: var(--raised); color: var(--label); border: 2px solid var(--outline); transition: border-color 120ms ease-out; }
 .sortbtn[aria-pressed="true"] { border-color: var(--accent); color: var(--ink); }
@@ -168,6 +168,7 @@ footer h2 { font-size: 1.15rem; margin-bottom: 0.3rem; }
   .browser { grid-template-columns: minmax(0, 1fr); }
   .list { position: static; } .games { max-height: 260px; }
   .barcell { width: auto; }
+  .sort { justify-content: center; }
 }
 @media (max-width: 700px) {
   .tabs { gap: 0.6rem; }
